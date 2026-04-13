@@ -12,7 +12,7 @@ template<typename T>
 class BoundedQueue {
 public:
     explicit BoundedQueue(size_t max_size)
-        : max_size_(max_size), shutdown_(false), dropped_(0) {}
+        : max_size_(max_size), dropped_(0) {}
 
     // Returns false if queue is full (item dropped)
     bool try_push(T item) {
@@ -30,7 +30,7 @@ public:
     // Blocks until item available or shutdown
     std::optional<T> pop(bool& shutdown_flag) {
         std::unique_lock<std::mutex> lk(mutex_);
-        cv_.wait(lk, [this] { return !queue_.empty() || shutdown_; });
+        cv_.wait(lk, [this] { return !queue_.empty() || shutdown_.load(); });
         if (queue_.empty()) {
             shutdown_flag = true;
             return std::nullopt;
@@ -41,10 +41,7 @@ public:
     }
 
     void shutdown() {
-        {
-            std::lock_guard<std::mutex> lk(mutex_);
-            shutdown_ = true;
-        }
+        shutdown_.store(true);
         cv_.notify_all();
     }
 
@@ -62,7 +59,7 @@ private:
     std::condition_variable cv_;
     std::queue<T> queue_;
     size_t max_size_;
-    bool shutdown_;
+    std::atomic<bool> shutdown_{false};
     std::atomic<size_t> dropped_;
 };
 

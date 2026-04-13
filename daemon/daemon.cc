@@ -37,6 +37,10 @@ Daemon::Daemon(Config cfg)
     int hwm = cfg_.zmq_hwm;
     zmq_setsockopt(zmq_sock_, ZMQ_RCVHWM, &hwm, sizeof(hwm));
 
+    // Poll with timeout so stop() can unblock recv_loop cleanly
+    int rcvtimeo_ms = 500;
+    zmq_setsockopt(zmq_sock_, ZMQ_RCVTIMEO, &rcvtimeo_ms, sizeof(rcvtimeo_ms));
+
     if (zmq_bind(zmq_sock_, cfg_.zmq_endpoint.c_str()) != 0) {
         zmq_close(zmq_sock_);
         zmq_ctx_term(zmq_ctx_);
@@ -61,11 +65,6 @@ void Daemon::run() {
 void Daemon::stop() {
     running_ = false;
     queue_.shutdown();
-    // Unblock zmq_recv by closing the socket
-    if (zmq_sock_) {
-        zmq_close(zmq_sock_);
-        zmq_sock_ = nullptr;
-    }
 }
 
 void Daemon::recv_loop() {
@@ -75,6 +74,8 @@ void Daemon::recv_loop() {
         int rc = zmq_msg_recv(&msg, zmq_sock_, 0);
         if (rc < 0) {
             zmq_msg_close(&msg);
+            // EAGAIN means timeout (RCVTIMEO) — check running_ and loop
+            if (errno == EAGAIN) continue;
             if (!running_) break;
             std::lock_guard<std::mutex> lk(error_mutex_);
             last_error_ = std::string("zmq_msg_recv: ") + zmq_strerror(errno);

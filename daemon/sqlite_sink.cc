@@ -116,17 +116,17 @@ int64_t SqliteSink::upsert_series(const std::string& dut_name,
     if (it != series_cache_.end()) return it->second;
 
     // Insert (ignore if exists)
-    sqlite3_bind_text(stmt_ins_series_, 1, dut_name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt_ins_series_, 2, dut_ip.c_str(),   -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt_ins_series_, 3, metric_name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt_ins_series_, 4, oid.c_str(),       -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt_ins_series_, 1, dut_name.c_str(),    -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_ins_series_, 2, dut_ip.c_str(),      -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_ins_series_, 3, metric_name.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_ins_series_, 4, oid.c_str(),         -1, SQLITE_TRANSIENT);
     sqlite3_step(stmt_ins_series_);
     sqlite3_reset(stmt_ins_series_);
     sqlite3_clear_bindings(stmt_ins_series_);
 
     // Select id
-    sqlite3_bind_text(stmt_sel_series_, 1, dut_name.c_str(),    -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt_sel_series_, 2, metric_name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt_sel_series_, 1, dut_name.c_str(),    -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_sel_series_, 2, metric_name.c_str(), -1, SQLITE_TRANSIENT);
     int rc = sqlite3_step(stmt_sel_series_);
     int64_t sid = -1;
     if (rc == SQLITE_ROW) {
@@ -172,7 +172,7 @@ void SqliteSink::write(const Batch& batch) {
         } else if (s.type_tag == TypeTag::Str) {
             sqlite3_bind_null(stmt_ins_sample_, 4);
             sqlite3_bind_null(stmt_ins_sample_, 5);
-            sqlite3_bind_text(stmt_ins_sample_, 6, s.str_val.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt_ins_sample_, 6, s.str_val.c_str(), -1, SQLITE_TRANSIENT);
         } else {
             sqlite3_bind_null(stmt_ins_sample_, 4);
             sqlite3_bind_null(stmt_ins_sample_, 5);
