@@ -7,9 +7,12 @@ zmq_dep = dependency('libzmq', required: true)
 sqlite_dep = dependency('sqlite3', required: true)
 libpq_dep = dependency('libpq', required: true)
 nlohmann_json_dep = dependency('nlohmann_json', required: true)
-
-# msgpack is header-only, find it manually
-msgpack_inc = include_directories('/usr/include')
+# msgpack-cxx is a header-only library; try pkg-config first, then fall back
+msgpack_dep = dependency('msgpack', required: false)
+if not msgpack_dep.found()
+  msgpack_dep = declare_dependency(
+    include_directories: include_directories('/usr/include'))
+endif
 
 # Daemon sources
 daemon_sources = [
@@ -24,6 +27,6 @@ daemon_sources = [
 
 executable('ezsnmp_loggerd',
   daemon_sources,
-  include_directories: [msgpack_inc, include_directories('daemon')],
-  dependencies: [zmq_dep, sqlite_dep, libpq_dep, nlohmann_json_dep],
+  include_directories: include_directories('daemon'),
+  dependencies: [zmq_dep, sqlite_dep, libpq_dep, nlohmann_json_dep, msgpack_dep],
   install: true)

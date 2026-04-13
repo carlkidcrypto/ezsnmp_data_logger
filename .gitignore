@@ -1,0 +1,26 @@
+# Build artifacts
+build/
+*.o
+*.so
+*.a
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.eggs/
+
+# Data output
+data/
+*.sqlite
+*.csv
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
