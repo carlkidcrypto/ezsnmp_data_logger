@@ -1,0 +1,58 @@
+{
+  "zmq_endpoint": "ipc:///tmp/ezsnmp_loggerd.sock",
+  "zmq_hwm": 10000,
+  "queue_depth": 100000,
+  "poll_interval_ms": 1000,
+  "process_start_method": "spawn",
+  "duts": [
+    {
+      "name": "core_sw_1",
+      "dut_ip": "10.0.0.10",
+      "snmp": {
+        "version": 2,
+        "community": "public",
+        "port_number": 161,
+        "timeout": 1,
+        "retries": 2
+      },
+      "metrics": [
+        { "name": "sysUpTime", "oid": "sysUpTime.0" },
+        { "name": "sysName",   "oid": "sysName.0" },
+        { "name": "sysDescr",  "oid": "sysDescr.0" }
+      ]
+    },
+    {
+      "name": "core_sw_2",
+      "dut_ip": "10.0.0.11",
+      "snmp": {
+        "version": 2,
+        "community": "public",
+        "port_number": 161,
+        "timeout": 1,
+        "retries": 2
+      },
+      "metrics": [
+        { "name": "sysUpTime", "oid": "sysUpTime.0" },
+        { "name": "cpuLoad1",  "oid": "laLoad.1" }
+      ]
+    }
+  ],
+  "sinks": [
+    {
+      "type": "csv",
+      "dir": "./data"
+    },
+    {
+      "type": "sqlite3",
+      "path": "./data/logger.sqlite",
+      "commit_every_n": 100,
+      "commit_every_ms": 500
+    },
+    {
+      "type": "psql",
+      "conninfo": "host=127.0.0.1 port=5432 dbname=snmp user=snmp password=snmp",
+      "batch_size": 100,
+      "reconnect_delay_ms": 2000
+    }
+  ]
+}
