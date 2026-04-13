@@ -27,17 +27,21 @@ public:
         return true;
     }
 
-    // Blocks until item available or shutdown
+    // Blocks until item available or shutdown.
+    // Sets shutdown_flag=true and returns nullopt when shutdown is requested
+    // and the queue is drained. Items already in the queue are returned first.
     std::optional<T> pop(bool& shutdown_flag) {
         std::unique_lock<std::mutex> lk(mutex_);
         cv_.wait(lk, [this] { return !queue_.empty() || shutdown_.load(); });
-        if (queue_.empty()) {
-            shutdown_flag = true;
-            return std::nullopt;
+        // Drain remaining items even after shutdown() is called
+        if (!queue_.empty()) {
+            T item = std::move(queue_.front());
+            queue_.pop();
+            return item;
         }
-        T item = std::move(queue_.front());
-        queue_.pop();
-        return item;
+        // Queue is empty and shutdown was requested
+        shutdown_flag = true;
+        return std::nullopt;
     }
 
     void shutdown() {
