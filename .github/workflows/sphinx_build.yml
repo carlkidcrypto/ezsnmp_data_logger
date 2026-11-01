@@ -35,7 +35,7 @@ jobs:
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
-          path: subprojects/ezsnmp
+          path: third_party/ezsnmp
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -112,7 +112,7 @@ jobs:
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
-          path: subprojects/ezsnmp
+          path: third_party/ezsnmp
 
       - name: Set up Python
         uses: actions/setup-python@v5

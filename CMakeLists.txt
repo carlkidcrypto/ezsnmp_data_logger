@@ -36,10 +36,10 @@ else()
 endif()
 
 if(EZSNMP_SOURCE_DIR STREQUAL "")
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../ezsnmp/ezsnmp/include/sessionbase.h")
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ezsnmp/ezsnmp/include/sessionbase.h")
+    set(EZSNMP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ezsnmp")
+  elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../ezsnmp/ezsnmp/include/sessionbase.h")
     set(EZSNMP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ezsnmp")
-  elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/ezsnmp/ezsnmp/include/sessionbase.h")
-    set(EZSNMP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/ezsnmp")
   endif()
 endif()
 

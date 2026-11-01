@@ -100,7 +100,6 @@ extend-exclude = '''
   | ^/build/
   | ^/docs/
   | ^/third_party/
-  | ^/subprojects/ezsnmp/
   | ^/generated_swig/
   | ^/bindings/.*/generated/
 )

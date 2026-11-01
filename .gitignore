@@ -49,7 +49,7 @@ bindings/**/runtimes/
 bindings/go/lib/
 generated_swig/
 third_party/sqlite3/
-subprojects/ezsnmp/
+third_party/ezsnmp/
 loader.sce
 
 # Documentation builds (matching ezsnmp / purpleair repos)

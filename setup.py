@@ -62,8 +62,8 @@ def _locate_ezsnmp_source_dir() -> Path | None:
         candidates.append(Path(env_dir))
     candidates.extend(
         [
+            ROOT_DIR / "third_party" / "ezsnmp",
             ROOT_DIR.parent / "ezsnmp",
-            ROOT_DIR / "subprojects" / "ezsnmp",
         ]
     )
     for cand in candidates:

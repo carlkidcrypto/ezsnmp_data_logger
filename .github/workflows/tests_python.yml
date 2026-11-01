@@ -36,7 +36,7 @@ jobs:
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
-          path: subprojects/ezsnmp
+          path: third_party/ezsnmp
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

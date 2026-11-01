@@ -2,7 +2,7 @@ option(
   'ezsnmp_source_dir',
   type: 'string',
   value: '',
-  description: 'Path to ezsnmp repository root (defaults to ../ezsnmp or subprojects/ezsnmp)'
+  description: 'Path to ezsnmp repository root (defaults to third_party/ezsnmp or ../ezsnmp)'
 )
 option(
   'ezsnmp',

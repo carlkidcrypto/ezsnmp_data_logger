@@ -15,18 +15,22 @@ EZSNMP_CALSEMVER_TAG = "v2026.10.28a0"
 
 
 def ensure_ezsnmp_source(target_dir: Path | None = None, tag: str = EZSNMP_CALSEMVER_TAG) -> Path:
-    """Locate sibling ../ezsnmp or clone pinned CalSemVer tag into subprojects/ezsnmp."""
+    """Locate third_party/ezsnmp or ../ezsnmp, or clone pinned tag into third_party/ezsnmp."""
     env_dir = os.environ.get("EZSNMP_SOURCE_DIR", "").strip()
     if env_dir:
         cand = Path(env_dir).resolve()
         if (cand / "ezsnmp" / "include" / "sessionbase.h").is_file():
             return cand
 
+    vendored = (REPO_ROOT / "third_party" / "ezsnmp").resolve()
+    if target_dir is None and (vendored / "ezsnmp" / "include" / "sessionbase.h").is_file():
+        return vendored
+
     sibling = (REPO_ROOT.parent / "ezsnmp").resolve()
     if target_dir is None and (sibling / "ezsnmp" / "include" / "sessionbase.h").is_file():
         return sibling
 
-    dest = (target_dir or (REPO_ROOT / "subprojects" / "ezsnmp")).resolve()
+    dest = (target_dir or vendored).resolve()
     if (dest / "ezsnmp" / "include" / "sessionbase.h").is_file():
         return dest
 

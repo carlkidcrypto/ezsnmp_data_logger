@@ -35,7 +35,7 @@ jobs:
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
-          path: subprojects/ezsnmp
+          path: third_party/ezsnmp
 
       - name: Provision embedded SQLite3 amalgamation
         run: python3 tools/prepare_sqlite3_amalgamation.py

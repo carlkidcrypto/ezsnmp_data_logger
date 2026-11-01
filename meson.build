@@ -21,14 +21,14 @@ if host_machine.system() == 'windows'
   socket_deps += cxx.find_library('ws2_32', required: true)
 endif
 
-# Locate sibling or subproject ezsnmp C++17 sources
+# Locate vendored third_party/ezsnmp or sibling ../ezsnmp C++17 sources
 ezsnmp_opt = get_option('ezsnmp')
 ezsnmp_root = get_option('ezsnmp_source_dir')
 if ezsnmp_root == ''
-  if fs.is_dir(join_paths(meson.current_source_dir(), '..', 'ezsnmp', 'ezsnmp', 'include'))
+  if fs.is_dir(join_paths(meson.current_source_dir(), 'third_party', 'ezsnmp', 'ezsnmp', 'include'))
+    ezsnmp_root = join_paths('third_party', 'ezsnmp')
+  elif fs.is_dir(join_paths(meson.current_source_dir(), '..', 'ezsnmp', 'ezsnmp', 'include'))
     ezsnmp_root = join_paths('..', 'ezsnmp')
-  elif fs.is_dir(join_paths(meson.current_source_dir(), 'subprojects', 'ezsnmp', 'ezsnmp', 'include'))
-    ezsnmp_root = join_paths('subprojects', 'ezsnmp')
   endif
 endif
 
