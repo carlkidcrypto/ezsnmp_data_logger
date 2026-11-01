@@ -44,6 +44,7 @@ ezsnmp_data_logger/ezsnmp_data_logger_swig.py
 src/ezsnmp_data_logger_wrap.cxx
 bindings/**/generated/
 generated_swig/
+loader.sce
 
 # Documentation builds (matching ezsnmp / purpleair repos)
 docs/_build/
