@@ -350,6 +350,24 @@ class SwigBuildExt(build_ext):
         subprocess.run(cmd, check=True)
         super().run()
 
+        should_bundle = (
+            os.environ.get("EZSNMP_DL_BUNDLE_INPLACE", "1").strip() != "0"
+            and os.environ.get("CIBUILDWHEEL", "").strip() != "1"
+        )
+        if should_bundle:
+            import bundle_native_package
+
+            seen: set[Path] = set()
+            for ext in self.extensions:
+                candidates = [Path(self.get_ext_fullpath(ext.name)).resolve()]
+                if self.inplace:
+                    inplace_name = Path(self.get_ext_filename(ext.name)).name
+                    candidates.append((ROOT_DIR / "ezsnmp_data_logger" / inplace_name).resolve())
+                for cand in candidates:
+                    if cand.is_file() and cand not in seen:
+                        seen.add(cand)
+                        bundle_native_package.bundle_artifact(cand)
+
     def build_extensions(self) -> None:
         is_msvc = getattr(self.compiler, "compiler_type", "") == "msvc"
         build_temp = self.build_temp or "build/temp"
@@ -381,14 +399,6 @@ class SwigBuildExt(build_ext):
                 ext.extra_objects = list(ext.extra_objects or []) + list(objs)
 
         super().build_extensions()
-
-        if os.environ.get("EZSNMP_DL_BUNDLE_INPLACE", "").strip() == "1":
-            import bundle_native_package
-
-            for ext in self.extensions:
-                ext_path = Path(self.get_ext_fullpath(ext.name)).resolve()
-                if ext_path.is_file():
-                    bundle_native_package.bundle_artifact(ext_path)
 
 
 class BuildPy(_build_py):

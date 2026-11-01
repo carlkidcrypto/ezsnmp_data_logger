@@ -18,6 +18,14 @@ std::string version();
 std::string ezsnmp_target_version();
 
 /**
+ * @brief Validate whether a version or git tag conforms to CalSemVer
+ * (YYYY.M.D[aN|bN|rcN|-alpha.N]).
+ * @param ver Version or tag string to validate.
+ * @return true if ver is a valid non-zero-padded CalSemVer identifier, false otherwise.
+ */
+bool is_valid_calsemver(std::string const& ver);
+
+/**
  * @brief Check whether ezsnmp SessionBase SNMP support was compiled into the binary.
  * @return true if compiled against ezsnmp C++ SessionBase + Net-SNMP, false otherwise.
  */

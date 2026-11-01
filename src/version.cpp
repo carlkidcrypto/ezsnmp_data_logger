@@ -1,5 +1,7 @@
 #include "ezsnmp_data_logger/version.h"
 
+#include <regex>
+
 #include "ezsnmp_data_logger/json_utils.h"
 
 namespace ezsnmp_data_logger {
@@ -7,6 +9,12 @@ namespace ezsnmp_data_logger {
 std::string version() { return "2026.11.1a0"; }
 
 std::string ezsnmp_target_version() { return "2026.10.28a0"; }
+
+bool is_valid_calsemver(std::string const& ver) {
+   static std::regex const kCalSemVerPattern(
+       R"(^[vV]?20\d{2}\.(?:[1-9]|1[0-2])\.(?:[1-9]|[12]\d|3[01])(?:\.(?:0|[1-9]\d*))?(?:(?:a|b|rc)(?:0|[1-9]\d*)|-(?:alpha|beta|rc)\.(?:0|[1-9]\d*))?$)");
+   return std::regex_match(ver, kCalSemVerPattern);
+}
 
 bool has_ezsnmp_support() {
 #if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
@@ -56,6 +64,7 @@ std::string build_info_json(int indent) {
    root["package"] = "ezsnmp_data_logger";
    root["version"] = version();
    root["versioning_scheme"] = "CalSemVer";
+   root["calsemver_valid"] = is_valid_calsemver(version());
    root["ezsnmp_target_version"] = ezsnmp_target_version();
    root["cpp_standard"] = "C++17";
    root["snmp_engine"] = "ezsnmp (SessionBase)";

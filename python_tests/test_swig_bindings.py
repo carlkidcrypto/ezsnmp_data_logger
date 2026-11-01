@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import shutil
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -29,6 +31,13 @@ def test_calsemver_version_and_capabilities() -> None:
     assert edl.__version__ == "2026.11.1a0"
     assert edl.version() == "2026.11.1a0"
     assert edl.ezsnmp_target_version() == "2026.10.28a0"
+    assert edl.is_valid_calsemver(edl.__version__) is True
+    assert edl.is_valid_calsemver(edl.ezsnmp_target_version()) is True
+    assert edl.is_valid_calsemver("2026.11.1") is True
+    assert edl.is_valid_calsemver("v2026.11.1a0") is True
+    assert edl.is_valid_calsemver("2026.11.1-alpha.0") is True
+    assert edl.is_valid_calsemver("2026.01.05") is False
+    assert edl.is_valid_calsemver("0.1.0") is False
     assert edl.has_sqlite3_support() is True
     assert edl.has_embedded_sqlite3() is True
 
@@ -38,10 +47,60 @@ def test_calsemver_version_and_capabilities() -> None:
     info = json.loads(edl.build_info_json(2))
     assert info["version"] == "2026.11.1a0"
     assert info["versioning_scheme"] == "CalSemVer"
+    assert info["calsemver_valid"] is True
     assert info["ezsnmp_target_version"] == "2026.10.28a0"
     assert info["self_contained"] is True
     assert info["capabilities"]["sqlite3_sink"] is True
     assert info["capabilities"]["embedded_sqlite3"] is True
+
+
+def test_all_project_manifests_synchronized_on_calsemver() -> None:
+    """Verify [VER-01]-[VER-04]: every project manifest uses synchronized CalSemVer."""
+    repo_root = Path(__file__).resolve().parent.parent
+    pyproject_path = repo_root / "pyproject.toml"
+    if not pyproject_path.is_file():
+        pytest.skip("Repository manifests unavailable outside source checkout")
+
+    expected_pep440 = edl.version()
+    assert edl.is_valid_calsemver(expected_pep440)
+    m_base = re.match(r"^(\d{4}\.\d+\.\d+)(?:a(\d+)|b(\d+)|rc(\d+))?$", expected_pep440)
+    assert m_base is not None
+    cal_core = m_base.group(1)
+    if m_base.group(2) is not None:
+        expected_semver = f"{cal_core}-alpha.{m_base.group(2)}"
+    elif m_base.group(3) is not None:
+        expected_semver = f"{cal_core}-beta.{m_base.group(3)}"
+    elif m_base.group(4) is not None:
+        expected_semver = f"{cal_core}-rc.{m_base.group(4)}"
+    else:
+        expected_semver = cal_core
+
+    pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    assert pyproject["project"]["version"] == expected_pep440
+
+    meson_text = (repo_root / "meson.build").read_text(encoding="utf-8")
+    assert f"version: '{expected_pep440}'" in meson_text
+
+    cmake_text = (repo_root / "CMakeLists.txt").read_text(encoding="utf-8")
+    assert f"VERSION {cal_core}" in cmake_text
+    assert f'EZSNMP_DL_VERSION_STRING "{expected_pep440}"' in cmake_text
+
+    doxy_text = (repo_root / ".doxygen").read_text(encoding="utf-8")
+    assert f'PROJECT_NUMBER         = "{expected_pep440}"' in doxy_text
+
+    conf_text = (repo_root / "sphinx_docs_build" / "source" / "conf.py").read_text(encoding="utf-8")
+    assert f'release = "v{expected_pep440}"' in conf_text
+
+    npm_pkg = json.loads(
+        (repo_root / "bindings" / "javascript" / "package.json").read_text(encoding="utf-8")
+    )
+    assert npm_pkg["version"] == expected_semver
+    assert edl.is_valid_calsemver(npm_pkg["version"])
+
+    csproj_text = (repo_root / "bindings" / "csharp" / "EzSnmpDataLogger.csproj").read_text(
+        encoding="utf-8"
+    )
+    assert f"<Version>{expected_semver}</Version>" in csproj_text
 
 
 def test_self_contained_native_extension_bundling(tmp_path: Path) -> None:

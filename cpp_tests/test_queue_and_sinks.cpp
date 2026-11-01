@@ -1,3 +1,4 @@
+#include <cstring>
 #include <thread>
 
 #include "ezsnmp_data_logger/csv_sink.h"

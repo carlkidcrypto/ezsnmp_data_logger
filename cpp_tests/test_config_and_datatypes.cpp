@@ -48,7 +48,7 @@ TEST(DatatypesTest, SampleSupportsTypedConstructorsAndEzSnmpResultJson) {
 }
 
 TEST(ConfigTest, TemplatesValidateAndRoundTripCleanly) {
-   for (std::string const& tpl : {"minimal", "demo", "enterprise", "snmpv3"}) {
+   for (char const* tpl : {"minimal", "demo", "enterprise", "snmpv3"}) {
       std::string json_text = generate_template_config_json(tpl, 2);
       ValidationReport rep = validate_config(json_text);
       EXPECT_TRUE(rep.valid) << "Template '" << tpl << "' failed validation";
@@ -104,6 +104,13 @@ TEST(ConfigTest, RejectsInvalidSnmpAndSinkConfigurations) {
 TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
    EXPECT_EQ(version(), "2026.11.1a0");
    EXPECT_EQ(ezsnmp_target_version(), "2026.10.28a0");
+   EXPECT_TRUE(is_valid_calsemver(version()));
+   EXPECT_TRUE(is_valid_calsemver(ezsnmp_target_version()));
+   EXPECT_TRUE(is_valid_calsemver("v2026.11.1a0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.1"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.1-alpha.0"));
+   EXPECT_FALSE(is_valid_calsemver("2026.01.05"));
+   EXPECT_FALSE(is_valid_calsemver("0.1.0"));
    EXPECT_EQ(supported_swig_languages().size(), 4u);
    std::string info = build_info_json(2);
    EXPECT_NE(info.find("CalSemVer"), std::string::npos);
