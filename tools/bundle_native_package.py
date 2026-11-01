@@ -268,9 +268,7 @@ def verify_self_contained(artifact: Path, libs_dir: Path | None = None) -> dict[
     targets = [artifact]
     if libs_dir and libs_dir.is_dir():
         for p in sorted(libs_dir.iterdir()):
-            if p.is_file() and (
-                p.suffix in (".dylib", ".dll", ".so") or ".so." in p.name
-            ):
+            if p.is_file() and (p.suffix in (".dylib", ".dll", ".so") or ".so." in p.name):
                 targets.append(p)
 
     external: list[dict[str, str]] = []
@@ -330,7 +328,12 @@ def bundle_artifact(
     libs_dir = libs_dir.resolve()
 
     search_dirs: list[Path] = list(extra_search_dirs or [])
-    for env_key in ("EZSNMP_NETSNMP_BIN_DIR", "EZSNMP_OPENSSL_BIN_DIR", "DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
+    for env_key in (
+        "EZSNMP_NETSNMP_BIN_DIR",
+        "EZSNMP_OPENSSL_BIN_DIR",
+        "DYLD_LIBRARY_PATH",
+        "LD_LIBRARY_PATH",
+    ):
         raw = os.environ.get(env_key, "")
         for part in raw.split(os.pathsep):
             if part and Path(part).is_dir():

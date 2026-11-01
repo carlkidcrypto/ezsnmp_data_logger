@@ -1,92 +1,58 @@
-================================
-SWIG Multi-Language Distribution
-================================
+================================================
+Self-Contained SWIG Multi-Language Distribution
+================================================
 
-**EzSnmp Data Logger** is built from day one so that a single **C++17** backend (powered by ``ezsnmp``'s ``SessionBase`` and ``Result`` layers) can be distributed to every language target supported by **SWIG 4.x**.
+**EzSnmp Data Logger** distributes its **C++17** backend (powered by ``ezsnmp``'s ``SessionBase`` and ``Result`` layers on the ``v2026.10.28a0`` CalSemVer alpha line) as **self-contained packages** across **4 SWIG 4.x target languages** so end users never need to install external system libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG).
 
 Supported SWIG Target Languages
 ===============================
 
-The unified generator script ``tools/generate_swig_bindings.py`` validates and emits bindings for **16 SWIG 4.x targets**:
-
 .. list-table::
    :header-rows: 1
-   :widths: 18 22 60
+   :widths: 22 28 50
 
    * - Language
      - SWIG Invocation
-     - Build Scaffold / Usage
+     - Self-Contained Packaging Mechanism
    * - **Python**
      - ``swig -c++ -python``
-     - ``pyproject.toml`` + ``setup.py`` (``pip install .``)
-   * - **JavaScript (Node.js)**
+     - ``pyproject.toml`` + ``cibuildwheel`` (``auditwheel`` on Linux, ``delocate-wheel`` on macOS, ``delvewheel`` on Windows) + embedded SQLite3 amalgamation
+   * - **JavaScript (Node.js N-API)**
      - ``swig -c++ -javascript -napi``
-     - ``bindings/javascript/package.json`` + ``binding.gyp`` (``node-gyp``)
-   * - **Java (JNI)**
-     - ``swig -c++ -java -package io.github.carlkidcrypto.ezsnmp_data_logger``
-     - ``bindings/java/CMakeLists.txt``
-   * - **C# (.NET P/Invoke)**
+     - ``bindings/javascript/`` (``node-gyp`` compiling C++17 core + embedded SQLite3 + ``bundle_native_package.py`` relocating ``libnetsnmp`` / ``libcrypto``)
+   * - **C# (.NET 8+)**
      - ``swig -c++ -csharp -namespace EzSnmpDataLogger``
-     - ``bindings/csharp/EzSnmpDataLogger.csproj``
+     - ``bindings/csharp/`` (``EzSnmpDataLogger.csproj`` + ``build_self_contained.py`` populating NuGet ``runtimes/<rid>/native/``)
    * - **Go (cgo)**
      - ``swig -c++ -go -cgo -intgosize 64``
-     - ``bindings/go/go.mod`` + ``ezsnmp_data_logger_cgo.go``
-   * - **Ruby**
-     - ``swig -c++ -ruby``
-     - ``bindings/ruby/extconf.rb`` (``mkmf``)
-   * - **Perl 5**
-     - ``swig -c++ -perl5``
-     - ``bindings/perl5/Makefile.PL`` (``ExtUtils::MakeMaker``)
-   * - **PHP 8+**
-     - ``swig -c++ -php``
-     - Generated ``php_ezsnmp_data_logger.h`` + C++ wrapper
-   * - **Lua**
-     - ``swig -c++ -lua``
-     - Generated Lua C++ module wrapper
-   * - **R**
-     - ``swig -c++ -r``
-     - ``bindings/r/src/Makevars`` (``R CMD SHLIB``)
-   * - **Tcl 8**
-     - ``swig -c++ -tcl8``
-     - Generated Tcl package C++ wrapper
-   * - **GNU Octave**
-     - ``swig -c++ -octave``
-     - Build with ``mkoctfile``
-   * - **D**
-     - ``swig -c++ -d``
-     - Generated D module + C++ wrapper
-   * - **GNU Guile**
-     - ``swig -c++ -guile``
-     - Generated Guile C++ wrapper
-   * - **Scilab**
-     - ``swig -c++ -scilab``
-     - Generated Scilab gateway C++ wrapper
-   * - **XML AST**
-     - ``swig -c++ -xml``
-     - Full machine-readable SWIG parse tree for custom FFI generators (Rust, Zig, Swift, Kotlin/Native)
+     - ``bindings/go/`` (``go.mod`` + ``build_self_contained.py`` staging bundled native runtime libraries in ``bindings/go/lib/``)
 
-Generating Bindings
+How Self-Containment Works
+==========================
+
+1. **Embedded SQLite3 Amalgamation (``tools/prepare_sqlite3_amalgamation.py``):**
+   Downloads and SHA-256-verifies the official public-domain SQLite3 C amalgamation (`3.49.1`) into ``third_party/sqlite3/`` and compiles ``sqlite3.c`` statically into every binary (`EZSNMP_DL_EMBEDDED_SQLITE3=1`), eliminating ``libsqlite3`` shared-library dependencies on Linux, macOS, and Windows.
+2. **Standalone Net-SNMP 5.10 + OpenSSL + EzSnmp ``v2026.10.28a0``:**
+   ``tools/prepare_ezsnmp_source.py`` stages ``ezsnmp`` at CalSemVer alpha tag ``v2026.10.28a0``, while ``tools/prepare_{linux,macos,windows}_netsnmp.*`` builds minimal SHA-256-verified Net-SNMP ``5.10.pre2`` libraries.
+3. **Dynamic Loader Relocation (``tools/bundle_native_package.py``):**
+   Copies all non-OS runtime shared libraries into each package's runtime folder, rewrites RPATH/install-name entries (``$ORIGIN`` via ``patchelf`` on Linux, ``@loader_path`` via ``install_name_tool`` + ``codesign`` on macOS, side-by-side DLLs on Windows), and verifies that zero external non-OS dependencies remain.
+
+Generating Wrappers
 ===================
 
-Generate all 16 language targets into ``generated_swig/<lang>/``:
-
 .. code-block:: bash
 
-   python3 tools/generate_swig_bindings.py --out-dir generated_swig
-
-Or generate a subset of languages directly into ``bindings/<lang>/generated/`` for compilation with each language's native toolchain:
-
-.. code-block:: bash
-
-   python3 tools/generate_swig_bindings.py --languages python javascript java csharp go ruby --in-bindings
+   python3 tools/generate_swig_bindings.py --languages all --out-dir build/swig_generated
 
 Cross-Language Idiomatic Usage
 ==============================
 
-Because all settings live in **JSON** and every core type exposes ``to_json()`` / ``from_json()`` alongside typed struct accessors, every target language gets an ergonomic, zero-boilerplate API:
+Python (CalSemVer Alpha)
+------------------------
 
-Python
-------
+.. code-block:: bash
+
+   pip install --pre "ezsnmp-data-logger>=2026.11.1a0"
 
 .. code-block:: python
 
@@ -97,16 +63,28 @@ Python
    for batch in batches:
        print(batch.dut_name, len(batch.samples), batch.to_json())
 
-Node.js (N-API)
----------------
+JavaScript / Node.js (N-API)
+----------------------------
 
 .. code-block:: javascript
 
-   const edl = require('./build/Release/ezsnmp_data_logger');
+   const edl = require('ezsnmp-data-logger');
 
    const dl = edl.DataLogger.from_file('configs/example.json');
    const batches = dl.run_once();
    console.log(dl.stats_json(2));
+
+C# (.NET 8+)
+------------
+
+.. code-block:: csharp
+
+   using System;
+   using EzSnmpDataLogger;
+
+   using var dl = DataLogger.from_file("configs/example.json");
+   var batches = dl.run_once();
+   Console.WriteLine(dl.stats_json(2));
 
 Go (cgo)
 --------
@@ -126,30 +104,3 @@ Go (cgo)
        dl.Run_once()
        fmt.Println(dl.Stats_json(2))
    }
-
-Java (JNI)
-----------
-
-.. code-block:: java
-
-   import io.github.carlkidcrypto.ezsnmp_data_logger.*;
-
-   public class Example {
-       public static void main(String[] args) {
-           DataLogger dl = DataLogger.from_file("configs/example.json");
-           BatchVector batches = dl.run_once();
-           System.out.println(dl.stats_json(2));
-       }
-   }
-
-C# (.NET)
----------
-
-.. code-block:: csharp
-
-   using System;
-   using EzSnmpDataLogger;
-
-   using var dl = DataLogger.from_file("configs/example.json");
-   var batches = dl.run_once();
-   Console.WriteLine(dl.stats_json(2));

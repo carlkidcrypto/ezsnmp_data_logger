@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Setuptools + SWIG 4.x C++17 build script for ezsnmp_data_logger."""
+"""Setuptools + SWIG 4.x C++17 self-contained build script for ezsnmp_data_logger."""
 
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py as _build_py
 
 ROOT_DIR = Path(__file__).resolve().parent
+if str(ROOT_DIR / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR / "tools"))
 
 if sys.platform == "darwin":
     os.environ.setdefault("ARCHFLAGS", f"-arch {platform.machine()}")
@@ -52,6 +54,8 @@ def _parse_flags(flag_str: str) -> tuple[list[str], list[str], list[str], list[s
 
 
 def _locate_ezsnmp_source_dir() -> Path | None:
+    if os.environ.get("EZSNMP_DL_DISABLE_EZSNMP_LINK", "").strip() == "1":
+        return None
     env_dir = os.environ.get("EZSNMP_SOURCE_DIR", "").strip()
     candidates = []
     if env_dir:
@@ -65,6 +69,31 @@ def _locate_ezsnmp_source_dir() -> Path | None:
     for cand in candidates:
         if (cand / "ezsnmp" / "include" / "sessionbase.h").is_file():
             return cand.resolve()
+
+    if os.environ.get("EZSNMP_DL_AUTO_FETCH_DEPS", "1").strip() != "0":
+        try:
+            import prepare_ezsnmp_source
+
+            return prepare_ezsnmp_source.ensure_ezsnmp_source()
+        except Exception:
+            return None
+    return None
+
+
+def _ensure_sqlite_amalgamation() -> Path | None:
+    """Provision embedded SQLite3 C amalgamation so zero runtime libsqlite3 is needed."""
+    if os.environ.get("EZSNMP_DL_USE_SYSTEM_SQLITE", "").strip() == "1":
+        return None
+    amalg_dir = ROOT_DIR / "third_party" / "sqlite3"
+    if (amalg_dir / "sqlite3.c").is_file() and (amalg_dir / "sqlite3.h").is_file():
+        return amalg_dir
+    if os.environ.get("EZSNMP_DL_AUTO_FETCH_DEPS", "1").strip() != "0":
+        try:
+            import prepare_sqlite3_amalgamation
+
+            return prepare_sqlite3_amalgamation.ensure_sqlite3_amalgamation(amalg_dir)
+        except Exception:
+            return None
     return None
 
 
@@ -150,40 +179,58 @@ def _configure_extension() -> Extension:
         extra_compile_args = ["-std=c++17", "-O3"]
         extra_link_args = []
 
-    # Homebrew prefix auto-discovery on macOS
     homebrew_prefixes = [Path("/opt/homebrew/opt"), Path("/usr/local/opt")]
 
-    # 1. SQLite3 detection
+    # 1. Self-contained SQLite3 amalgamation (preferred) with system fallback
     have_sqlite3 = 0
-    sq_cflags = _run_cmd_output(["pkg-config", "--cflags", "sqlite3"])
-    sq_libs = _run_cmd_output(["pkg-config", "--libs", "sqlite3"])
-    if sq_libs:
+    embedded_sqlite3 = 0
+    amalg_dir = _ensure_sqlite_amalgamation()
+    if amalg_dir is not None:
         have_sqlite3 = 1
-        inc, _, _, _ = _parse_flags(sq_cflags)
-        _, ldir, lnames, _ = _parse_flags(sq_libs)
-        include_dirs.extend(inc)
-        library_dirs.extend(ldir)
-        libraries.extend(lnames)
+        embedded_sqlite3 = 1
+        include_dirs.insert(0, str(amalg_dir.relative_to(ROOT_DIR)))
     else:
-        for hp in homebrew_prefixes:
-            if (hp / "sqlite" / "include" / "sqlite3.h").is_file():
-                have_sqlite3 = 1
-                include_dirs.append(str(hp / "sqlite" / "include"))
-                library_dirs.append(str(hp / "sqlite" / "lib"))
-                libraries.append("sqlite3")
-                break
-        if not have_sqlite3 and sys.platform != "win32":
-            if Path("/usr/include/sqlite3.h").is_file() or sys.platform == "darwin":
-                have_sqlite3 = 1
-                libraries.append("sqlite3")
+        sq_cflags = _run_cmd_output(["pkg-config", "--cflags", "sqlite3"])
+        sq_libs = _run_cmd_output(["pkg-config", "--libs", "sqlite3"])
+        if sq_libs:
+            have_sqlite3 = 1
+            inc, _, _, _ = _parse_flags(sq_cflags)
+            _, ldir, lnames, _ = _parse_flags(sq_libs)
+            include_dirs.extend(inc)
+            library_dirs.extend(ldir)
+            libraries.extend(lnames)
+        else:
+            for hp in homebrew_prefixes:
+                if (hp / "sqlite" / "include" / "sqlite3.h").is_file():
+                    have_sqlite3 = 1
+                    include_dirs.append(str(hp / "sqlite" / "include"))
+                    library_dirs.append(str(hp / "sqlite" / "lib"))
+                    libraries.append("sqlite3")
+                    break
+            if not have_sqlite3 and sys.platform != "win32":
+                if Path("/usr/include/sqlite3.h").is_file() or sys.platform == "darwin":
+                    have_sqlite3 = 1
+                    libraries.append("sqlite3")
 
-    # 2. ezsnmp + Net-SNMP detection (prefer Homebrew / pkg-config over macOS system SDK 5.6)
+    # 2. ezsnmp + Net-SNMP detection (supports standalone cibuildwheel env vars + Homebrew + pkg-config)
     have_ezsnmp = 0
     ezsnmp_dir = _locate_ezsnmp_source_dir()
     netsnmp_cflags = ""
     netsnmp_libs = ""
 
-    if sys.platform == "darwin":
+    win_inc = os.environ.get("EZSNMP_NETSNMP_INCLUDE_DIR", "").strip()
+    win_lib = os.environ.get("EZSNMP_NETSNMP_LIB_DIR", "").strip()
+    explicit_cfg = os.environ.get("EZSNMP_NETSNMP_CONFIG", "").strip()
+
+    if explicit_cfg and Path(explicit_cfg).is_file():
+        netsnmp_cflags = _run_cmd_output([explicit_cfg, "--cflags"])
+        netsnmp_libs = _run_cmd_output([explicit_cfg, "--libs"])
+    elif sys.platform == "win32" and win_inc and win_lib:
+        netsnmp_libs = "netsnmp"
+    elif Path("/usr/local/bin/net-snmp-config").is_file():
+        netsnmp_cflags = _run_cmd_output(["/usr/local/bin/net-snmp-config", "--cflags"])
+        netsnmp_libs = _run_cmd_output(["/usr/local/bin/net-snmp-config", "--libs"])
+    elif sys.platform == "darwin":
         for hp in homebrew_prefixes:
             ns_cfg = hp / "net-snmp" / "bin" / "net-snmp-config"
             if ns_cfg.is_file():
@@ -195,7 +242,7 @@ def _configure_extension() -> Extension:
         netsnmp_cflags = _run_cmd_output(["pkg-config", "--cflags", "netsnmp"])
         netsnmp_libs = _run_cmd_output(["pkg-config", "--libs", "netsnmp"])
 
-    if not netsnmp_libs and sys.platform != "darwin":
+    if not netsnmp_libs and sys.platform not in ("darwin", "win32"):
         netsnmp_cflags = _run_cmd_output(["net-snmp-config", "--cflags"])
         netsnmp_libs = _run_cmd_output(["net-snmp-config", "--libs"])
 
@@ -205,11 +252,33 @@ def _configure_extension() -> Extension:
         sources.extend(staged_srcs)
         include_dirs.extend(staged_incs)
 
-        inc, _, _, _ = _parse_flags(netsnmp_cflags)
-        _, ldir, lnames, _ = _parse_flags(netsnmp_libs)
-        include_dirs.extend(inc)
-        library_dirs.extend(ldir)
-        libraries.extend(lnames)
+        if sys.platform == "win32" and win_inc and win_lib:
+            include_dirs.extend([p for p in win_inc.split(os.pathsep) if p])
+            library_dirs.extend([p for p in win_lib.split(os.pathsep) if p])
+            libraries.extend(["netsnmp", "advapi32", "iphlpapi", "crypt32", "user32"])
+            ssl_inc = os.environ.get("EZSNMP_OPENSSL_INCLUDE_DIR", "").strip()
+            ssl_lib = os.environ.get("EZSNMP_OPENSSL_LIB_DIR", "").strip()
+            if ssl_inc:
+                include_dirs.extend([p for p in ssl_inc.split(os.pathsep) if p])
+            if ssl_lib:
+                library_dirs.extend([p for p in ssl_lib.split(os.pathsep) if p])
+        else:
+            inc, _, _, _ = _parse_flags(netsnmp_cflags)
+            _, ldir, lnames, _ = _parse_flags(netsnmp_libs)
+            include_dirs.extend(inc)
+            library_dirs.extend(ldir)
+            libraries.extend(lnames)
+
+        ssl_inc_env = os.environ.get("EZSNMP_OPENSSL_INCLUDE_DIR", "").strip()
+        ssl_lib_env = os.environ.get("EZSNMP_OPENSSL_LIB_DIR", "").strip()
+        if ssl_inc_env:
+            include_dirs.extend(
+                [p for p in ssl_inc_env.split(os.pathsep) if p and os.path.isdir(p)]
+            )
+        if ssl_lib_env:
+            library_dirs.extend(
+                [p for p in ssl_lib_env.split(os.pathsep) if p and os.path.isdir(p)]
+            )
 
         if sys.platform == "darwin":
             for hp in homebrew_prefixes:
@@ -222,16 +291,16 @@ def _configure_extension() -> Extension:
         [
             ("EZSNMP_DL_HAVE_EZSNMP", str(have_ezsnmp)),
             ("EZSNMP_DL_HAVE_SQLITE3", str(have_sqlite3)),
+            ("EZSNMP_DL_EMBEDDED_SQLITE3", str(embedded_sqlite3)),
             ("EZSNMP_DL_HAVE_LIBPQ", "0"),
         ]
     )
 
-    # Deduplicate while preserving order
     include_dirs = list(dict.fromkeys(include_dirs))
     library_dirs = list(dict.fromkeys(library_dirs))
     libraries = list(dict.fromkeys(libraries))
 
-    return Extension(
+    ext = Extension(
         name="ezsnmp_data_logger._ezsnmp_data_logger",
         sources=sources,
         include_dirs=include_dirs,
@@ -242,10 +311,14 @@ def _configure_extension() -> Extension:
         extra_link_args=extra_link_args,
         language="c++",
     )
+    ext._embedded_sqlite_c = (  # type: ignore[attr-defined]
+        str((amalg_dir / "sqlite3.c").relative_to(ROOT_DIR)) if amalg_dir else None
+    )
+    return ext
 
 
 class SwigBuildExt(build_ext):
-    """Run SWIG 4.x before compiling the C++17 Python extension."""
+    """Run SWIG 4.x, compile embedded SQLite3 C amalgamation, and build C++17 extension."""
 
     def run(self) -> None:
         swig_bin = shutil.which("swig")
@@ -277,6 +350,46 @@ class SwigBuildExt(build_ext):
         subprocess.run(cmd, check=True)
         super().run()
 
+    def build_extensions(self) -> None:
+        is_msvc = getattr(self.compiler, "compiler_type", "") == "msvc"
+        build_temp = self.build_temp or "build/temp"
+        os.makedirs(build_temp, exist_ok=True)
+
+        # Strip -Wstrict-prototypes if present on POSIX compilers when building C++
+        compiler_so = getattr(self.compiler, "compiler_so", None)
+        if isinstance(compiler_so, list) and "-Wstrict-prototypes" in compiler_so:
+            compiler_so.remove("-Wstrict-prototypes")
+
+        for ext in self.extensions:
+            sqlite_c = getattr(ext, "_embedded_sqlite_c", None)
+            if sqlite_c and os.path.isfile(sqlite_c):
+                c_macros = [
+                    ("SQLITE_THREADSAFE", "1"),
+                    ("SQLITE_ENABLE_FTS5", "1"),
+                    ("SQLITE_ENABLE_JSON1", "1"),
+                    ("SQLITE_OMIT_LOAD_EXTENSION", "1"),
+                ]
+                c_postargs = ["/O2"] if is_msvc else ["-O2", "-fPIC", "-w"]
+                objs = self.compiler.compile(
+                    [sqlite_c],
+                    output_dir=build_temp,
+                    macros=c_macros,
+                    include_dirs=[os.path.dirname(sqlite_c)],
+                    debug=self.debug,
+                    extra_postargs=c_postargs,
+                )
+                ext.extra_objects = list(ext.extra_objects or []) + list(objs)
+
+        super().build_extensions()
+
+        if os.environ.get("EZSNMP_DL_BUNDLE_INPLACE", "").strip() == "1":
+            import bundle_native_package
+
+            for ext in self.extensions:
+                ext_path = Path(self.get_ext_fullpath(ext.name)).resolve()
+                if ext_path.is_file():
+                    bundle_native_package.bundle_artifact(ext_path)
+
 
 class BuildPy(_build_py):
     """Ensure SWIG-generated ezsnmp_data_logger.py exists prior to packaging Python modules."""
@@ -290,6 +403,7 @@ setup(
     packages=find_packages(include=["ezsnmp_data_logger", "ezsnmp_data_logger.*"]),
     package_data={
         "ezsnmp_data_logger.gui": ["static/*"],
+        "ezsnmp_data_logger": [".dylibs/*", "libs/*", "*.dll"],
     },
     include_package_data=True,
     ext_modules=[_configure_extension()],

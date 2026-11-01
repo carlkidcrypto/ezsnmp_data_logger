@@ -6,10 +6,16 @@
 namespace ezsnmp_data_logger {
 
 /**
- * @brief Return the semantic version string of ezsnmp_data_logger.
- * @return Semantic version string (e.g. "0.1.0").
+ * @brief Return the CalSemVer version string of ezsnmp_data_logger.
+ * @return CalSemVer version string (e.g. "2026.11.1a0").
  */
 std::string version();
+
+/**
+ * @brief Return the standardized CalSemVer alpha baseline version of ezsnmp targeted by this build.
+ * @return Target ezsnmp CalSemVer string (e.g. "2026.10.28a0").
+ */
+std::string ezsnmp_target_version();
 
 /**
  * @brief Check whether ezsnmp SessionBase SNMP support was compiled into the binary.
@@ -30,19 +36,25 @@ bool has_netsnmp_support();
 bool has_sqlite3_support();
 
 /**
+ * @brief Check whether SQLite3 was statically embedded via the SQLite3 C amalgamation.
+ * @return true if statically embedded with zero external libsqlite3 dependency, false otherwise.
+ */
+bool has_embedded_sqlite3();
+
+/**
  * @brief Check whether PostgreSQL (libpq) sink support was compiled into the binary.
  * @return true if compiled with libpq support, false otherwise.
  */
 bool has_psql_support();
 
 /**
- * @brief Return a list of SWIG target languages supported by the interface definitions.
- * @return Vector of SWIG target language identifiers.
+ * @brief Return the supported SWIG target languages ("python", "javascript", "csharp", "go").
+ * @return Vector of supported SWIG target language identifiers.
  */
 std::vector<std::string> supported_swig_languages();
 
 /**
- * @brief Return a JSON object string summarizing version and compiled capabilities.
+ * @brief Return a JSON object string summarizing version, CalSemVer baseline, and capabilities.
  * @param indent Pretty-print indentation (-1 for compact single-line JSON).
  * @return JSON string describing build capabilities.
  */

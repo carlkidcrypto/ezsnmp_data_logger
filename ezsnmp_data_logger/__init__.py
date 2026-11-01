@@ -31,7 +31,9 @@ from .ezsnmp_data_logger import (
     ValidationReport,
     build_info_json,
     config_json_schema,
+    ezsnmp_target_version,
     generate_template_config_json,
+    has_embedded_sqlite3,
     has_ezsnmp_support,
     has_psql_support,
     has_sqlite3_support,
@@ -44,7 +46,7 @@ from .ezsnmp_data_logger import (
     version,
 )
 
-__version__ = "0.2.0"
+__version__ = "2026.11.1a0"
 
 __all__ = [
     "__version__",
@@ -78,7 +80,9 @@ __all__ = [
     "ValidationReport",
     "build_info_json",
     "config_json_schema",
+    "ezsnmp_target_version",
     "generate_template_config_json",
+    "has_embedded_sqlite3",
     "has_ezsnmp_support",
     "has_psql_support",
     "has_sqlite3_support",

@@ -1,4 +1,4 @@
-"""Verify multi-language SWIG codegen and repository JSON config templates."""
+"""Verify 4-language SWIG codegen (python, javascript, csharp, go) and JSON config templates."""
 
 from __future__ import annotations
 
@@ -22,8 +22,14 @@ def test_all_repository_json_configs_are_valid() -> None:
         assert rep.valid is True, f"{jf.name} failed validation: {list(rep.errors)}"
 
 
+def test_supported_swig_targets_match_bindings_scaffolds() -> None:
+    assert list(SWIG_LANGUAGE_TARGETS.keys()) == ["python", "javascript", "csharp", "go"]
+    bindings_dirs = sorted(p.name for p in (REPO_ROOT / "bindings").iterdir() if p.is_dir())
+    assert bindings_dirs == ["csharp", "go", "javascript"]
+
+
 @pytest.mark.skipif(shutil.which("swig") is None, reason="SWIG CLI not installed on PATH")
-def test_swig_generates_wrappers_for_all_16_targets(tmp_path: Path) -> None:
+def test_swig_generates_wrappers_for_all_4_targets(tmp_path: Path) -> None:
     swig_bin = shutil.which("swig")
     assert swig_bin is not None
     for lang in SWIG_LANGUAGE_TARGETS:

@@ -1,5 +1,4 @@
-// Universal SWIG exception translation across all supported target languages
-#ifndef SWIGXML
+// SWIG exception translation across supported target languages (python, javascript, csharp, go)
 %include <exception.i>
 
 %{
@@ -27,4 +26,3 @@
       SWIG_exception(SWIG_RuntimeError, e.what());
    }
 }
-#endif

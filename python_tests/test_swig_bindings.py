@@ -1,18 +1,20 @@
-"""Tests for the Python SWIG 4.x C++17 bindings of ezsnmp_data_logger."""
+"""Tests for the Python SWIG 4.x C++17 bindings and self-containment of ezsnmp_data_logger."""
 
 from __future__ import annotations
 
 import ast
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 import ezsnmp_data_logger as edl
+from tools import bundle_native_package
 
 
 def test_init_py_contains_only_imports_and_metadata() -> None:
-    """Verify [GEN-004]: __init__.py has no executable logic or import-time side effects."""
+    """Verify [GEN-04]: __init__.py has no executable logic or import-time side effects."""
     init_path = Path(edl.__file__).resolve()
     tree = ast.parse(init_path.read_text(encoding="utf-8"))
     for node in tree.body:
@@ -23,20 +25,44 @@ def test_init_py_contains_only_imports_and_metadata() -> None:
         ), f"Disallowed statement in __init__.py: {type(node).__name__}"
 
 
-def test_version_and_capabilities() -> None:
-    assert edl.version() == "0.2.0"
+def test_calsemver_version_and_capabilities() -> None:
+    assert edl.__version__ == "2026.11.1a0"
+    assert edl.version() == "2026.11.1a0"
+    assert edl.ezsnmp_target_version() == "2026.10.28a0"
     assert edl.has_sqlite3_support() is True
+    assert edl.has_embedded_sqlite3() is True
+
     langs = list(edl.supported_swig_languages())
-    assert "python" in langs
-    assert "javascript" in langs
-    assert "java" in langs
-    assert "csharp" in langs
-    assert "go" in langs
+    assert langs == ["python", "javascript", "csharp", "go"]
 
     info = json.loads(edl.build_info_json(2))
-    assert info["version"] == "0.2.0"
+    assert info["version"] == "2026.11.1a0"
+    assert info["versioning_scheme"] == "CalSemVer"
+    assert info["ezsnmp_target_version"] == "2026.10.28a0"
+    assert info["self_contained"] is True
     assert info["capabilities"]["sqlite3_sink"] is True
-    assert info["capabilities"]["ezsnmp"] is True
+    assert info["capabilities"]["embedded_sqlite3"] is True
+
+
+def test_self_contained_native_extension_bundling(tmp_path: Path) -> None:
+    """Verify [PKG-02]/[PKG-03]/[PKG-06]: zero external libsqlite3 dep & clean native bundling."""
+    pkg_dir = Path(edl.__file__).resolve().parent
+    ext_candidates = list(pkg_dir.glob("_ezsnmp_data_logger*.so")) + list(
+        pkg_dir.glob("_ezsnmp_data_logger*.pyd")
+    )
+    assert len(ext_candidates) >= 1
+    src_ext = ext_candidates[0]
+
+    staged_ext = tmp_path / src_ext.name
+    shutil.copy2(src_ext, staged_ext)
+
+    report = bundle_native_package.bundle_artifact(staged_ext)
+    assert report["ok"] is True, f"External deps remained after bundling: {report}"
+    assert report["external_dependencies"] == []
+
+    # Verify SQLite3 was statically embedded (not copied as an external shared library)
+    bundled_names = [name.lower() for name in report.get("bundled_libraries", [])]
+    assert not any("sqlite" in name for name in bundled_names)
 
 
 def test_datatypes_and_ezsnmp_result_ingestion() -> None:
@@ -112,4 +138,4 @@ def test_data_logger_lifecycle_and_cli_runner(tmp_path: Path) -> None:
     # Verify programmatic CliRunner
     cli_res = edl.CliRunner.execute(edl.StringVector(["version", "--json"]))
     assert cli_res.exit_code == 0
-    assert json.loads(cli_res.stdout_text)["version"] == "0.2.0"
+    assert json.loads(cli_res.stdout_text)["version"] == "2026.11.1a0"

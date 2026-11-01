@@ -94,7 +94,9 @@ class EzSnmpPoller : public ISnmpPoller {
 
   private:
    DutConfig dut_;
+#if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
    std::unique_ptr<::SessionBase> session_;
+#endif
 };
 
 /**

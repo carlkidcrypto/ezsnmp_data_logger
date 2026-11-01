@@ -1,20 +1,24 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = [
+    "setuptools>=75.0.0",
+    "wheel>=0.45.0",
+    "swig>=4.3.0",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ezsnmp-data-logger"
-version = "0.2.0"
-description = "C++17 SNMP Data Logger powered by ezsnmp with SWIG multi-language bindings, CLI, and cross-platform GUI."
+version = "2026.11.1a0"
+description = "Self-contained C++17 SNMP Data Logger powered by ezsnmp with SWIG bindings (Python, Node.js, C#, Go), CLI, and cross-platform GUI."
 readme = "README.rst"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [
     {name = "carlkidcrypto"}
 ]
-keywords = ["snmp", "ezsnmp", "net-snmp", "telemetry", "data-logger", "swig", "c++17", "gui", "cli"]
+keywords = ["snmp", "ezsnmp", "net-snmp", "telemetry", "data-logger", "swig", "c++17", "gui", "cli", "calsemver"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Intended Audience :: Telecommunications Industry",
@@ -23,18 +27,23 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C++",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Monitoring",
     "Topic :: System :: Networking :: Monitoring",
 ]
 dependencies = [
-    "ezsnmp>=2.0.0",
+    "ezsnmp>=2026.10.28a0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "black>=24.0.0",
+    "cibuildwheel>=2.22.0",
+    "yamllint>=1.35.0",
     "sphinx>=7.0.0",
     "furo",
     "breathe",
@@ -50,14 +59,48 @@ Documentation = "https://carlkidcrypto.github.io/ezsnmp_data_logger/"
 Repository = "https://github.com/carlkidcrypto/ezsnmp_data_logger"
 Issues = "https://github.com/carlkidcrypto/ezsnmp_data_logger/issues"
 
+[tool.cibuildwheel]
+manylinux-x86_64-image = "manylinux_2_28"
+skip = "cp39-* cp310-* pp*"
+environment = { CIBW_BUILD_VERBOSITY = "1" }
+test-requires = ["pytest"]
+test-command = "pytest {project}/python_tests -k 'not swig_generates'"
+
+[[tool.cibuildwheel.overrides]]
+select = "*musllinux*"
+before-all = "apk add openssl git curl && bash tools/prepare_linux_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
+
+[tool.cibuildwheel.linux]
+environment = { CIBW_BUILD_VERBOSITY = "1", PATH = "/usr/local/bin:$PATH", LD_LIBRARY_PATH = "/usr/local/lib:$LD_LIBRARY_PATH" }
+before-all = "bash tools/prepare_linux_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
+repair-wheel-command = "auditwheel repair --strip -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+archs = "arm64"
+environment = { PATH = "/usr/local/bin:/opt/homebrew/bin:$PATH", EZSNMP_NETSNMP_CONFIG = "/usr/local/bin/net-snmp-config", EZSNMP_OPENSSL_INCLUDE_DIR = "/usr/local/include:/opt/homebrew/opt/openssl@3/include:/usr/local/opt/openssl@3/include", EZSNMP_OPENSSL_LIB_DIR = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib", DYLD_LIBRARY_PATH = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib" }
+before-all = "HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3 && sudo bash tools/prepare_macos_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64", "x86", "ARM64"]
+test-skip = "*-win_arm64"
+before-all = "python tools/prepare_sqlite3_amalgamation.py && python tools/prepare_ezsnmp_source.py"
+environment-pass = ["EZSNMP_NETSNMP_INCLUDE_DIR", "EZSNMP_NETSNMP_LIB_DIR", "EZSNMP_NETSNMP_BIN_DIR", "EZSNMP_OPENSSL_BIN_DIR", "EZSNMP_OPENSSL_INCLUDE_DIR", "EZSNMP_OPENSSL_LIB_DIR"]
+repair-wheel-command = [
+    "delvewheel show --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" {wheel}",
+    "delvewheel repair --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" -w {dest_dir} {wheel}",
+]
+
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = ["py311", "py312", "py313"]
 extend-exclude = '''
 (
     ^/ezsnmp_data_logger/ezsnmp_data_logger\.py$
   | ^/build/
   | ^/docs/
+  | ^/third_party/
+  | ^/subprojects/ezsnmp/
   | ^/generated_swig/
   | ^/bindings/.*/generated/
 )

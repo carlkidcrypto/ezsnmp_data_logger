@@ -6,16 +6,8 @@
 #endif
 
 %include <stdint.i>
-#ifdef SWIGXML
-namespace std {
-   class string {};
-   template <class T>
-   class vector {};
-}
-#else
 %include <std_string.i>
 %include <std_vector.i>
-#endif
 
 %include "exceptions.i"
 %include "datatypes.i"

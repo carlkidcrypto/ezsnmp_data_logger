@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 project = "EzSnmp Data Logger"
 copyright = "2024-%Y, carlkidcrypto"
 author = "carlkidcrypto"
-release = "v0.2.0"
+release = "v2026.11.1a0"
 
 # -- General configuration ---------------------------------------------------
 

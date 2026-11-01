@@ -1,7 +1,7 @@
 project(
   'ezsnmp_data_logger',
-  'cpp',
-  version: '0.2.0',
+  ['c', 'cpp'],
+  version: '2026.11.1a0',
   license: 'MIT',
   default_options: [
     'cpp_std=c++17',
@@ -81,9 +81,38 @@ elif ezsnmp_opt.enabled()
   error('ezsnmp feature enabled, but netsnmp or ezsnmp_source_dir was not found')
 endif
 
-# SQLite3 dependency
-sqlite_dep = dependency('sqlite3', required: get_option('sqlite3'))
-have_sqlite3 = sqlite_dep.found()
+# SQLite3 dependency: prefer self-contained third_party/sqlite3 amalgamation
+embedded_sqlite3 = false
+sqlite_link_libs = []
+sqlite_inc_dirs = []
+sqlite_dep = declare_dependency()
+
+if fs.is_file(join_paths(meson.current_source_dir(), 'third_party', 'sqlite3', 'sqlite3.c'))
+  embedded_sqlite3 = true
+  have_sqlite3 = true
+  sqlite_inc_dirs = [include_directories('third_party/sqlite3')]
+  sqlite_c_args = [
+    '-DSQLITE_THREADSAFE=1',
+    '-DSQLITE_ENABLE_FTS5=1',
+    '-DSQLITE_ENABLE_JSON1=1',
+    '-DSQLITE_OMIT_LOAD_EXTENSION=1',
+  ]
+  if cxx.get_id() != 'msvc'
+    sqlite_c_args += ['-w']
+  endif
+  sqlite_embedded_lib = static_library(
+    'ezsnmp_dl_sqlite3_embedded',
+    'third_party/sqlite3/sqlite3.c',
+    include_directories: sqlite_inc_dirs,
+    c_args: sqlite_c_args,
+    pic: true,
+  )
+  sqlite_link_libs = [sqlite_embedded_lib]
+  message('Embedding self-contained SQLite3 amalgamation from third_party/sqlite3/sqlite3.c')
+else
+  sqlite_dep = dependency('sqlite3', required: get_option('sqlite3'))
+  have_sqlite3 = sqlite_dep.found()
+endif
 
 # Optional PostgreSQL (libpq) dependency
 pq_dep = dependency('libpq', required: get_option('psql'))
@@ -92,17 +121,18 @@ have_libpq = pq_dep.found()
 dl_compile_args = [
   '-DEZSNMP_DL_HAVE_EZSNMP=' + (have_ezsnmp ? '1' : '0'),
   '-DEZSNMP_DL_HAVE_SQLITE3=' + (have_sqlite3 ? '1' : '0'),
+  '-DEZSNMP_DL_EMBEDDED_SQLITE3=' + (embedded_sqlite3 ? '1' : '0'),
   '-DEZSNMP_DL_HAVE_LIBPQ=' + (have_libpq ? '1' : '0'),
 ]
 
 public_inc = include_directories('include')
-all_inc = [public_inc]
+all_inc = [public_inc] + sqlite_inc_dirs
 if have_ezsnmp
   all_inc += [ezsnmp_inc_dirs]
 endif
 
 all_deps = [thread_dep] + socket_deps + ezsnmp_deps
-if have_sqlite3
+if have_sqlite3 and not embedded_sqlite3
   all_deps += [sqlite_dep]
 endif
 if have_libpq
@@ -130,7 +160,7 @@ ezsnmp_dl_lib = both_libraries(
   core_sources,
   include_directories: all_inc,
   cpp_args: dl_compile_args,
-  link_whole: ezsnmp_link_libs,
+  link_whole: ezsnmp_link_libs + sqlite_link_libs,
   dependencies: all_deps,
   install: true,
 )

@@ -1,12 +1,21 @@
 {
   "name": "ezsnmp-data-logger",
-  "version": "0.2.0",
-  "description": "Node.js N-API bindings for the C++17 ezsnmp_data_logger engine",
+  "version": "2026.11.1-alpha.0",
+  "description": "Self-contained Node.js N-API bindings for the C++17 ezsnmp_data_logger engine",
   "license": "MIT",
-  "main": "build/Release/ezsnmp_data_logger.node",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "build/Release/ezsnmp_data_logger.node",
+    "build/Release/.dylibs/**",
+    "build/Release/libs/**",
+    "build/Release/*.dll"
+  ],
   "scripts": {
+    "prepare-deps": "python3 ../../tools/prepare_sqlite3_amalgamation.py && python3 ../../tools/prepare_ezsnmp_source.py",
     "generate-swig": "python3 ../../tools/generate_swig_bindings.py --languages javascript --output-dir ./generated",
-    "build": "npm run generate-swig && node-gyp rebuild"
+    "bundle-native": "python3 ../../tools/bundle_native_package.py ./build/Release/ezsnmp_data_logger.node",
+    "build": "npm run prepare-deps && npm run generate-swig && node-gyp rebuild && npm run bundle-native"
   },
   "dependencies": {
     "node-addon-api": "^8.0.0"

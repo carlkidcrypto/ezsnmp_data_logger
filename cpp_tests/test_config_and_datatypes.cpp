@@ -102,8 +102,10 @@ TEST(ConfigTest, RejectsInvalidSnmpAndSinkConfigurations) {
 }
 
 TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
-   EXPECT_FALSE(version().empty());
-   EXPECT_GE(supported_swig_languages().size(), 15u);
+   EXPECT_EQ(version(), "2026.11.1a0");
+   EXPECT_EQ(ezsnmp_target_version(), "2026.10.28a0");
+   EXPECT_EQ(supported_swig_languages().size(), 4u);
    std::string info = build_info_json(2);
+   EXPECT_NE(info.find("CalSemVer"), std::string::npos);
    EXPECT_NE(info.find("swig_target_languages"), std::string::npos);
 }

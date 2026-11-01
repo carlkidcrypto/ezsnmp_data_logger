@@ -1,4 +1,4 @@
 [wrap-git]
 url = https://github.com/carlkidcrypto/ezsnmp.git
-revision = main
+revision = v2026.10.28a0
 depth = 1

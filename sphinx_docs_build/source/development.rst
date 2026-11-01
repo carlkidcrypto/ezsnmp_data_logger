@@ -2,38 +2,33 @@
 Development Guide
 =================
 
-This guide covers building the C++17 engine, running the GoogleTest and ``pytest`` suites, generating multi-language SWIG bindings, and formatting code for **EzSnmp Data Logger**.
+This guide covers building the self-contained C++17 engine, running GoogleTest and ``pytest`` suites, generating the 4 SWIG language bindings (Python, JavaScript/Node.js N-API, C#, Go), and formatting code for **EzSnmp Data Logger**.
 
-Prerequisites
-=============
+CalSemVer Alpha Standardization
+===============================
 
-* **C++17 Compiler:** GCC 9+, Clang 11+, Apple Clang 13+, or MSVC 2019+
-* **Net-SNMP & OpenSSL:** Required by the ``ezsnmp`` C++17 ``SessionBase`` layer
-* **SQLite3:** Required for the embedded SQLite3 WAL sink (``libpq`` optional for PostgreSQL/TimescaleDB)
-* **SWIG 4.x:** Required to generate target-language bindings
-* **Build Tools:** Meson (>= 1.1) + Ninja, or CMake (>= 3.16), plus Python 3.9+
+``ezsnmp_data_logger`` follows **CalSemVer** (`YYYY.M.DaN`, currently ``2026.11.1a0``) and standardizes on `ezsnmp <https://github.com/carlkidcrypto/ezsnmp>`_'s self-contained CalSemVer alpha release stream (``ezsnmp>=2026.10.28a0``, git tag ``v2026.10.28a0``) until a stable CalSemVer release is published.
 
-Installing System Dependencies
-------------------------------
-
-**macOS (Homebrew):**
+Always pass ``--pre`` when installing ``ezsnmp`` or ``ezsnmp-data-logger`` from PyPI during the alpha testing period:
 
 .. code-block:: bash
 
-   brew install net-snmp openssl@3 sqlite swig meson ninja cmake doxygen
+   python3 -m pip install --pre -r requirements.txt
 
-**Ubuntu / Debian:**
+Provisioning Self-Contained Native Sources
+==========================================
+
+Before compiling from a fresh git clone, provision the SHA-256-verified SQLite3 C amalgamation (`third_party/sqlite3/`) and pinned ``ezsnmp`` ``v2026.10.28a0`` C++17 sources:
 
 .. code-block:: bash
 
-   sudo apt-get update
-   sudo apt-get install -y build-essential libsnmp-dev libssl-dev libsqlite3-dev \
-       libpq-dev swig meson ninja-build cmake libgtest-dev doxygen
+   python3 tools/prepare_sqlite3_amalgamation.py
+   python3 tools/prepare_ezsnmp_source.py
+
+(Note: ``python3 setup.py build_ext`` runs both helpers automatically when ``EZSNMP_DL_AUTO_FETCH_DEPS`` is not ``0``.)
 
 Building & Testing C++17 Core (Meson)
 =====================================
-
-Meson automatically discovers a sibling ``../ezsnmp`` checkout (or resolves ``subprojects/ezsnmp.wrap``), compiles ``libezsnmp_data_logger``, the native ``ezsnmp-data-logger`` CLI binary, and all 5 GoogleTest suites:
 
 .. code-block:: bash
 
@@ -41,34 +36,30 @@ Meson automatically discovers a sibling ``../ezsnmp`` checkout (or resolves ``su
    meson compile -C build
    meson test -C build -v
 
-Building & Testing C++17 Core (CMake)
-=====================================
+Building & Testing Python Package, CLI & Cross-Platform GUI
+===========================================================
 
 .. code-block:: bash
 
-   cmake -B build-cmake -DEZSNMP_SOURCE_DIR=../ezsnmp/ezsnmp
-   cmake --build build-cmake -j
+   python3 -m pip install --pre -e .
+   pytest -v
 
-Building Python Package, CLI & Cross-Platform GUI
+Generating & Bundling the 4 SWIG Language Targets
 =================================================
 
 .. code-block:: bash
 
-   python3 -m pip install -e .
-   pytest -v
+   # Generate wrappers for python, javascript (Node.js N-API), csharp, and go
+   python3 tools/generate_swig_bindings.py --out-dir build/swig_generated
 
-Generating All 16 SWIG Language Targets
-=======================================
-
-.. code-block:: bash
-
-   python3 tools/generate_swig_bindings.py --out-dir generated_swig
+   # Relocate and bundle non-OS runtime libraries for any compiled native artifact
+   python3 tools/bundle_native_package.py <path-to-compiled-extension> --json
 
 Code Formatting & Workflow Linting
 ==================================
 
-* **C++17 Formatting:** ``clang-format -i include/ezsnmp_data_logger/*.h src/*.cpp cpp_tests/*.h cpp_tests/*.cpp`` (never format generated ``src/ezsnmp_data_logger_wrap.cxx``)
-* **Python Formatting:** ``black --line-length 100 setup.py tools/ ezsnmp_data_logger/ python_tests/`` (excluding SWIG-generated ``ezsnmp_data_logger/ezsnmp_data_logger.py``)
+* **C++17 Formatting:** ``clang-format -i include/ezsnmp_data_logger/*.h src/*.cpp cpp_tests/*.h cpp_tests/*.cpp`` (excluding generated ``src/ezsnmp_data_logger_wrap.cxx``)
+* **Python Formatting:** ``black .`` (configured in ``pyproject.toml`` to skip SWIG-generated ``ezsnmp_data_logger/ezsnmp_data_logger.py`` and ``third_party/``)
 * **GitHub Actions Workflows:** ``yamllint -c .yamllint .github/workflows/*.yml`` and ``actionlint``
 
 Software Requirements Governance

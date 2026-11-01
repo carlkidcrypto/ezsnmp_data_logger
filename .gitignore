@@ -43,7 +43,13 @@ ezsnmp_data_logger/ezsnmp_data_logger.py
 ezsnmp_data_logger/ezsnmp_data_logger_swig.py
 src/ezsnmp_data_logger_wrap.cxx
 bindings/**/generated/
+bindings/**/libs/
+bindings/**/.dylibs/
+bindings/**/runtimes/
+bindings/go/lib/
 generated_swig/
+third_party/sqlite3/
+subprojects/ezsnmp/
 loader.sce
 
 # Documentation builds (matching ezsnmp / purpleair repos)

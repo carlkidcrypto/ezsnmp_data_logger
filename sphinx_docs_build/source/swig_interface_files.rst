@@ -2,7 +2,7 @@
 SWIG Interface File(s)
 =======================
 
-The following modular SWIG 4.x interface files in ``interface/`` wrap the C++17 ``ezsnmp_data_logger`` engine for Python, JavaScript (Node.js N-API), Java, C#, Go, Ruby, Perl 5, PHP, Lua, R, Tcl 8, Octave, D, Guile, Scilab, and XML AST inspection.
+The following modular SWIG 4.x interface files in ``interface/`` wrap the C++17 ``ezsnmp_data_logger`` engine for the 4 supported target languages: Python, JavaScript (Node.js N-API), C# (.NET P/Invoke), and Go (cgo).
 
 For more information on SWIG interface syntax, see the `SWIG 4 Documentation <https://www.swig.org/Doc4.3/SWIGDocumentation.html>`_.
 
