@@ -1,0 +1,56 @@
+name: Validate Workflow Files
+
+concurrency:
+  group: verify_syntax-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/*.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/*.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install yamllint
+        run: python -m pip install yamllint==1.38.0
+
+      - name: Install actionlint
+        run: |
+          set -e
+          version=$(cat tools/actionlint-version.txt)
+          archive="actionlint_${version#v}_linux_amd64.tar.gz"
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/${version}/${archive}" -o /tmp/actionlint.tar.gz
+          mkdir -p /tmp/actionlint
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp/actionlint
+          sudo install -m 0755 /tmp/actionlint/actionlint /usr/local/bin/actionlint
+          actionlint -version
+
+      - name: Lint workflow YAML files
+        run: |
+          set -e
+          find .github/workflows/ -name "*.yml" -print0 | xargs -0 yamllint -c .yamllint
+
+      - name: Validate workflow actions
+        run: |
+          set -e
+          find .github/workflows/ -name "*.yml" -print0 | xargs -0 actionlint -shellcheck=

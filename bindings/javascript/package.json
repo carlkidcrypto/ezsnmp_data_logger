@@ -1,0 +1,14 @@
+{
+  "name": "ezsnmp-data-logger",
+  "version": "0.2.0",
+  "description": "Node.js N-API bindings for the C++17 ezsnmp_data_logger engine",
+  "license": "MIT",
+  "main": "build/Release/ezsnmp_data_logger.node",
+  "scripts": {
+    "generate-swig": "python3 ../../tools/generate_swig_bindings.py --languages javascript --output-dir ./generated",
+    "build": "npm run generate-swig && node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.0.0"
+  }
+}

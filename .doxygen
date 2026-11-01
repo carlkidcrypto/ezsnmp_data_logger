@@ -1,0 +1,24 @@
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = "EzSnmp Data Logger"
+PROJECT_NUMBER         = "0.2.0"
+PROJECT_BRIEF          = "C++17 SNMP Data Logger powered by ezsnmp with Multi-Language SWIG Bindings, CLI, and Cross-Platform GUI"
+OUTPUT_DIRECTORY       = ./doxygen_docs_build/doxygen
+CREATE_SUBDIRS         = NO
+OUTPUT_LANGUAGE        = English
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+INPUT                  = ./include/ezsnmp_data_logger ./src
+FILE_PATTERNS          = *.h *.cpp
+RECURSIVE              = YES
+EXCLUDE                = ./src/ezsnmp_data_logger_wrap.cxx
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+PREDEFINED             = EZSNMP_DL_HAVE_EZSNMP=1 EZSNMP_DL_HAVE_SQLITE3=1 EZSNMP_DL_HAVE_LIBPQ=1
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml

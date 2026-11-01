@@ -1,0 +1,50 @@
+name: Black
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.py'
+      - '*.py'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - '.github/workflows/black.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.py'
+      - '*.py'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - '.github/workflows/black.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-syntax:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify_syntax.yml
+  black:
+    needs: verify-syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Black
+        run: python -m pip install black
+
+      - name: Check Python Formatting
+        run: black --check .

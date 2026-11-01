@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EzSnmp Data Logger — Cross-Platform CLI Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-theme="dark">
+  <header class="topbar">
+    <div>
+      <h1>EzSnmp Data Logger Studio</h1>
+      <p id="config-subtitle" class="subtitle">Loading JSON configuration...</p>
+    </div>
+    <div class="toolbar">
+      <button id="btn-theme" class="btn">Toggle Theme</button>
+      <button id="btn-once" class="btn">Run 1 Cycle (--once)</button>
+      <button id="btn-probe-all" class="btn">Probe DUTs</button>
+      <button id="btn-start" class="btn btn-accent">Start CLI Logger</button>
+      <button id="btn-stop" class="btn btn-danger">Stop CLI Logger</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">1. Live Dashboard</button>
+    <button class="tab" data-tab="studio">2. EzSnmp GET / WALK / SET</button>
+    <button class="tab" data-tab="explorer">3. Data Explorer</button>
+    <button class="tab" data-tab="json">4. JSON Settings &amp; Schema</button>
+    <button class="tab" data-tab="audit">5. CLI Command Audit</button>
+  </nav>
+
+  <main class="container">
+    <!-- Tab 1: Dashboard -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="kpi-grid">
+        <div class="kpi-card"><span>CLI State</span><strong id="kpi-state">IDLE</strong></div>
+        <div class="kpi-card"><span>Cycles</span><strong id="kpi-cycles">0</strong></div>
+        <div class="kpi-card"><span>Batches</span><strong id="kpi-batches">0</strong></div>
+        <div class="kpi-card"><span>Samples</span><strong id="kpi-samples">0</strong></div>
+        <div class="kpi-card"><span>Queue Depth</span><strong id="kpi-queue">0</strong></div>
+        <div class="kpi-card"><span>Poll / Sink Errors</span><strong id="kpi-errors">0 / 0</strong></div>
+      </div>
+
+      <div class="card">
+        <h3>Real-Time SNMP Numeric Telemetry (streamed from <code>ezsnmp-data-logger run --json</code>)</h3>
+        <svg id="telemetry-chart" viewBox="0 0 900 240" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="card">
+        <h3>Live CLI JSON Event Stream</h3>
+        <pre id="cli-log" class="code-box"></pre>
+      </div>
+    </section>
+
+    <!-- Tab 2: EzSnmp Request / SET Studio -->
+    <section id="tab-studio" class="tab-panel">
+      <div class="card">
+        <h3>On-Demand EzSnmp Request / SET (executed via <code>ezsnmp-data-logger request|set</code>)</h3>
+        <div class="form-row">
+          <label>DUT <select id="req-dut"></select></label>
+          <label>Operation
+            <select id="req-op">
+              <option value="get">get</option>
+              <option value="getnext">getnext</option>
+              <option value="walk">walk</option>
+              <option value="bulkget">bulkget</option>
+              <option value="bulkwalk">bulkwalk</option>
+              <option value="set">set</option>
+            </select>
+          </label>
+          <label class="grow">OID(s) (comma-separated)
+            <input id="req-oids" type="text" value="1.3.6.1.2.1.1.3.0, 1.3.6.1.2.1.1.5.0" />
+          </label>
+        </div>
+        <div class="form-row">
+          <label>SET Type
+            <select id="req-set-type">
+              <option value="s">s (String)</option>
+              <option value="i">i (Integer)</option>
+              <option value="u">u (Unsigned)</option>
+              <option value="t">t (Timeticks)</option>
+              <option value="a">a (IPAddr)</option>
+              <option value="o">o (OID)</option>
+              <option value="x">x (Hex)</option>
+            </select>
+          </label>
+          <label class="grow">SET Value <input id="req-set-val" type="text" placeholder="Value for SET" /></label>
+          <label class="checkbox-label"><input id="req-record" type="checkbox" /> Persist to sinks (--record)</label>
+          <button id="btn-exec-req" class="btn btn-accent">Execute via CLI</button>
+        </div>
+        <p id="req-status" class="status-note">Ready.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>OID</th><th>Index</th><th>SNMP Type</th><th>Raw Value</th><th>Normalized</th><th>Status</th></tr>
+            </thead>
+            <tbody id="req-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Data Explorer -->
+    <section id="tab-explorer" class="tab-panel">
+      <div class="card">
+        <h3>Stored Telemetry Explorer (executed via <code>ezsnmp-data-logger inspect --json</code>)</h3>
+        <div class="form-row">
+          <label>DUT Filter <input id="exp-dut" type="text" placeholder="optional" /></label>
+          <label>Metric Filter <input id="exp-metric" type="text" placeholder="optional" /></label>
+          <label>Limit <input id="exp-limit" type="number" value="50" min="1" max="1000" /></label>
+          <button id="btn-inspect" class="btn btn-accent">Query Sinks via CLI</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Timestamp (ns)</th><th>DUT</th><th>Metric</th><th>OID</th><th>SNMP Type</th><th>Value</th><th>Sink</th></tr>
+            </thead>
+            <tbody id="exp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: JSON Config Editor -->
+    <section id="tab-json" class="tab-panel">
+      <div class="card">
+        <h3>Unified JSON Configuration (100% of Engine, DUT, Sink &amp; GUI Settings)</h3>
+        <div class="form-row">
+          <label>Template
+            <select id="tpl-select">
+              <option value="demo">demo</option>
+              <option value="minimal">minimal</option>
+              <option value="enterprise">enterprise</option>
+              <option value="snmpv3">snmpv3</option>
+            </select>
+          </label>
+          <button id="btn-load-tpl" class="btn">Load CLI Template</button>
+          <button id="btn-validate-json" class="btn">Validate via CLI</button>
+          <button id="btn-save-json" class="btn btn-accent">Save JSON Config</button>
+        </div>
+        <p id="json-status" class="status-note">All configuration lives in JSON.</p>
+        <textarea id="json-editor" rows="22" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <!-- Tab 5: CLI Audit -->
+    <section id="tab-audit" class="tab-panel">
+      <div class="card">
+        <h3>Behind-the-Scenes CLI Command Audit Trail</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>UTC Timestamp</th><th>Exit Code</th><th>Duration (ms)</th><th>Executed CLI Command</th></tr>
+            </thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-audit">CLI Audit: Ready</span>
+    <span id="footer-cli">CLI Binary: ezsnmp-data-logger</span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

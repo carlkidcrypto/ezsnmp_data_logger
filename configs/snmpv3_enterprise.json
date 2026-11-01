@@ -1,0 +1,81 @@
+{
+  "logger": {
+    "poll_interval_ms": 2000,
+    "queue_depth": 250000,
+    "worker_threads": 8,
+    "stats_interval_ms": 5000,
+    "log_level": "info"
+  },
+  "duts": [
+    {
+      "name": "dc1-spine-01",
+      "dut_ip": "10.20.30.10",
+      "enabled": true,
+      "poll_interval_ms": 2000,
+      "snmp": {
+        "mode": "ezsnmp",
+        "version": "3",
+        "port_number": 161,
+        "timeout_seconds": 2,
+        "retries": 2,
+        "security_level": "authPriv",
+        "security_username": "telemetry_ro",
+        "auth_protocol": "SHA-256",
+        "auth_passphrase": "ChangeMeAuthSecret123!",
+        "privacy_protocol": "AES",
+        "privacy_passphrase": "ChangeMePrivSecret456!",
+        "context": "",
+        "load_mibs": "ALL",
+        "print_oids_numerically": true,
+        "print_timeticks_numerically": true
+      },
+      "metrics": [
+        {
+          "name": "sysUpTime",
+          "oid": "1.3.6.1.2.1.1.3.0",
+          "operation": "get"
+        },
+        {
+          "name": "ifHCInOctets",
+          "oid": "1.3.6.1.2.1.31.1.1.1.6",
+          "operation": "bulkwalk",
+          "max_repeaters": 25
+        }
+      ]
+    }
+  ],
+  "sinks": [
+    {
+      "type": "sqlite3",
+      "enabled": true,
+      "path": "./data/enterprise_v3.sqlite",
+      "commit_every_n": 200,
+      "commit_every_ms": 1000
+    },
+    {
+      "type": "psql",
+      "enabled": false,
+      "conninfo": "host=127.0.0.1 port=5432 dbname=telemetry user=postgres password=secret",
+      "batch_size": 250,
+      "reconnect_delay_ms": 2000,
+      "enable_timescaledb": true
+    },
+    {
+      "type": "prometheus",
+      "enabled": true,
+      "host": "127.0.0.1",
+      "port": 9761,
+      "metric_prefix": "ezsnmp"
+    }
+  ],
+  "gui": {
+    "frontend": "auto",
+    "host": "127.0.0.1",
+    "port": 8765,
+    "theme": "dark",
+    "window_width": 1360,
+    "window_height": 860,
+    "refresh_interval_ms": 1000,
+    "open_browser": true
+  }
+}

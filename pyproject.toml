@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ezsnmp-data-logger"
+version = "0.2.0"
+description = "C++17 SNMP Data Logger powered by ezsnmp with SWIG multi-language bindings, CLI, and cross-platform GUI."
+readme = "README.rst"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    {name = "carlkidcrypto"}
+]
+keywords = ["snmp", "ezsnmp", "net-snmp", "telemetry", "data-logger", "swig", "c++17", "gui", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Telecommunications Industry",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking :: Monitoring",
+]
+dependencies = [
+    "ezsnmp>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "black>=24.0.0",
+    "sphinx>=7.0.0",
+    "furo",
+    "breathe",
+]
+
+[project.scripts]
+ezsnmp-data-logger = "ezsnmp_data_logger.cli:main"
+ezsnmp-data-logger-gui = "ezsnmp_data_logger.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/carlkidcrypto/ezsnmp_data_logger"
+Documentation = "https://carlkidcrypto.github.io/ezsnmp_data_logger/"
+Repository = "https://github.com/carlkidcrypto/ezsnmp_data_logger"
+Issues = "https://github.com/carlkidcrypto/ezsnmp_data_logger/issues"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+extend-exclude = '''
+(
+    ^/ezsnmp_data_logger/ezsnmp_data_logger\.py$
+  | ^/build/
+  | ^/docs/
+  | ^/generated_swig/
+  | ^/bindings/.*/generated/
+)
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["python_tests"]

@@ -1,0 +1,3 @@
+CXX_STD = CXX17
+PKG_CPPFLAGS = -I../../../include
+PKG_LIBS = -L../../../build -lezsnmp_data_logger

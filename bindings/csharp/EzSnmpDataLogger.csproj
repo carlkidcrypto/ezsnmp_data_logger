@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <PackageId>EzSnmpDataLogger</PackageId>
+    <Version>0.2.0</Version>
+    <Authors>carlkidcrypto</Authors>
+    <Description>.NET SWIG bindings for the C++17 ezsnmp_data_logger engine</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

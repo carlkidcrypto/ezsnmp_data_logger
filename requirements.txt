@@ -1,4 +1,1 @@
-# Python dependencies for ezsnmp_data_logger producers
-pyzmq>=25.0.0
-msgpack>=1.0.0
 ezsnmp>=2.0.0
