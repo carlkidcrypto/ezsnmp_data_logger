@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .cli_bridge import CliSubprocessBridge
+from .locale_manager import LocaleManager, get_default_locale_manager
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -25,8 +26,14 @@ class StudioHttpServer(ThreadingHTTPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, server_address: tuple[str, int], bridge: CliSubprocessBridge) -> None:
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        bridge: CliSubprocessBridge,
+        locale_mgr: LocaleManager | None = None,
+    ) -> None:
         self.bridge = bridge
+        self.locale_mgr = locale_mgr or get_default_locale_manager()
         super().__init__(server_address, StudioRequestHandler)
 
 
@@ -77,6 +84,17 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
         try:
             if parsed.path == "/api/status":
                 self._send_json({"ok": True, **bridge.snapshot()})
+                return
+            if parsed.path == "/api/locale":
+                req_locale = qs.get("locale", [self.server.locale_mgr.locale])[0]
+                self._send_json(
+                    {
+                        "ok": True,
+                        "locale": req_locale,
+                        "supported": self.server.locale_mgr.supported_locales(),
+                        "strings": self.server.locale_mgr.get_locale_dict(req_locale),
+                    }
+                )
                 return
             if parsed.path == "/api/config":
                 self._send_json(
@@ -172,6 +190,21 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
             if parsed.path == "/api/run/once":
                 self._send_json(bridge.run_once())
                 return
+            if parsed.path == "/api/locale":
+                req_locale = str(body.get("locale", "")).strip()
+                if req_locale:
+                    self.server.locale_mgr.set_locale(req_locale)
+                self._send_json(
+                    {
+                        "ok": True,
+                        "locale": self.server.locale_mgr.locale,
+                        "supported": self.server.locale_mgr.supported_locales(),
+                        "strings": self.server.locale_mgr.get_locale_dict(
+                            self.server.locale_mgr.locale
+                        ),
+                    }
+                )
+                return
 
             self._send_json(
                 {"ok": False, "error": "Unknown API endpoint"}, status=HTTPStatus.NOT_FOUND
@@ -184,9 +217,10 @@ def create_web_server(
     bridge: CliSubprocessBridge,
     host: str = "127.0.0.1",
     port: int = 8765,
+    locale_mgr: LocaleManager | None = None,
 ) -> StudioHttpServer:
     """Create a bound StudioHttpServer instance (supports port=0 ephemeral bind)."""
-    return StudioHttpServer((host, port), bridge)
+    return StudioHttpServer((host, port), bridge, locale_mgr=locale_mgr)
 
 
 def launch_web_gui(
@@ -194,9 +228,10 @@ def launch_web_gui(
     host: str = "127.0.0.1",
     port: int = 8765,
     open_browser: bool = True,
+    locale_mgr: LocaleManager | None = None,
 ) -> int:
     """Start the cross-platform Browser Studio and block until Ctrl+C."""
-    srv = create_web_server(bridge, host=host, port=port)
+    srv = create_web_server(bridge, host=host, port=port, locale_mgr=locale_mgr)
     actual_host, actual_port = srv.server_address[:2]
     url = f"http://{actual_host}:{actual_port}/"
     print(f"EzSnmp Data Logger Browser Studio listening at {url}")
@@ -217,3 +252,12 @@ def launch_web_gui(
         bridge.stop_run()
         srv.server_close()
     return 0
+
+
+__all__ = [
+    "STATIC_DIR",
+    "StudioHttpServer",
+    "StudioRequestHandler",
+    "create_web_server",
+    "launch_web_gui",
+]

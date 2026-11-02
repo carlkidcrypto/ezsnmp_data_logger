@@ -125,6 +125,8 @@ struct GuiConfig {
    std::string host = "127.0.0.1";
    int port = 8765;
    std::string theme = "dark";
+   std::string locale = "en";
+   std::string locale_file;
    int window_width = 1280;
    int window_height = 820;
    int refresh_interval_ms = 1000;

@@ -1,5 +1,9 @@
 const COLORS = ["#06b6d4", "#10b981", "#f59e0b", "#a855f7", "#f43f5e", "#3b82f6"];
 
+let currentLocale = "en";
+let localeStrings = {};
+let supportedLocales = ["en"];
+
 async function apiGet(path) {
   const r = await fetch(path);
   return r.json();
@@ -12,6 +16,77 @@ async function apiPost(path, payload) {
     body: JSON.stringify(payload || {}),
   });
   return r.json();
+}
+
+function resolveDotted(obj, path) {
+  if (!obj || !path) return null;
+  const parts = path.split(".");
+  let curr = obj;
+  for (const p of parts) {
+    if (curr && typeof curr === "object" && p in curr) {
+      curr = curr[p];
+    } else {
+      return null;
+    }
+  }
+  return curr;
+}
+
+function t(key, fallback) {
+  const val = resolveDotted(localeStrings, key);
+  return (typeof val === "string") ? val : (fallback ?? key);
+}
+
+function applyTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    const translated = t(key, null);
+    if (translated) {
+      if (el.tagName === "INPUT" && (el.type === "button" || el.type === "submit")) {
+        el.value = translated;
+      } else {
+        el.textContent = translated;
+      }
+    }
+  });
+
+  const langSel = document.getElementById("lang-select");
+  if (langSel && supportedLocales && supportedLocales.length > 0) {
+    langSel.innerHTML = "";
+    supportedLocales.forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code.toUpperCase();
+      if (code === currentLocale) opt.selected = true;
+      langSel.appendChild(opt);
+    });
+  }
+}
+
+async function initLocale(targetLocale) {
+  try {
+    const url = targetLocale ? `/api/locale?locale=${encodeURIComponent(targetLocale)}` : "/api/locale";
+    const res = await apiGet(url);
+    if (res.ok) {
+      currentLocale = res.locale || "en";
+      supportedLocales = res.supported || ["en"];
+      localeStrings = res.strings || {};
+      applyTranslations();
+    }
+  } catch (_e) {}
+}
+
+async function switchLocale(newLocale) {
+  try {
+    const res = await apiPost("/api/locale", { locale: newLocale });
+    if (res.ok) {
+      currentLocale = res.locale;
+      supportedLocales = res.supported;
+      localeStrings = res.strings;
+      applyTranslations();
+      await loadConfigIntoUi();
+    }
+  } catch (_e) {}
 }
 
 function renderChart(seriesMap) {
@@ -27,7 +102,11 @@ function renderChart(seriesMap) {
   }
 
   if (entries.length === 0) {
-    html += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#94a3b8" font-size="13">Start CLI Logger or click "Run 1 Cycle (--once)" to stream SNMP telemetry</text>`;
+    const emptyMsg = t(
+      "status_bar.chart_empty_web",
+      'Start CLI Logger or click "Run 1 Cycle (--once)" to stream SNMP telemetry'
+    );
+    html += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#94a3b8" font-size="13">${emptyMsg}</text>`;
     svg.innerHTML = html;
     return;
   }
@@ -65,7 +144,8 @@ function renderChart(seriesMap) {
 async function loadConfigIntoUi() {
   const data = await apiGet("/api/config");
   if (!data.ok) return;
-  document.getElementById("config-subtitle").textContent = `JSON Config: ${data.path}`;
+  const prefix = t("app.json_config_prefix", "JSON Config: ");
+  document.getElementById("config-subtitle").textContent = `${prefix}${data.path}`;
   document.getElementById("json-editor").value = data.raw;
 
   const dutSel = document.getElementById("req-dut");
@@ -77,8 +157,10 @@ async function loadConfigIntoUi() {
     dutSel.appendChild(opt);
   });
 
-  if (data.config && data.config.gui && data.config.gui.theme) {
-    document.body.dataset.theme = data.config.gui.theme === "light" ? "light" : "dark";
+  if (data.config && data.config.gui) {
+    if (data.config.gui.theme) {
+      document.body.dataset.theme = data.config.gui.theme === "light" ? "light" : "dark";
+    }
   }
 }
 
@@ -124,6 +206,13 @@ function setupEvents() {
   document.getElementById("btn-theme").addEventListener("click", () => {
     document.body.dataset.theme = document.body.dataset.theme === "light" ? "dark" : "light";
   });
+
+  const langSelect = document.getElementById("lang-select");
+  if (langSelect) {
+    langSelect.addEventListener("change", (e) => {
+      switchLocale(e.target.value);
+    });
+  }
 
   document.getElementById("btn-start").addEventListener("click", async () => {
     await apiPost("/api/run/start");
@@ -229,6 +318,7 @@ function setupEvents() {
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupEvents();
+  await initLocale();
   await loadConfigIntoUi();
   await pollStatus();
   setInterval(pollStatus, 1000);
