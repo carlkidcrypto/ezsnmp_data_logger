@@ -18,6 +18,7 @@ Welcome to EzSnmp Data Logger's Docs!
    :maxdepth: 2
    :caption: User & Architecture Guides:
 
+   installation
    architecture
    configuration
    cli_guide
