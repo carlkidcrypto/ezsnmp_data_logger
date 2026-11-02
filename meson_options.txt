@@ -1,0 +1,30 @@
+option(
+  'ezsnmp_source_dir',
+  type: 'string',
+  value: '',
+  description: 'Path to ezsnmp repository root (defaults to third_party/ezsnmp or ../ezsnmp)'
+)
+option(
+  'ezsnmp',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build with ezsnmp SessionBase C++17 SNMP layer'
+)
+option(
+  'sqlite3',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build with SQLite3 WAL time-series storage sink'
+)
+option(
+  'psql',
+  type: 'feature',
+  value: 'auto',
+  description: 'Build with PostgreSQL / TimescaleDB storage sink (libpq)'
+)
+option(
+  'tests',
+  type: 'boolean',
+  value: true,
+  description: 'Build C++17 GoogleTest unit and integration test suite'
+)

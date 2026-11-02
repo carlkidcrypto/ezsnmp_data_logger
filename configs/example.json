@@ -1,0 +1,118 @@
+{
+  "logger": {
+    "poll_interval_ms": 1000,
+    "queue_depth": 100000,
+    "worker_threads": 4,
+    "stats_interval_ms": 2000,
+    "max_cycles": 0,
+    "run_duration_seconds": 0,
+    "log_level": "info",
+    "status_file": "./data/status.json"
+  },
+  "duts": [
+    {
+      "name": "core-switch-01",
+      "dut_ip": "127.0.0.1",
+      "enabled": true,
+      "poll_interval_ms": 1000,
+      "snmp": {
+        "mode": "stub",
+        "version": "2c",
+        "community": "public",
+        "port_number": 161,
+        "timeout_seconds": 1,
+        "retries": 2,
+        "print_oids_numerically": false,
+        "print_timeticks_numerically": true
+      },
+      "metrics": [
+        {
+          "name": "sysUpTime",
+          "oid": "1.3.6.1.2.1.1.3.0",
+          "operation": "get"
+        },
+        {
+          "name": "sysName",
+          "oid": "1.3.6.1.2.1.1.5.0",
+          "operation": "get"
+        },
+        {
+          "name": "cpuLoad1m",
+          "oid": "1.3.6.1.4.1.2021.10.1.3.1",
+          "operation": "get"
+        },
+        {
+          "name": "ifInOctets1",
+          "oid": "1.3.6.1.2.1.2.2.1.10.1",
+          "operation": "get"
+        }
+      ]
+    },
+    {
+      "name": "edge-router-02",
+      "dut_ip": "127.0.0.1",
+      "enabled": true,
+      "poll_interval_ms": 1000,
+      "snmp": {
+        "mode": "stub",
+        "version": "2c",
+        "community": "public",
+        "port_number": 161,
+        "timeout_seconds": 1,
+        "retries": 2
+      },
+      "metrics": [
+        {
+          "name": "sysUpTime",
+          "oid": "1.3.6.1.2.1.1.3.0",
+          "operation": "get"
+        },
+        {
+          "name": "chassisTempC",
+          "oid": "1.3.6.1.4.1.9.9.13.1.3.1.3.1",
+          "operation": "get"
+        }
+      ]
+    }
+  ],
+  "sinks": [
+    {
+      "type": "sqlite3",
+      "enabled": true,
+      "path": "./data/logger.sqlite",
+      "commit_every_n": 50,
+      "commit_every_ms": 500
+    },
+    {
+      "type": "csv",
+      "enabled": true,
+      "dir": "./data/csv",
+      "flush_every_n": 32
+    },
+    {
+      "type": "jsonl",
+      "enabled": true,
+      "dir": "./data/jsonl",
+      "flush_every_n": 32
+    },
+    {
+      "type": "prometheus",
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 9761,
+      "metric_prefix": "ezsnmp"
+    }
+  ],
+  "gui": {
+    "frontend": "auto",
+    "host": "127.0.0.1",
+    "port": 8765,
+    "theme": "dark",
+    "window_width": 1280,
+    "window_height": 820,
+    "refresh_interval_ms": 1000,
+    "open_browser": true,
+    "cli_executable": "",
+    "max_log_lines": 500
+  }
+}

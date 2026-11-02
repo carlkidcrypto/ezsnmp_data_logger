@@ -1,0 +1,47 @@
+name: SWIG 4-Language Bindings
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-syntax:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify_syntax.yml
+  swig-4-languages:
+    needs: verify-syntax
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install SWIG 4.x (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y swig
+
+      - name: Install SWIG 4.x (macOS)
+        if: runner.os == 'macOS'
+        run: brew install swig
+
+      - name: Generate SWIG bindings for python, javascript, csharp, and go
+        run: python tools/generate_swig_bindings.py --languages python javascript csharp go --out-dir generated_swig

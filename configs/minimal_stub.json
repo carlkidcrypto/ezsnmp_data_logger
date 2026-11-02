@@ -1,0 +1,46 @@
+{
+  "logger": {
+    "poll_interval_ms": 500,
+    "queue_depth": 10000,
+    "worker_threads": 2,
+    "max_cycles": 5
+  },
+  "duts": [
+    {
+      "name": "demo-switch",
+      "dut_ip": "127.0.0.1",
+      "enabled": true,
+      "snmp": {
+        "mode": "stub",
+        "version": "2c",
+        "community": "public",
+        "port_number": 161
+      },
+      "metrics": [
+        {
+          "name": "sysUpTime",
+          "oid": "1.3.6.1.2.1.1.3.0",
+          "operation": "get"
+        },
+        {
+          "name": "sysName",
+          "oid": "1.3.6.1.2.1.1.5.0",
+          "operation": "get"
+        }
+      ]
+    }
+  ],
+  "sinks": [
+    {
+      "type": "sqlite3",
+      "enabled": true,
+      "path": "./data/minimal.sqlite",
+      "commit_every_n": 10,
+      "commit_every_ms": 250
+    }
+  ],
+  "gui": {
+    "frontend": "auto",
+    "theme": "dark"
+  }
+}

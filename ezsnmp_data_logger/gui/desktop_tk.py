@@ -1,0 +1,1299 @@
+"""Cross-platform Native Desktop GUI (`tkinter.ttk`) for Linux, macOS, and Windows.
+
+Drives `ezsnmp-data-logger` strictly through `CliSubprocessBridge` (CLI + JSON)
+with zero duplicated engine or SNMP logic.
+"""
+
+from __future__ import annotations
+
+import json
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+from typing import Any
+
+from .cli_bridge import CliSubprocessBridge
+
+PALETTES: dict[str, dict[str, str]] = {
+    "dark": {
+        "bg": "#0f172a",
+        "panel": "#1e293b",
+        "card": "#0b1220",
+        "fg": "#f1f5f9",
+        "muted": "#94a3b8",
+        "accent": "#06b6d4",
+        "success": "#10b981",
+        "danger": "#ef4444",
+        "border": "#334155",
+    },
+    "light": {
+        "bg": "#f8fafc",
+        "panel": "#ffffff",
+        "card": "#e2e8f0",
+        "fg": "#0f172a",
+        "muted": "#475569",
+        "accent": "#0284c7",
+        "success": "#059669",
+        "danger": "#dc2626",
+        "border": "#cbd5e1",
+    },
+}
+
+SERIES_COLORS = [
+    "#06b6d4",
+    "#10b981",
+    "#f59e0b",
+    "#a855f7",
+    "#f43f5e",
+    "#3b82f6",
+]
+
+
+class DesktopLoggerStudio:
+    """Cross-platform tkinter.ttk GUI interacting exclusively with the CLI + JSON."""
+
+    def __init__(self, bridge: CliSubprocessBridge, schedule_refresh: bool = True) -> None:
+        self.bridge = bridge
+        self.config_doc: dict[str, Any] = self.bridge.load_config_dict()
+        gui_cfg = (
+            self.config_doc.get("gui", {}) if isinstance(self.config_doc.get("gui"), dict) else {}
+        )
+
+        self.theme_name = "light" if gui_cfg.get("theme") == "light" else "dark"
+        self.refresh_ms = max(250, int(gui_cfg.get("refresh_interval_ms", 1000)))
+        win_w = max(800, int(gui_cfg.get("window_width", 1280)))
+        win_h = max(600, int(gui_cfg.get("window_height", 820)))
+
+        self.root = tk.Tk()
+        self.root.title(f"EzSnmp Data Logger Studio — {self.bridge.config_path.name}")
+        self.root.geometry(f"{win_w}x{win_h}")
+        self.root.minsize(920, 620)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        self._selected_dut_index = 0
+        self._after_id: str | None = None
+
+        self._apply_style()
+        self._build_layout()
+        self.reload_from_disk()
+        self.refresh_live_state(reschedule=schedule_refresh)
+
+    def _apply_style(self) -> None:
+        pal = PALETTES[self.theme_name]
+        self.root.configure(bg=pal["bg"])
+        style = ttk.Style(self.root)
+        if "clam" in style.theme_names():
+            style.theme_use("clam")
+
+        style.configure(".", background=pal["bg"], foreground=pal["fg"], font=("TkDefaultFont", 10))
+        style.configure("TFrame", background=pal["bg"])
+        style.configure("Panel.TFrame", background=pal["panel"])
+        style.configure("Card.TFrame", background=pal["card"], relief="flat")
+        style.configure("TLabel", background=pal["bg"], foreground=pal["fg"])
+        style.configure(
+            "CardTitle.TLabel",
+            background=pal["card"],
+            foreground=pal["muted"],
+            font=("TkDefaultFont", 9),
+        )
+        style.configure(
+            "CardValue.TLabel",
+            background=pal["card"],
+            foreground=pal["fg"],
+            font=("TkDefaultFont", 15, "bold"),
+        )
+        style.configure(
+            "Header.TLabel",
+            background=pal["panel"],
+            foreground=pal["fg"],
+            font=("TkDefaultFont", 13, "bold"),
+        )
+        style.configure(
+            "Subtle.TLabel",
+            background=pal["panel"],
+            foreground=pal["muted"],
+            font=("TkDefaultFont", 9),
+        )
+        style.configure("TButton", background=pal["panel"], foreground=pal["fg"], padding=(10, 5))
+        style.map("TButton", background=[("active", pal["border"])])
+        style.configure(
+            "Accent.TButton", background=pal["accent"], foreground="#ffffff", padding=(12, 6)
+        )
+        style.configure(
+            "Danger.TButton", background=pal["danger"], foreground="#ffffff", padding=(12, 6)
+        )
+        style.configure("TNotebook", background=pal["bg"], borderwidth=0)
+        style.configure(
+            "TNotebook.Tab", background=pal["panel"], foreground=pal["fg"], padding=(12, 6)
+        )
+        style.map(
+            "TNotebook.Tab",
+            background=[("selected", pal["accent"])],
+            foreground=[("selected", "#ffffff")],
+        )
+        style.configure(
+            "Treeview",
+            background=pal["card"],
+            fieldbackground=pal["card"],
+            foreground=pal["fg"],
+            rowheight=24,
+        )
+        style.configure("Treeview.Heading", background=pal["panel"], foreground=pal["fg"])
+        style.configure("TEntry", fieldbackground=pal["card"], foreground=pal["fg"])
+        style.configure("TCombobox", fieldbackground=pal["card"], foreground=pal["fg"])
+        style.configure("TCheckbutton", background=pal["bg"], foreground=pal["fg"])
+
+    def _build_layout(self) -> None:
+        pal = PALETTES[self.theme_name]
+
+        # Top header bar
+        header = ttk.Frame(self.root, style="Panel.TFrame", padding=(14, 10))
+        header.pack(fill=tk.X)
+
+        title_box = ttk.Frame(header, style="Panel.TFrame")
+        title_box.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Label(
+            title_box,
+            text="EzSnmp Data Logger — Cross-Platform CLI Studio",
+            style="Header.TLabel",
+        ).pack(anchor=tk.W)
+        self.cfg_path_var = tk.StringVar(value=f"JSON Config: {self.bridge.config_path}")
+        ttk.Label(title_box, textvariable=self.cfg_path_var, style="Subtle.TLabel").pack(
+            anchor=tk.W
+        )
+
+        btn_bar = ttk.Frame(header, style="Panel.TFrame")
+        btn_bar.pack(side=tk.RIGHT)
+        ttk.Button(btn_bar, text="Open JSON...", command=self.action_open_config).pack(
+            side=tk.LEFT, padx=3
+        )
+        ttk.Button(btn_bar, text="Save JSON", command=self.action_save_all).pack(
+            side=tk.LEFT, padx=3
+        )
+        ttk.Button(
+            btn_bar, text="Start CLI Logger", style="Accent.TButton", command=self.action_start_run
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            btn_bar, text="Stop CLI Logger", style="Danger.TButton", command=self.action_stop_run
+        ).pack(side=tk.LEFT, padx=3)
+
+        # Notebook tabs
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=(8, 4))
+
+        self._build_dashboard_tab()
+        self._build_duts_tab()
+        self._build_ezsnmp_studio_tab()
+        self._build_sinks_and_gui_tab()
+        self._build_explorer_tab()
+        self._build_json_tab()
+
+        # Bottom Behind-the-Scenes CLI Command Audit footer
+        footer = ttk.Frame(self.root, style="Panel.TFrame", padding=(12, 6))
+        footer.pack(fill=tk.X, side=tk.BOTTOM)
+        self.audit_status_var = tk.StringVar(value="CLI Audit: Ready")
+        ttk.Label(footer, textvariable=self.audit_status_var, style="Subtle.TLabel").pack(
+            side=tk.LEFT, fill=tk.X, expand=True
+        )
+        self.cli_bin_label = ttk.Label(
+            footer,
+            text=f"Backend CLI: {' '.join(self.bridge.cli_base_command())}",
+            style="Subtle.TLabel",
+        )
+        self.cli_bin_label.pack(side=tk.RIGHT)
+        _ = pal
+
+    def _build_dashboard_tab(self) -> None:
+        pal = PALETTES[self.theme_name]
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="1. Live Dashboard")
+
+        # KPI Cards
+        kpi_row = ttk.Frame(tab)
+        kpi_row.pack(fill=tk.X, pady=(0, 8))
+        self.kpi_vars: dict[str, tk.StringVar] = {}
+        kpi_specs = [
+            ("state", "CLI Engine"),
+            ("cycles", "Cycles"),
+            ("batches", "Batches"),
+            ("samples", "Samples"),
+            ("queue", "Queue Depth"),
+            ("errors", "Poll / Sink Errors"),
+        ]
+        for key, label in kpi_specs:
+            card = ttk.Frame(kpi_row, style="Card.TFrame", padding=(12, 8))
+            card.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+            ttk.Label(card, text=label, style="CardTitle.TLabel").pack(anchor=tk.W)
+            var = tk.StringVar(value="0")
+            self.kpi_vars[key] = var
+            ttk.Label(card, textvariable=var, style="CardValue.TLabel").pack(anchor=tk.W)
+
+        # Quick CLI action row
+        act_row = ttk.Frame(tab)
+        act_row.pack(fill=tk.X, pady=4)
+        ttk.Button(
+            act_row, text="Run Single Cycle (CLI --once)", command=self.action_run_once
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(act_row, text="Probe All DUTs (CLI probe)", command=self.action_probe_all).pack(
+            side=tk.LEFT, padx=3
+        )
+        ttk.Button(
+            act_row, text="Validate Config (CLI validate)", command=self.action_validate_saved
+        ).pack(side=tk.LEFT, padx=3)
+
+        # Live Canvas telemetry chart
+        ttk.Label(
+            tab,
+            text="Real-Time SNMP Numeric Series (streamed from `ezsnmp-data-logger run --json`):",
+        ).pack(anchor=tk.W, pady=(6, 2))
+        self.chart_canvas = tk.Canvas(
+            tab,
+            height=220,
+            bg=pal["card"],
+            highlightthickness=1,
+            highlightbackground=pal["border"],
+        )
+        self.chart_canvas.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
+
+        # Live CLI stdout JSON stream console + CLI Audit list
+        bottom_split = ttk.PanedWindow(tab, orient=tk.HORIZONTAL)
+        bottom_split.pack(fill=tk.BOTH, expand=True)
+
+        log_frame = ttk.Frame(bottom_split)
+        ttk.Label(log_frame, text="Live CLI JSON Event Stream:").pack(anchor=tk.W)
+        self.cli_log_text = tk.Text(
+            log_frame,
+            height=9,
+            bg=pal["card"],
+            fg=pal["fg"],
+            insertbackground=pal["fg"],
+            font=("Courier", 10),
+        )
+        self.cli_log_text.pack(fill=tk.BOTH, expand=True)
+        bottom_split.add(log_frame, weight=3)
+
+        audit_frame = ttk.Frame(bottom_split)
+        ttk.Label(audit_frame, text="Behind-the-Scenes CLI Command Audit:").pack(anchor=tk.W)
+        self.audit_tree = ttk.Treeview(
+            audit_frame,
+            columns=("time", "rc", "ms", "cmd"),
+            show="headings",
+            height=8,
+        )
+        self.audit_tree.heading("time", text="UTC Time")
+        self.audit_tree.heading("rc", text="Exit")
+        self.audit_tree.heading("ms", text="ms")
+        self.audit_tree.heading("cmd", text="Executed CLI Command")
+        self.audit_tree.column("time", width=90, stretch=False)
+        self.audit_tree.column("rc", width=45, stretch=False)
+        self.audit_tree.column("ms", width=65, stretch=False)
+        self.audit_tree.column("cmd", width=360, stretch=True)
+        self.audit_tree.pack(fill=tk.BOTH, expand=True)
+        bottom_split.add(audit_frame, weight=2)
+
+    def _build_duts_tab(self) -> None:
+        pal = PALETTES[self.theme_name]
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="2. DUTs & Metrics")
+
+        pane = ttk.PanedWindow(tab, orient=tk.HORIZONTAL)
+        pane.pack(fill=tk.BOTH, expand=True)
+
+        left = ttk.Frame(pane, padding=(0, 0, 8, 0))
+        ttk.Label(left, text="Configured DUTs:").pack(anchor=tk.W)
+        self.dut_listbox = tk.Listbox(
+            left,
+            bg=pal["card"],
+            fg=pal["fg"],
+            selectbackground=pal["accent"],
+            exportselection=False,
+            width=26,
+        )
+        self.dut_listbox.pack(fill=tk.BOTH, expand=True, pady=4)
+        self.dut_listbox.bind("<<ListboxSelect>>", self._on_dut_selected)
+
+        dut_btns = ttk.Frame(left)
+        dut_btns.pack(fill=tk.X)
+        ttk.Button(dut_btns, text="+ Add DUT", command=self.action_add_dut).pack(
+            side=tk.LEFT, padx=2
+        )
+        ttk.Button(dut_btns, text="- Remove", command=self.action_remove_dut).pack(
+            side=tk.LEFT, padx=2
+        )
+        pane.add(left, weight=1)
+
+        right = ttk.Frame(pane)
+        form = ttk.Frame(right)
+        form.pack(fill=tk.X)
+
+        self.dut_vars: dict[str, tk.Variable] = {
+            "name": tk.StringVar(),
+            "dut_ip": tk.StringVar(),
+            "enabled": tk.BooleanVar(value=True),
+            "poll_interval_ms": tk.StringVar(value="0"),
+            "mode": tk.StringVar(value="ezsnmp"),
+            "version": tk.StringVar(value="2c"),
+            "community": tk.StringVar(value="public"),
+            "port_number": tk.StringVar(value="161"),
+            "timeout_seconds": tk.StringVar(value="1"),
+            "retries": tk.StringVar(value="2"),
+            "security_level": tk.StringVar(value="noAuthNoPriv"),
+            "security_username": tk.StringVar(),
+            "auth_protocol": tk.StringVar(value="SHA-256"),
+            "auth_passphrase": tk.StringVar(),
+            "privacy_protocol": tk.StringVar(value="AES"),
+            "privacy_passphrase": tk.StringVar(),
+        }
+
+        fields = [
+            ("DUT Name:", "name", 0, 0),
+            ("Host / IP:", "dut_ip", 0, 2),
+            ("Poll ms (0=global):", "poll_interval_ms", 0, 4),
+            ("SNMP Mode:", "mode", 1, 0),
+            ("SNMP Version:", "version", 1, 2),
+            ("Community:", "community", 1, 4),
+            ("UDP Port:", "port_number", 2, 0),
+            ("Timeout (s):", "timeout_seconds", 2, 2),
+            ("Retries:", "retries", 2, 4),
+            ("v3 SecLevel:", "security_level", 3, 0),
+            ("v3 Username:", "security_username", 3, 2),
+            ("v3 AuthProto:", "auth_protocol", 3, 4),
+            ("v3 AuthPass:", "auth_passphrase", 4, 0),
+            ("v3 PrivProto:", "privacy_protocol", 4, 2),
+            ("v3 PrivPass:", "privacy_passphrase", 4, 4),
+        ]
+        for label_txt, key, r, c in fields:
+            ttk.Label(form, text=label_txt).grid(row=r, column=c, sticky=tk.W, padx=4, pady=3)
+            if key == "mode":
+                w: tk.Widget = ttk.Combobox(
+                    form,
+                    textvariable=self.dut_vars[key],
+                    values=["ezsnmp", "stub"],
+                    width=14,
+                    state="readonly",
+                )
+            elif key == "version":
+                w = ttk.Combobox(
+                    form,
+                    textvariable=self.dut_vars[key],
+                    values=["1", "2c", "3"],
+                    width=14,
+                    state="readonly",
+                )
+            elif key == "security_level":
+                w = ttk.Combobox(
+                    form,
+                    textvariable=self.dut_vars[key],
+                    values=["noAuthNoPriv", "authNoPriv", "authPriv"],
+                    width=14,
+                    state="readonly",
+                )
+            else:
+                w = ttk.Entry(form, textvariable=self.dut_vars[key], width=16)
+            w.grid(row=r, column=c + 1, sticky=tk.EW, padx=4, pady=3)
+
+        chk_row = ttk.Frame(right)
+        chk_row.pack(fill=tk.X, pady=4)
+        ttk.Checkbutton(chk_row, text="DUT Enabled", variable=self.dut_vars["enabled"]).pack(
+            side=tk.LEFT, padx=4
+        )
+        ttk.Button(
+            chk_row,
+            text="Apply DUT Changes to JSON",
+            style="Accent.TButton",
+            command=self.action_apply_dut,
+        ).pack(side=tk.LEFT, padx=8)
+        ttk.Button(
+            chk_row, text="Probe This DUT via CLI", command=self.action_probe_selected_dut
+        ).pack(side=tk.LEFT, padx=4)
+
+        ttk.Label(right, text="DUT Polled Metrics (ezsnmp OIDs):").pack(anchor=tk.W, pady=(8, 2))
+        self.metrics_tree = ttk.Treeview(
+            right,
+            columns=("name", "oid", "op", "rep"),
+            show="headings",
+            height=8,
+        )
+        for col, title, width in [
+            ("name", "Metric Name", 160),
+            ("oid", "OID / Symbolic MIB", 260),
+            ("op", "Operation", 90),
+            ("rep", "Max Repeaters", 100),
+        ]:
+            self.metrics_tree.heading(col, text=title)
+            self.metrics_tree.column(col, width=width)
+        self.metrics_tree.pack(fill=tk.BOTH, expand=True)
+
+        m_add = ttk.Frame(right)
+        m_add.pack(fill=tk.X, pady=4)
+        self.new_metric_name = tk.StringVar(value="sysUpTime")
+        self.new_metric_oid = tk.StringVar(value="1.3.6.1.2.1.1.3.0")
+        self.new_metric_op = tk.StringVar(value="get")
+        ttk.Label(m_add, text="Name:").pack(side=tk.LEFT)
+        ttk.Entry(m_add, textvariable=self.new_metric_name, width=14).pack(side=tk.LEFT, padx=3)
+        ttk.Label(m_add, text="OID:").pack(side=tk.LEFT)
+        ttk.Entry(m_add, textvariable=self.new_metric_oid, width=22).pack(side=tk.LEFT, padx=3)
+        ttk.Combobox(
+            m_add,
+            textvariable=self.new_metric_op,
+            values=["get", "getnext", "walk", "bulkget", "bulkwalk"],
+            width=10,
+            state="readonly",
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(m_add, text="+ Add Metric", command=self.action_add_metric).pack(
+            side=tk.LEFT, padx=3
+        )
+        ttk.Button(m_add, text="- Delete Selected", command=self.action_remove_metric).pack(
+            side=tk.LEFT, padx=3
+        )
+
+        pane.add(right, weight=3)
+
+    def _build_ezsnmp_studio_tab(self) -> None:
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="3. EzSnmp GET / WALK / SET")
+
+        ctrl = ttk.Frame(tab)
+        ctrl.pack(fill=tk.X, pady=(0, 8))
+
+        self.req_dut_var = tk.StringVar()
+        self.req_op_var = tk.StringVar(value="get")
+        self.req_oid_var = tk.StringVar(value="1.3.6.1.2.1.1.1.0")
+        self.req_set_type_var = tk.StringVar(value="s")
+        self.req_set_val_var = tk.StringVar(value="")
+        self.req_record_var = tk.BooleanVar(value=False)
+
+        ttk.Label(ctrl, text="DUT:").grid(row=0, column=0, sticky=tk.W, padx=4, pady=3)
+        self.req_dut_combo = ttk.Combobox(
+            ctrl, textvariable=self.req_dut_var, width=18, state="readonly"
+        )
+        self.req_dut_combo.grid(row=0, column=1, padx=4, pady=3)
+
+        ttk.Label(ctrl, text="Operation:").grid(row=0, column=2, sticky=tk.W, padx=4, pady=3)
+        ttk.Combobox(
+            ctrl,
+            textvariable=self.req_op_var,
+            values=["get", "getnext", "walk", "bulkget", "bulkwalk", "set"],
+            width=12,
+            state="readonly",
+        ).grid(row=0, column=3, padx=4, pady=3)
+
+        ttk.Label(ctrl, text="OID(s) (comma-sep):").grid(
+            row=0, column=4, sticky=tk.W, padx=4, pady=3
+        )
+        ttk.Entry(ctrl, textvariable=self.req_oid_var, width=28).grid(
+            row=0, column=5, padx=4, pady=3
+        )
+
+        ttk.Label(ctrl, text="SET Type:").grid(row=1, column=0, sticky=tk.W, padx=4, pady=3)
+        ttk.Combobox(
+            ctrl,
+            textvariable=self.req_set_type_var,
+            values=["s", "i", "u", "t", "a", "o", "x"],
+            width=8,
+            state="readonly",
+        ).grid(row=1, column=1, sticky=tk.W, padx=4, pady=3)
+
+        ttk.Label(ctrl, text="SET Value:").grid(row=1, column=2, sticky=tk.W, padx=4, pady=3)
+        ttk.Entry(ctrl, textvariable=self.req_set_val_var, width=22).grid(
+            row=1, column=3, columnspan=2, sticky=tk.EW, padx=4, pady=3
+        )
+
+        ttk.Checkbutton(
+            ctrl,
+            text="Also persist response to enabled sinks (--record)",
+            variable=self.req_record_var,
+        ).grid(row=1, column=5, sticky=tk.W, padx=4)
+
+        ttk.Button(
+            ctrl,
+            text="Execute via CLI",
+            style="Accent.TButton",
+            command=self.action_execute_ezsnmp_request,
+        ).grid(row=0, column=6, rowspan=2, padx=8)
+
+        self.req_summary_var = tk.StringVar(
+            value="Ready to run on-demand ezsnmp request/set via CLI."
+        )
+        ttk.Label(tab, textvariable=self.req_summary_var).pack(anchor=tk.W, pady=(0, 4))
+
+        self.req_tree = ttk.Treeview(
+            tab,
+            columns=("oid", "index", "snmp_type", "raw", "typed", "status"),
+            show="headings",
+        )
+        for col, title, w in [
+            ("oid", "OID", 220),
+            ("index", "Index", 70),
+            ("snmp_type", "SNMP Type", 110),
+            ("raw", "Raw Value (ezsnmp)", 260),
+            ("typed", "Normalized Type", 110),
+            ("status", "Status", 70),
+        ]:
+            self.req_tree.heading(col, text=title)
+            self.req_tree.column(col, width=w)
+        self.req_tree.pack(fill=tk.BOTH, expand=True)
+
+    def _build_sinks_and_gui_tab(self) -> None:
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="4. Sinks & JSON Settings")
+
+        self.settings_vars: dict[str, tk.Variable] = {
+            "poll_interval_ms": tk.StringVar(value="1000"),
+            "queue_depth": tk.StringVar(value="100000"),
+            "worker_threads": tk.StringVar(value="4"),
+            "max_cycles": tk.StringVar(value="0"),
+            "sqlite_enabled": tk.BooleanVar(value=True),
+            "sqlite_path": tk.StringVar(value="./data/logger.sqlite"),
+            "csv_enabled": tk.BooleanVar(value=False),
+            "csv_dir": tk.StringVar(value="./data/csv"),
+            "jsonl_enabled": tk.BooleanVar(value=False),
+            "jsonl_dir": tk.StringVar(value="./data/jsonl"),
+            "prom_enabled": tk.BooleanVar(value=False),
+            "prom_port": tk.StringVar(value="9761"),
+            "gui_frontend": tk.StringVar(value="auto"),
+            "gui_theme": tk.StringVar(value=self.theme_name),
+            "gui_refresh_ms": tk.StringVar(value="1000"),
+            "gui_port": tk.StringVar(value="8765"),
+        }
+
+        grid = ttk.Frame(tab)
+        grid.pack(fill=tk.X)
+
+        rows = [
+            ("Logger Poll Interval (ms):", "poll_interval_ms", 0, 0),
+            ("Bounded Queue Depth:", "queue_depth", 0, 2),
+            ("Worker Threads:", "worker_threads", 1, 0),
+            ("Max Cycles (0=continuous):", "max_cycles", 1, 2),
+            ("SQLite3 Path:", "sqlite_path", 2, 0),
+            ("CSV Directory:", "csv_dir", 3, 0),
+            ("JSONL Directory:", "jsonl_dir", 4, 0),
+            ("Prometheus HTTP Port:", "prom_port", 5, 0),
+            ("GUI Frontend (auto|tk|web):", "gui_frontend", 6, 0),
+            ("GUI Theme (dark|light):", "gui_theme", 6, 2),
+            ("GUI Refresh (ms):", "gui_refresh_ms", 7, 0),
+            ("Web Studio Port:", "gui_port", 7, 2),
+        ]
+        for lbl, key, r, c in rows:
+            ttk.Label(grid, text=lbl).grid(row=r, column=c, sticky=tk.W, padx=6, pady=4)
+            if key == "gui_frontend":
+                w: tk.Widget = ttk.Combobox(
+                    grid,
+                    textvariable=self.settings_vars[key],
+                    values=["auto", "tk", "web"],
+                    width=18,
+                    state="readonly",
+                )
+            elif key == "gui_theme":
+                w = ttk.Combobox(
+                    grid,
+                    textvariable=self.settings_vars[key],
+                    values=["dark", "light"],
+                    width=18,
+                    state="readonly",
+                )
+            else:
+                w = ttk.Entry(grid, textvariable=self.settings_vars[key], width=24)
+            w.grid(row=r, column=c + 1, sticky=tk.W, padx=6, pady=4)
+
+        ttk.Checkbutton(
+            grid, text="Enable SQLite3 Sink", variable=self.settings_vars["sqlite_enabled"]
+        ).grid(row=2, column=2, sticky=tk.W, padx=6)
+        ttk.Checkbutton(
+            grid, text="Enable CSV Sink", variable=self.settings_vars["csv_enabled"]
+        ).grid(row=3, column=2, sticky=tk.W, padx=6)
+        ttk.Checkbutton(
+            grid, text="Enable JSONL Sink", variable=self.settings_vars["jsonl_enabled"]
+        ).grid(row=4, column=2, sticky=tk.W, padx=6)
+        ttk.Checkbutton(
+            grid, text="Enable Prometheus Sink", variable=self.settings_vars["prom_enabled"]
+        ).grid(row=5, column=2, sticky=tk.W, padx=6)
+
+        ttk.Button(
+            tab,
+            text="Save Runtime, Sink & GUI Settings to JSON",
+            style="Accent.TButton",
+            command=self.action_apply_settings_tab,
+        ).pack(anchor=tk.W, pady=12)
+
+    def _build_explorer_tab(self) -> None:
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="5. Data Explorer")
+
+        bar = ttk.Frame(tab)
+        bar.pack(fill=tk.X, pady=(0, 8))
+        self.exp_dut_var = tk.StringVar()
+        self.exp_metric_var = tk.StringVar()
+        self.exp_limit_var = tk.StringVar(value="100")
+
+        ttk.Label(bar, text="Filter DUT:").pack(side=tk.LEFT)
+        ttk.Entry(bar, textvariable=self.exp_dut_var, width=16).pack(side=tk.LEFT, padx=4)
+        ttk.Label(bar, text="Filter Metric:").pack(side=tk.LEFT)
+        ttk.Entry(bar, textvariable=self.exp_metric_var, width=16).pack(side=tk.LEFT, padx=4)
+        ttk.Label(bar, text="Limit:").pack(side=tk.LEFT)
+        ttk.Entry(bar, textvariable=self.exp_limit_var, width=8).pack(side=tk.LEFT, padx=4)
+        ttk.Button(
+            bar,
+            text="Query Stored Samples (CLI inspect)",
+            style="Accent.TButton",
+            command=self.action_inspect_sinks,
+        ).pack(side=tk.LEFT, padx=8)
+
+        self.inspect_tree = ttk.Treeview(
+            tab,
+            columns=("ts", "dut", "metric", "oid", "stype", "raw", "sink"),
+            show="headings",
+        )
+        for col, title, w in [
+            ("ts", "Timestamp (ns)", 160),
+            ("dut", "DUT", 130),
+            ("metric", "Metric", 140),
+            ("oid", "OID", 200),
+            ("stype", "SNMP Type", 100),
+            ("raw", "Value", 220),
+            ("sink", "Sink", 80),
+        ]:
+            self.inspect_tree.heading(col, text=title)
+            self.inspect_tree.column(col, width=w)
+        self.inspect_tree.pack(fill=tk.BOTH, expand=True)
+
+    def _build_json_tab(self) -> None:
+        pal = PALETTES[self.theme_name]
+        tab = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(tab, text="6. Raw JSON & Schema")
+
+        top = ttk.Frame(tab)
+        top.pack(fill=tk.X, pady=(0, 6))
+        self.tpl_var = tk.StringVar(value="demo")
+        ttk.Label(top, text="Template:").pack(side=tk.LEFT)
+        ttk.Combobox(
+            top,
+            textvariable=self.tpl_var,
+            values=["minimal", "demo", "enterprise", "snmpv3"],
+            width=12,
+            state="readonly",
+        ).pack(side=tk.LEFT, padx=4)
+        ttk.Button(top, text="Load CLI Template", command=self.action_load_template).pack(
+            side=tk.LEFT, padx=3
+        )
+        ttk.Button(
+            top, text="Validate Editor JSON via CLI", command=self.action_validate_editor
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            top,
+            text="Save Editor JSON",
+            style="Accent.TButton",
+            command=self.action_save_editor_json,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(top, text="Show JSON Schema", command=self.action_show_schema).pack(
+            side=tk.LEFT, padx=3
+        )
+
+        self.json_status_var = tk.StringVar(value="All configuration is stored in JSON.")
+        ttk.Label(tab, textvariable=self.json_status_var).pack(anchor=tk.W, pady=(0, 4))
+
+        self.json_editor = tk.Text(
+            tab,
+            bg=pal["card"],
+            fg=pal["fg"],
+            insertbackground=pal["fg"],
+            font=("Courier", 11),
+            undo=True,
+        )
+        self.json_editor.pack(fill=tk.BOTH, expand=True)
+
+    # --- Synchronization Helpers ---
+
+    def reload_from_disk(self) -> None:
+        raw = self.bridge.load_config_text()
+        self.config_doc = json.loads(raw)
+        self.cfg_path_var.set(f"JSON Config: {self.bridge.config_path}")
+
+        self.json_editor.delete("1.0", tk.END)
+        self.json_editor.insert("1.0", raw)
+
+        # Populate DUT list
+        duts = self.config_doc.get("duts", [])
+        self.dut_listbox.delete(0, tk.END)
+        dut_names: list[str] = []
+        for d in duts:
+            name = str(d.get("name", "unnamed"))
+            dut_names.append(name)
+            state_badge = "ON" if d.get("enabled", True) else "OFF"
+            self.dut_listbox.insert(tk.END, f"[{state_badge}] {name} ({d.get('dut_ip', '')})")
+
+        self.req_dut_combo["values"] = dut_names
+        if dut_names and not self.req_dut_var.get():
+            self.req_dut_var.set(dut_names[0])
+
+        if duts:
+            idx = min(self._selected_dut_index, len(duts) - 1)
+            self.dut_listbox.selection_set(idx)
+            self._populate_dut_form(idx)
+
+        # Populate settings tab
+        lg = self.config_doc.get("logger", {})
+        self.settings_vars["poll_interval_ms"].set(str(lg.get("poll_interval_ms", 1000)))
+        self.settings_vars["queue_depth"].set(str(lg.get("queue_depth", 100000)))
+        self.settings_vars["worker_threads"].set(str(lg.get("worker_threads", 4)))
+        self.settings_vars["max_cycles"].set(str(lg.get("max_cycles", 0)))
+
+        self.settings_vars["sqlite_enabled"].set(False)
+        self.settings_vars["csv_enabled"].set(False)
+        self.settings_vars["jsonl_enabled"].set(False)
+        self.settings_vars["prom_enabled"].set(False)
+        for s in self.config_doc.get("sinks", []):
+            stype = s.get("type")
+            if stype == "sqlite3":
+                self.settings_vars["sqlite_enabled"].set(bool(s.get("enabled", True)))
+                self.settings_vars["sqlite_path"].set(str(s.get("path", "./data/logger.sqlite")))
+            elif stype == "csv":
+                self.settings_vars["csv_enabled"].set(bool(s.get("enabled", True)))
+                self.settings_vars["csv_dir"].set(str(s.get("dir", "./data/csv")))
+            elif stype == "jsonl":
+                self.settings_vars["jsonl_enabled"].set(bool(s.get("enabled", True)))
+                self.settings_vars["jsonl_dir"].set(str(s.get("dir", "./data/jsonl")))
+            elif stype == "prometheus":
+                self.settings_vars["prom_enabled"].set(bool(s.get("enabled", True)))
+                self.settings_vars["prom_port"].set(str(s.get("port", 9761)))
+
+        gui = self.config_doc.get("gui", {})
+        self.settings_vars["gui_frontend"].set(str(gui.get("frontend", "auto")))
+        self.settings_vars["gui_theme"].set(str(gui.get("theme", self.theme_name)))
+        self.settings_vars["gui_refresh_ms"].set(str(gui.get("refresh_interval_ms", 1000)))
+        self.settings_vars["gui_port"].set(str(gui.get("port", 8765)))
+
+    def _populate_dut_form(self, idx: int) -> None:
+        duts = self.config_doc.get("duts", [])
+        if idx < 0 or idx >= len(duts):
+            return
+        self._selected_dut_index = idx
+        d = duts[idx]
+        sc = d.get("snmp", {})
+        self.dut_vars["name"].set(str(d.get("name", "")))
+        self.dut_vars["dut_ip"].set(str(d.get("dut_ip", "")))
+        self.dut_vars["enabled"].set(bool(d.get("enabled", True)))
+        self.dut_vars["poll_interval_ms"].set(str(d.get("poll_interval_ms", 0)))
+        self.dut_vars["mode"].set(str(sc.get("mode", "ezsnmp")))
+        self.dut_vars["version"].set(str(sc.get("version", "2c")))
+        self.dut_vars["community"].set(str(sc.get("community", "public")))
+        self.dut_vars["port_number"].set(str(sc.get("port_number", 161)))
+        self.dut_vars["timeout_seconds"].set(str(sc.get("timeout_seconds", 1)))
+        self.dut_vars["retries"].set(str(sc.get("retries", 2)))
+        self.dut_vars["security_level"].set(str(sc.get("security_level", "noAuthNoPriv")))
+        self.dut_vars["security_username"].set(str(sc.get("security_username", "")))
+        self.dut_vars["auth_protocol"].set(str(sc.get("auth_protocol", "SHA-256")))
+        self.dut_vars["auth_passphrase"].set(str(sc.get("auth_passphrase", "")))
+        self.dut_vars["privacy_protocol"].set(str(sc.get("privacy_protocol", "AES")))
+        self.dut_vars["privacy_passphrase"].set(str(sc.get("privacy_passphrase", "")))
+
+        for item in self.metrics_tree.get_children():
+            self.metrics_tree.delete(item)
+        for m in d.get("metrics", []):
+            self.metrics_tree.insert(
+                "",
+                tk.END,
+                values=(
+                    m.get("name", ""),
+                    m.get("oid", ""),
+                    m.get("operation", "get"),
+                    m.get("max_repeaters", 10),
+                ),
+            )
+
+    def _on_dut_selected(self, _event: Any = None) -> None:
+        sel = self.dut_listbox.curselection()
+        if sel:
+            self._populate_dut_form(int(sel[0]))
+
+    # --- Actions (Every action goes through CliSubprocessBridge!) ---
+
+    def action_open_config(self) -> None:
+        chosen = filedialog.askopenfilename(
+            title="Open ezsnmp_data_logger JSON Config",
+            filetypes=[("JSON Configuration", "*.json"), ("All Files", "*.*")],
+        )
+        if chosen:
+            self.bridge.stop_run()
+            self.bridge = CliSubprocessBridge(chosen)
+            self.reload_from_disk()
+
+    def action_save_all(self) -> None:
+        res = self.bridge.save_config_dict(self.config_doc)
+        self.reload_from_disk()
+        self._update_audit_banner(res.get("audit"))
+
+    def action_start_run(self) -> None:
+        res = self.bridge.start_run()
+        self._update_audit_banner(res.get("audit"))
+        self.refresh_live_state(reschedule=False)
+
+    def action_stop_run(self) -> None:
+        res = self.bridge.stop_run()
+        self._update_audit_banner(res.get("audit"))
+        self.refresh_live_state(reschedule=False)
+
+    def action_run_once(self) -> None:
+        res = self.bridge.run_once()
+        self._update_audit_banner(res.get("audit"))
+        self.refresh_live_state(reschedule=False)
+
+    def action_probe_all(self) -> None:
+        res = self.bridge.probe()
+        self._update_audit_banner(res.get("audit"))
+        if res.get("data"):
+            self.notebook.select(2)
+            self._populate_request_results_from_probe(res["data"])
+
+    def action_probe_selected_dut(self) -> None:
+        dut_name = str(self.dut_vars["name"].get()).strip()
+        res = self.bridge.probe(dut_name=dut_name)
+        self._update_audit_banner(res.get("audit"))
+        if res.get("data"):
+            self.notebook.select(2)
+            self._populate_request_results_from_probe(res["data"])
+
+    def _populate_request_results_from_probe(self, probe_payload: dict[str, Any]) -> None:
+        for item in self.req_tree.get_children():
+            self.req_tree.delete(item)
+        total_samples = 0
+        for r in probe_payload.get("results", []):
+            for s in r.get("samples", []):
+                total_samples += 1
+                self.req_tree.insert(
+                    "",
+                    tk.END,
+                    values=(
+                        s.get("oid", ""),
+                        s.get("oid_index", ""),
+                        s.get("snmp_type", ""),
+                        s.get("raw_value", ""),
+                        s.get("type_name", ""),
+                        s.get("status", 0),
+                    ),
+                )
+        self.req_summary_var.set(
+            f"CLI probe completed across {probe_payload.get('count', 0)} DUT(s) -> {total_samples} sample(s)."
+        )
+
+    def action_validate_saved(self) -> None:
+        res = self.bridge.validate()
+        self._update_audit_banner(res.get("audit"))
+        rep = res.get("data") or {}
+        if rep.get("valid"):
+            self.json_status_var.set(
+                f"VALID: {rep.get('enabled_duts', 0)} DUTs, {rep.get('total_metrics', 0)} metrics, {rep.get('enabled_sinks', 0)} sinks."
+            )
+        else:
+            errs = "; ".join(rep.get("errors", [res.get("stderr", "Validation failed")]))
+            self.json_status_var.set(f"INVALID: {errs}")
+
+    def action_add_dut(self) -> None:
+        duts = self.config_doc.setdefault("duts", [])
+        new_name = f"dut-{len(duts) + 1}"
+        duts.append(
+            {
+                "name": new_name,
+                "dut_ip": "127.0.0.1",
+                "enabled": True,
+                "poll_interval_ms": 0,
+                "snmp": {
+                    "mode": "stub",
+                    "version": "2c",
+                    "community": "public",
+                    "port_number": 161,
+                },
+                "metrics": [
+                    {"name": "sysUpTime", "oid": "1.3.6.1.2.1.1.3.0", "operation": "get"},
+                    {"name": "sysName", "oid": "1.3.6.1.2.1.1.5.0", "operation": "get"},
+                ],
+            }
+        )
+        self._selected_dut_index = len(duts) - 1
+        self.action_save_all()
+
+    def action_remove_dut(self) -> None:
+        duts = self.config_doc.get("duts", [])
+        if not duts or self._selected_dut_index >= len(duts):
+            return
+        duts.pop(self._selected_dut_index)
+        self._selected_dut_index = max(0, self._selected_dut_index - 1)
+        self.action_save_all()
+
+    def action_apply_dut(self) -> None:
+        duts = self.config_doc.setdefault("duts", [])
+        if not duts or self._selected_dut_index >= len(duts):
+            return
+        d = duts[self._selected_dut_index]
+        d["name"] = str(self.dut_vars["name"].get()).strip()
+        d["dut_ip"] = str(self.dut_vars["dut_ip"].get()).strip()
+        d["enabled"] = bool(self.dut_vars["enabled"].get())
+        d["poll_interval_ms"] = int(self.dut_vars["poll_interval_ms"].get() or 0)
+        sc = d.setdefault("snmp", {})
+        sc["mode"] = str(self.dut_vars["mode"].get())
+        sc["version"] = str(self.dut_vars["version"].get())
+        sc["community"] = str(self.dut_vars["community"].get())
+        sc["port_number"] = int(self.dut_vars["port_number"].get() or 161)
+        sc["timeout_seconds"] = int(self.dut_vars["timeout_seconds"].get() or 1)
+        sc["retries"] = int(self.dut_vars["retries"].get() or 2)
+        sc["security_level"] = str(self.dut_vars["security_level"].get())
+        sc["security_username"] = str(self.dut_vars["security_username"].get())
+        sc["auth_protocol"] = str(self.dut_vars["auth_protocol"].get())
+        sc["auth_passphrase"] = str(self.dut_vars["auth_passphrase"].get())
+        sc["privacy_protocol"] = str(self.dut_vars["privacy_protocol"].get())
+        sc["privacy_passphrase"] = str(self.dut_vars["privacy_passphrase"].get())
+        self.action_save_all()
+
+    def action_add_metric(self) -> None:
+        duts = self.config_doc.get("duts", [])
+        if not duts or self._selected_dut_index >= len(duts):
+            return
+        metrics = duts[self._selected_dut_index].setdefault("metrics", [])
+        metrics.append(
+            {
+                "name": self.new_metric_name.get().strip(),
+                "oid": self.new_metric_oid.get().strip(),
+                "operation": self.new_metric_op.get().strip() or "get",
+                "max_repeaters": 10,
+            }
+        )
+        self.action_save_all()
+
+    def action_remove_metric(self) -> None:
+        duts = self.config_doc.get("duts", [])
+        if not duts or self._selected_dut_index >= len(duts):
+            return
+        sel = self.metrics_tree.selection()
+        if not sel:
+            return
+        idx = self.metrics_tree.index(sel[0])
+        metrics = duts[self._selected_dut_index].get("metrics", [])
+        if 0 <= idx < len(metrics):
+            metrics.pop(idx)
+            self.action_save_all()
+
+    def action_execute_ezsnmp_request(self) -> None:
+        dut = self.req_dut_var.get().strip()
+        op = self.req_op_var.get().strip()
+        raw_oids = [x.strip() for x in self.req_oid_var.get().split(",") if x.strip()]
+        record = bool(self.req_record_var.get())
+
+        if not dut or not raw_oids:
+            self.req_summary_var.set("Select a DUT and specify at least one OID.")
+            return
+
+        if op == "set":
+            res = self.bridge.set_oid(
+                dut_name=dut,
+                oid=raw_oids[0],
+                set_type=self.req_set_type_var.get().strip() or "s",
+                value=self.req_set_val_var.get(),
+                record=record,
+            )
+        else:
+            res = self.bridge.request(dut_name=dut, operation=op, oids=raw_oids, record=record)
+
+        self._update_audit_banner(res.get("audit"))
+        for item in self.req_tree.get_children():
+            self.req_tree.delete(item)
+
+        payload = res.get("data") or {}
+        if not res["ok"]:
+            err_msg = payload.get("error") or res.get("stderr", "CLI request failed").strip()
+            self.req_summary_var.set(f"Error: {err_msg}")
+            return
+
+        samples = payload.get("samples", [])
+        for s in samples:
+            self.req_tree.insert(
+                "",
+                tk.END,
+                values=(
+                    s.get("oid", ""),
+                    s.get("oid_index", ""),
+                    s.get("snmp_type", ""),
+                    s.get("raw_value", ""),
+                    s.get("type_name", ""),
+                    s.get("status", 0),
+                ),
+            )
+        self.req_summary_var.set(
+            f"OK: {op.upper()} on {dut} returned {len(samples)} sample(s) in {payload.get('latency_ms', 0):.2f} ms."
+        )
+
+    def action_apply_settings_tab(self) -> None:
+        lg = self.config_doc.setdefault("logger", {})
+        lg["poll_interval_ms"] = int(self.settings_vars["poll_interval_ms"].get() or 1000)
+        lg["queue_depth"] = int(self.settings_vars["queue_depth"].get() or 100000)
+        lg["worker_threads"] = int(self.settings_vars["worker_threads"].get() or 4)
+        lg["max_cycles"] = int(self.settings_vars["max_cycles"].get() or 0)
+
+        new_sinks: list[dict[str, Any]] = [
+            {
+                "type": "sqlite3",
+                "enabled": bool(self.settings_vars["sqlite_enabled"].get()),
+                "path": str(self.settings_vars["sqlite_path"].get()),
+                "commit_every_n": 50,
+                "commit_every_ms": 500,
+            },
+            {
+                "type": "csv",
+                "enabled": bool(self.settings_vars["csv_enabled"].get()),
+                "dir": str(self.settings_vars["csv_dir"].get()),
+                "flush_every_n": 32,
+            },
+            {
+                "type": "jsonl",
+                "enabled": bool(self.settings_vars["jsonl_enabled"].get()),
+                "dir": str(self.settings_vars["jsonl_dir"].get()),
+                "flush_every_n": 32,
+            },
+            {
+                "type": "prometheus",
+                "enabled": bool(self.settings_vars["prom_enabled"].get()),
+                "host": "127.0.0.1",
+                "port": int(self.settings_vars["prom_port"].get() or 9761),
+                "metric_prefix": "ezsnmp",
+            },
+        ]
+        # Preserve any existing psql sink entry
+        for existing in self.config_doc.get("sinks", []):
+            if existing.get("type") == "psql":
+                new_sinks.append(existing)
+        self.config_doc["sinks"] = new_sinks
+
+        gui = self.config_doc.setdefault("gui", {})
+        gui["frontend"] = str(self.settings_vars["gui_frontend"].get())
+        gui["theme"] = str(self.settings_vars["gui_theme"].get())
+        gui["refresh_interval_ms"] = int(self.settings_vars["gui_refresh_ms"].get() or 1000)
+        gui["port"] = int(self.settings_vars["gui_port"].get() or 8765)
+
+        if gui["theme"] != self.theme_name:
+            self.theme_name = "light" if gui["theme"] == "light" else "dark"
+            self._apply_style()
+
+        self.refresh_ms = max(250, int(gui["refresh_interval_ms"]))
+        self.action_save_all()
+
+    def action_inspect_sinks(self) -> None:
+        res = self.bridge.inspect(
+            limit=int(self.exp_limit_var.get() or 50),
+            dut=self.exp_dut_var.get().strip(),
+            metric=self.exp_metric_var.get().strip(),
+        )
+        self._update_audit_banner(res.get("audit"))
+        for item in self.inspect_tree.get_children():
+            self.inspect_tree.delete(item)
+        payload = res.get("data") or {}
+        for r in payload.get("rows", []):
+            self.inspect_tree.insert(
+                "",
+                tk.END,
+                values=(
+                    r.get("ts_unix_ns", 0),
+                    r.get("dut_name", ""),
+                    r.get("metric_name", ""),
+                    r.get("oid", ""),
+                    r.get("snmp_type", ""),
+                    r.get("raw_value", "") or r.get("str_val", ""),
+                    r.get("sink_type", ""),
+                ),
+            )
+
+    def action_load_template(self) -> None:
+        res = self.bridge.init_config_template(self.tpl_var.get())
+        self._update_audit_banner(res.get("audit"))
+        if res["ok"] and res["stdout"].strip():
+            self.json_editor.delete("1.0", tk.END)
+            self.json_editor.insert("1.0", res["stdout"])
+            self.json_status_var.set(
+                f"Loaded '{self.tpl_var.get()}' template from CLI — click 'Save Editor JSON' to apply."
+            )
+
+    def action_validate_editor(self) -> None:
+        raw = self.json_editor.get("1.0", tk.END)
+        res = self.bridge.validate(config_text=raw)
+        self._update_audit_banner(res.get("audit"))
+        rep = res.get("data") or {}
+        if rep.get("valid"):
+            self.json_status_var.set(
+                f"CLI Validation PASSED ({rep.get('enabled_duts', 0)} DUTs, {rep.get('enabled_sinks', 0)} sinks)."
+            )
+        else:
+            errs = "; ".join(rep.get("errors", [res.get("stderr", "Invalid JSON")]))
+            self.json_status_var.set(f"CLI Validation FAILED: {errs}")
+
+    def action_save_editor_json(self) -> None:
+        raw = self.json_editor.get("1.0", tk.END)
+        try:
+            res = self.bridge.save_config_text(raw)
+        except Exception as exc:
+            messagebox.showerror("Invalid JSON Syntax", str(exc), parent=self.root)
+            return
+        self._update_audit_banner(res.get("audit"))
+        self.reload_from_disk()
+        rep = res.get("data") or {}
+        if rep.get("valid"):
+            self.json_status_var.set("Saved JSON configuration and verified VALID via CLI.")
+        else:
+            errs = "; ".join(rep.get("errors", []))
+            self.json_status_var.set(f"Saved JSON with validation errors: {errs}")
+
+    def action_show_schema(self) -> None:
+        res = self.bridge.schema()
+        self._update_audit_banner(res.get("audit"))
+        if res["ok"]:
+            win = tk.Toplevel(self.root)
+            win.title("JSON Schema (Draft 2020-12) — CLI `schema`")
+            win.geometry("760x580")
+            txt = tk.Text(win, font=("Courier", 10))
+            txt.pack(fill=tk.BOTH, expand=True)
+            txt.insert("1.0", res["stdout"])
+            txt.configure(state=tk.DISABLED)
+
+    def _update_audit_banner(self, audit: dict[str, Any] | None) -> None:
+        if not audit:
+            return
+        rc = audit.get("exit_code")
+        rc_str = "running" if rc is None else str(rc)
+        self.audit_status_var.set(
+            f"Last CLI Command [{rc_str}, {audit.get('duration_ms', 0)} ms]: {audit.get('command', '')}"
+        )
+
+    def _draw_chart(self, series_map: dict[str, list[dict[str, Any]]]) -> None:
+        pal = PALETTES[self.theme_name]
+        c = self.chart_canvas
+        c.delete("all")
+        w = max(320, c.winfo_width())
+        h = max(140, c.winfo_height())
+
+        pad_l, pad_r, pad_t, pad_b = 54, 20, 26, 24
+        plot_w = max(40, w - pad_l - pad_r)
+        plot_h = max(40, h - pad_t - pad_b)
+
+        # Grid lines
+        for i in range(5):
+            y = pad_t + (plot_h * i) / 4.0
+            c.create_line(pad_l, y, pad_l + plot_w, y, fill=pal["border"], dash=(2, 4))
+
+        non_empty = [(k, pts) for k, pts in series_map.items() if pts]
+        if not non_empty:
+            c.create_text(
+                w / 2,
+                h / 2,
+                text="Start CLI Logger or click 'Run Single Cycle' to stream real-time SNMP series",
+                fill=pal["muted"],
+            )
+            return
+
+        all_vals = [float(p["value"]) for _, pts in non_empty for p in pts]
+        vmin = min(all_vals)
+        vmax = max(all_vals)
+        if abs(vmax - vmin) < 1e-9:
+            vmin -= 1.0
+            vmax += 1.0
+
+        c.create_text(
+            pad_l - 6,
+            pad_t,
+            text=f"{vmax:.1f}",
+            anchor=tk.E,
+            fill=pal["muted"],
+            font=("Courier", 8),
+        )
+        c.create_text(
+            pad_l - 6,
+            pad_t + plot_h,
+            text=f"{vmin:.1f}",
+            anchor=tk.E,
+            fill=pal["muted"],
+            font=("Courier", 8),
+        )
+
+        legend_x = pad_l
+        for idx, (series_name, pts) in enumerate(non_empty[:6]):
+            color = SERIES_COLORS[idx % len(SERIES_COLORS)]
+            c.create_text(
+                legend_x,
+                10,
+                text=f"● {series_name}",
+                anchor=tk.W,
+                fill=color,
+                font=("TkDefaultFont", 9, "bold"),
+            )
+            legend_x += min(210, len(series_name) * 7 + 28)
+
+            if len(pts) == 1:
+                y = pad_t + plot_h - ((pts[0]["value"] - vmin) / (vmax - vmin)) * plot_h
+                c.create_oval(
+                    pad_l + plot_w / 2 - 3,
+                    y - 3,
+                    pad_l + plot_w / 2 + 3,
+                    y + 3,
+                    fill=color,
+                    outline="",
+                )
+                continue
+
+            coords: list[float] = []
+            span = max(1, len(pts) - 1)
+            for p_idx, pt in enumerate(pts):
+                x = pad_l + (p_idx / span) * plot_w
+                y = pad_t + plot_h - ((float(pt["value"]) - vmin) / (vmax - vmin)) * plot_h
+                coords.extend([x, y])
+            c.create_line(*coords, fill=color, width=2, smooth=False)
+
+    def refresh_live_state(self, reschedule: bool = True) -> None:
+        snap = self.bridge.snapshot()
+        st = snap["stats"]
+        self.kpi_vars["state"].set("RUNNING" if snap["running"] else "IDLE")
+        self.kpi_vars["cycles"].set(str(st.get("cycles_completed", 0)))
+        self.kpi_vars["batches"].set(str(st.get("processed_batches", 0)))
+        self.kpi_vars["samples"].set(str(st.get("processed_samples", 0)))
+        self.kpi_vars["queue"].set(str(st.get("queue_depth", 0)))
+        self.kpi_vars["errors"].set(f"{st.get('poll_errors', 0)} / {st.get('sink_errors', 0)}")
+
+        self._draw_chart(snap.get("series", {}))
+
+        # CLI JSON stream log
+        lines = snap.get("cli_lines", [])
+        self.cli_log_text.delete("1.0", tk.END)
+        if lines:
+            self.cli_log_text.insert("1.0", "\n".join(lines[-40:]))
+            self.cli_log_text.see(tk.END)
+
+        # CLI audit table
+        for item in self.audit_tree.get_children():
+            self.audit_tree.delete(item)
+        for entry in snap.get("audit", [])[:30]:
+            ts_short = str(entry.get("timestamp", ""))[11:19]
+            rc = entry.get("exit_code")
+            self.audit_tree.insert(
+                "",
+                tk.END,
+                values=(
+                    ts_short,
+                    "..." if rc is None else rc,
+                    entry.get("duration_ms", 0),
+                    entry.get("command", ""),
+                ),
+            )
+
+        if reschedule:
+            self._after_id = self.root.after(self.refresh_ms, self.refresh_live_state)
+
+    def on_close(self) -> None:
+        if self._after_id is not None:
+            try:
+                self.root.after_cancel(self._after_id)
+            except Exception:
+                pass
+            self._after_id = None
+        self.bridge.stop_run()
+        self.root.destroy()
+
+
+def launch_desktop_gui(bridge: CliSubprocessBridge) -> int:
+    """Launch the cross-platform tkinter.ttk Desktop Studio mainloop."""
+    studio = DesktopLoggerStudio(bridge, schedule_refresh=True)
+    studio.root.mainloop()
+    return 0
