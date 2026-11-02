@@ -7,7 +7,9 @@ with zero duplicated engine or SNMP logic.
 from __future__ import annotations
 
 import json
+import sys
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
@@ -87,11 +89,98 @@ class DesktopLoggerStudio:
 
         self._selected_dut_index = 0
         self._after_id: str | None = None
+        self._icon_image: tk.PhotoImage | None = None
+        self._header_icon_img: tk.PhotoImage | None = None
 
+        self._apply_icon()
         self._apply_style()
         self._build_layout()
         self.reload_from_disk()
         self.refresh_live_state(reschedule=schedule_refresh)
+
+    def _apply_icon(self) -> None:
+        """Apply custom branded icon to window titlebar, taskbar, and macOS Dock."""
+        static_dir = Path(__file__).resolve().parent / "static"
+        png_path = static_dir / "app_icon.png"
+        ico_path = static_dir / "app_icon.ico"
+        icns_path = static_dir / "app_icon.icns"
+
+        # 1. Cross-platform Tkinter iconphoto (Linux, Windows, macOS X11/Tk)
+        if png_path.is_file():
+            try:
+                self._icon_image = tk.PhotoImage(file=str(png_path))
+                self.root.iconphoto(True, self._icon_image)
+            except Exception:
+                pass
+
+        # 2. Windows taskbar / titlebar icon
+        if sys.platform == "win32" and ico_path.is_file():
+            try:
+                self.root.iconbitmap(default=str(ico_path))
+            except Exception:
+                pass
+
+        # 3. macOS Dock application icon (replaces generic Python rocket icon via Cocoa AppKit)
+        if sys.platform == "darwin":
+            self._set_macos_dock_icon(png_path if png_path.is_file() else icns_path)
+
+    @staticmethod
+    def _set_macos_dock_icon(icon_path: Path) -> bool:
+        """Set the macOS Dock application icon via standard AppKit/ctypes.
+
+        Zero external dependencies required (uses macOS system AppKit framework).
+        """
+        if not icon_path.is_file():
+            return False
+        try:
+            import ctypes
+            import ctypes.util
+
+            objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+            ctypes.cdll.LoadLibrary("/System/Library/Frameworks/AppKit.framework/AppKit")
+
+            objc.objc_getClass.restype = ctypes.c_void_p
+            objc.objc_getClass.argtypes = [ctypes.c_char_p]
+            objc.sel_registerName.restype = ctypes.c_void_p
+            objc.sel_registerName.argtypes = [ctypes.c_char_p]
+
+            def call_msg(
+                target: Any,
+                sel_name: str,
+                *args: Any,
+                restype: Any = ctypes.c_void_p,
+                argtypes: list[Any] | None = None,
+            ) -> Any:
+                fn = ctypes.cast(
+                    objc.objc_msgSend,
+                    ctypes.CFUNCTYPE(restype, ctypes.c_void_p, ctypes.c_void_p, *(argtypes or [])),
+                )
+                return fn(target, objc.sel_registerName(sel_name.encode("utf-8")), *args)
+
+            cls_ns_app = objc.objc_getClass(b"NSApplication")
+            cls_ns_image = objc.objc_getClass(b"NSImage")
+            cls_ns_string = objc.objc_getClass(b"NSString")
+
+            ns_app = call_msg(cls_ns_app, "sharedApplication")
+            ns_path_str = call_msg(
+                cls_ns_string,
+                "stringWithUTF8String:",
+                str(icon_path).encode("utf-8"),
+                argtypes=[ctypes.c_char_p],
+            )
+            img_alloc = call_msg(cls_ns_image, "alloc")
+            ns_img = call_msg(
+                img_alloc,
+                "initWithContentsOfFile:",
+                ns_path_str,
+                argtypes=[ctypes.c_void_p],
+            )
+            if ns_img:
+                call_msg(ns_app, "setApplicationIconImage:", ns_img, argtypes=[ctypes.c_void_p])
+                return True
+        except Exception:
+            pass
+        return False
 
     def _apply_style(self) -> None:
         pal = PALETTES[self.theme_name]
@@ -103,6 +192,7 @@ class DesktopLoggerStudio:
         style.configure(".", background=pal["bg"], foreground=pal["fg"], font=("TkDefaultFont", 10))
         style.configure("TFrame", background=pal["bg"])
         style.configure("Panel.TFrame", background=pal["panel"])
+        style.configure("Panel.TLabel", background=pal["panel"], foreground=pal["fg"])
         style.configure("Card.TFrame", background=pal["card"], relief="flat")
         style.configure("TLabel", background=pal["bg"], foreground=pal["fg"])
         style.configure(
@@ -164,6 +254,16 @@ class DesktopLoggerStudio:
         # Top header bar
         header = ttk.Frame(self.root, style="Panel.TFrame", padding=(14, 10))
         header.pack(fill=tk.X)
+
+        # Header brand logo thumbnail
+        icon_thumb = Path(__file__).resolve().parent / "static" / "app_icon_32.png"
+        if icon_thumb.is_file():
+            try:
+                self._header_icon_img = tk.PhotoImage(file=str(icon_thumb))
+                icon_lbl = ttk.Label(header, image=self._header_icon_img, style="Panel.TLabel")
+                icon_lbl.pack(side=tk.LEFT, padx=(0, 10))
+            except Exception:
+                pass
 
         title_box = ttk.Frame(header, style="Panel.TFrame")
         title_box.pack(side=tk.LEFT, fill=tk.X, expand=True)

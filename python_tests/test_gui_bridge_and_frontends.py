@@ -140,6 +140,17 @@ def test_web_studio_http_server_endpoints(tmp_path: Path) -> None:
             assert loc_obj["ok"] is True
             assert "en" in loc_obj["supported"]
             assert loc_obj["strings"]["buttons.start_logger"] == "Start CLI Logger"
+
+        # Favicon and icon static assets
+        with urllib.request.urlopen(f"{base_url}/favicon.ico") as resp:
+            assert resp.status == 200
+            assert resp.headers.get("Content-Type") == "image/x-icon"
+            assert len(resp.read()) > 0
+
+        with urllib.request.urlopen(f"{base_url}/favicon.svg") as resp:
+            assert resp.status == 200
+            assert resp.headers.get("Content-Type") == "image/svg+xml"
+            assert b"<svg" in resp.read()
     finally:
         bridge.stop_run()
         srv.shutdown()
@@ -232,3 +243,51 @@ def test_locale_manager_and_locale_json(tmp_path: Path) -> None:
     # When requesting an unsupported language, falls back to English
     custom_mgr.set_locale("de")
     assert custom_mgr.t("buttons.start_logger") == "Start CLI Logger"
+
+
+def test_icon_assets_and_desktop_launcher(tmp_path: Path) -> None:
+    from ezsnmp_data_logger.gui import main as gui_main
+    from ezsnmp_data_logger.gui.launcher import (
+        _install_linux_desktop_entry,
+        _install_macos_app_bundle,
+        _install_windows_shortcut,
+        get_icon_path,
+        install_desktop_launcher,
+    )
+
+    # 1. Verify existence and readability of all key icon assets
+    for kind in ("png", "png_32", "png_64", "ico", "icns", "svg", "favicon_ico"):
+        icon_file = get_icon_path(kind)
+        assert icon_file.is_file(), f"Icon asset for '{kind}' not found: {icon_file}"
+        assert icon_file.stat().st_size > 0
+
+    # 2. Verify platform desktop launcher installers
+    # macOS .app bundle
+    app_dir = _install_macos_app_bundle(tmp_path / "mac_apps")
+    assert app_dir.is_dir()
+    assert (app_dir / "Contents" / "Info.plist").is_file()
+    assert (app_dir / "Contents" / "MacOS" / "EzSnmp Data Logger Studio").is_file()
+    assert (app_dir / "Contents" / "Resources" / "app_icon.icns").is_file()
+
+    # Linux .desktop entry
+    desk_dir = tmp_path / "linux_apps"
+    desktop_file = _install_linux_desktop_entry(desk_dir)
+    assert desktop_file.is_file()
+    assert "EzSnmp Data Logger Studio" in desktop_file.read_text(encoding="utf-8")
+    assert "Icon=" in desktop_file.read_text(encoding="utf-8")
+
+    # Windows .bat shortcut
+    win_dir = tmp_path / "win_apps"
+    bat_file = _install_windows_shortcut(win_dir)
+    assert bat_file.is_file()
+    assert "ezsnmp_data_logger.gui" in bat_file.read_text(encoding="utf-8")
+
+    # Default platform installer
+    launcher_path = install_desktop_launcher(target_dir=tmp_path / "default_launcher")
+    assert launcher_path.exists()
+
+    # CLI option --install-launcher
+    cli_target = tmp_path / "cli_launcher"
+    rc = gui_main(["--install-launcher", "--launcher-dir", str(cli_target)])
+    assert rc == 0
+    assert len(list(cli_target.iterdir())) > 0

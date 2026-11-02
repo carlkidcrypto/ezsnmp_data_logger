@@ -19,6 +19,10 @@ from .cli_bridge import CliSubprocessBridge
 from .locale_manager import LocaleManager, get_default_locale_manager
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+mimetypes.add_type("image/x-icon", ".ico")
+mimetypes.add_type("image/svg+xml", ".svg")
+mimetypes.add_type("image/png", ".png")
+mimetypes.add_type("image/x-icns", ".icns")
 
 
 class StudioHttpServer(ThreadingHTTPServer):

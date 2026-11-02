@@ -62,3 +62,21 @@ Each key in ``locale.json`` is mapped to an object containing language translati
 - **Browser Studio Switching:** Switch languages instantly from the language dropdown in the top navigation toolbar, backed by ``GET /api/locale`` and ``POST /api/locale``.
 - **Graceful Fallback:** Any key or translation not defined in a custom language file automatically falls back to the canonical English string.
 
+Custom Branding Icons & Desktop Application Launchers
+=====================================================
+
+``ezsnmp_data_logger`` ships with a custom branding icon and favicon suite, ensuring neither Desktop Studio nor Web Studio display generic Python or browser tab icons:
+
+- **Browser Web Studio Favicons:** Vector SVG (``favicon.svg``), Windows ICO (``favicon.ico``), multi-resolution PNGs (``favicon-32x32.png``, ``favicon-16x16.png``), and Apple Touch Icon (``apple-touch-icon.png``).
+- **Desktop Tkinter Window & Dock Icon:** Custom window titlebar icon (``app_icon.png`` / ``app_icon.ico``) and automatic macOS Dock icon configuration via standard Cocoa/AppKit integration (zero extra dependencies).
+- **Desktop Application Launcher Installer:** Install a native launcher with custom icons for your operating system:
+
+.. code-block:: bash
+
+   # Install native launcher (~/Applications on macOS, ~/.local/share/applications on Linux)
+   ezsnmp-data-logger-gui --install-launcher
+
+   # Or specify a custom destination directory
+   ezsnmp-data-logger-gui --install-launcher --launcher-dir ~/Desktop
+
+
