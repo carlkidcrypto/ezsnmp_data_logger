@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ezsnmp_data_logger.gui import can_use_tkinter_display, select_frontend
 from ezsnmp_data_logger.gui.cli_bridge import CliSubprocessBridge
+from ezsnmp_data_logger.gui.locale_manager import LocaleManager, get_default_locale_manager
 from ezsnmp_data_logger.gui.server import create_web_server
 
 
@@ -132,6 +133,26 @@ def test_web_studio_http_server_endpoints(tmp_path: Path) -> None:
             insp_obj = json.loads(resp.read().decode("utf-8"))
             assert insp_obj["ok"] is True
             assert insp_obj["data"]["count"] >= 2
+
+        # Locale API: GET /api/locale
+        with urllib.request.urlopen(f"{base_url}/api/locale") as resp:
+            loc_obj = json.loads(resp.read().decode("utf-8"))
+            assert loc_obj["ok"] is True
+            assert "en" in loc_obj["supported"]
+            assert loc_obj["strings"]["buttons"]["start_logger"] == "Start CLI Logger"
+
+        # Locale API: POST /api/locale (switch to Spanish)
+        post_loc = urllib.request.Request(
+            f"{base_url}/api/locale",
+            data=json.dumps({"locale": "es"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(post_loc) as resp:
+            loc_es = json.loads(resp.read().decode("utf-8"))
+            assert loc_es["ok"] is True
+            assert loc_es["locale"] == "es"
+            assert loc_es["strings"]["buttons"]["start_logger"] == "Iniciar Logger CLI"
     finally:
         bridge.stop_run()
         srv.shutdown()
@@ -160,3 +181,51 @@ def test_frontend_selection_and_optional_tkinter_desktop(tmp_path: Path) -> None
         assert int(studio.kpi_vars["batches"].get()) >= 1
     finally:
         studio.on_close()
+
+    # Spanish localized studio
+    es_mgr = LocaleManager(locale="es")
+    studio_es = DesktopLoggerStudio(bridge, schedule_refresh=False, locale_mgr=es_mgr)
+    try:
+        studio_es.root.withdraw()
+        assert "Panel en Vivo" in studio_es.locale.t("tabs.live_dashboard")
+        assert studio_es.locale.t("buttons.start_logger") == "Iniciar Logger CLI"
+    finally:
+        studio_es.on_close()
+
+
+def test_locale_manager_and_locale_json(tmp_path: Path) -> None:
+    mgr = get_default_locale_manager()
+    assert "en" in mgr.supported_locales()
+    assert "es" in mgr.supported_locales()
+
+    assert mgr.t("buttons.start_logger") == "Start CLI Logger"
+    assert mgr.t("tabs.live_dashboard") == "1. Live Dashboard"
+
+    # Switch to Spanish
+    mgr.set_locale("es")
+    assert mgr.t("buttons.start_logger") == "Iniciar Logger CLI"
+    assert mgr.t("tabs.live_dashboard") == "1. Panel en Vivo"
+
+    # Formatting interpolation
+    assert (
+        mgr.t("app.window_title", filename="custom.json")
+        == "EzSnmp Data Logger Studio — custom.json"
+    )
+
+    # Missing key in target locale falls back to English
+    assert mgr.t("nonexistent.key.xyz", default="fallback") == "fallback"
+
+    # Custom locale JSON file
+    custom_doc = {
+        "default_locale": "fr",
+        "locales": {
+            "fr": {
+                "buttons": {"start_logger": "Démarrer Logger CLI"},
+            }
+        },
+    }
+    custom_path = tmp_path / "custom_locale.json"
+    custom_path.write_text(json.dumps(custom_doc), encoding="utf-8")
+
+    custom_mgr = LocaleManager(locale="fr", locale_file=custom_path)
+    assert custom_mgr.t("buttons.start_logger") == "Démarrer Logger CLI"

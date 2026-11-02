@@ -12,6 +12,7 @@ from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
 from .cli_bridge import CliSubprocessBridge
+from .locale_manager import LocaleManager, get_default_locale_manager
 
 PALETTES: dict[str, dict[str, str]] = {
     "dark": {
@@ -51,11 +52,20 @@ SERIES_COLORS = [
 class DesktopLoggerStudio:
     """Cross-platform tkinter.ttk GUI interacting exclusively with the CLI + JSON."""
 
-    def __init__(self, bridge: CliSubprocessBridge, schedule_refresh: bool = True) -> None:
+    def __init__(
+        self,
+        bridge: CliSubprocessBridge,
+        schedule_refresh: bool = True,
+        locale_mgr: LocaleManager | None = None,
+    ) -> None:
         self.bridge = bridge
         self.config_doc: dict[str, Any] = self.bridge.load_config_dict()
         gui_cfg = (
             self.config_doc.get("gui", {}) if isinstance(self.config_doc.get("gui"), dict) else {}
+        )
+        self.locale = locale_mgr or LocaleManager(
+            locale=str(gui_cfg.get("locale") or gui_cfg.get("language") or "en"),
+            locale_file=str(gui_cfg.get("locale_file") or "") or None,
         )
 
         self.theme_name = "light" if gui_cfg.get("theme") == "light" else "dark"
@@ -64,7 +74,13 @@ class DesktopLoggerStudio:
         win_h = max(600, int(gui_cfg.get("window_height", 820)))
 
         self.root = tk.Tk()
-        self.root.title(f"EzSnmp Data Logger Studio — {self.bridge.config_path.name}")
+        self.root.title(
+            self.locale.t(
+                "app.window_title",
+                default=f"EzSnmp Data Logger Studio — {self.bridge.config_path.name}",
+                filename=self.bridge.config_path.name,
+            )
+        )
         self.root.geometry(f"{win_w}x{win_h}")
         self.root.minsize(920, 620)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -153,27 +169,45 @@ class DesktopLoggerStudio:
         title_box.pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Label(
             title_box,
-            text="EzSnmp Data Logger — Cross-Platform CLI Studio",
+            text=self.locale.t(
+                "app.header_title", default="EzSnmp Data Logger — Cross-Platform CLI Studio"
+            ),
             style="Header.TLabel",
         ).pack(anchor=tk.W)
-        self.cfg_path_var = tk.StringVar(value=f"JSON Config: {self.bridge.config_path}")
+        self.cfg_path_var = tk.StringVar(
+            value=self.locale.t(
+                "labels.json_config",
+                default=f"JSON Config: {self.bridge.config_path}",
+                path=self.bridge.config_path,
+            )
+        )
         ttk.Label(title_box, textvariable=self.cfg_path_var, style="Subtle.TLabel").pack(
             anchor=tk.W
         )
 
         btn_bar = ttk.Frame(header, style="Panel.TFrame")
         btn_bar.pack(side=tk.RIGHT)
-        ttk.Button(btn_bar, text="Open JSON...", command=self.action_open_config).pack(
-            side=tk.LEFT, padx=3
-        )
-        ttk.Button(btn_bar, text="Save JSON", command=self.action_save_all).pack(
-            side=tk.LEFT, padx=3
-        )
         ttk.Button(
-            btn_bar, text="Start CLI Logger", style="Accent.TButton", command=self.action_start_run
+            btn_bar,
+            text=self.locale.t("buttons.open_json", default="Open JSON..."),
+            command=self.action_open_config,
         ).pack(side=tk.LEFT, padx=3)
         ttk.Button(
-            btn_bar, text="Stop CLI Logger", style="Danger.TButton", command=self.action_stop_run
+            btn_bar,
+            text=self.locale.t("buttons.save_json", default="Save JSON"),
+            command=self.action_save_all,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            btn_bar,
+            text=self.locale.t("buttons.start_logger", default="Start CLI Logger"),
+            style="Accent.TButton",
+            command=self.action_start_run,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            btn_bar,
+            text=self.locale.t("buttons.stop_logger", default="Stop CLI Logger"),
+            style="Danger.TButton",
+            command=self.action_stop_run,
         ).pack(side=tk.LEFT, padx=3)
 
         # Notebook tabs
@@ -190,13 +224,19 @@ class DesktopLoggerStudio:
         # Bottom Behind-the-Scenes CLI Command Audit footer
         footer = ttk.Frame(self.root, style="Panel.TFrame", padding=(12, 6))
         footer.pack(fill=tk.X, side=tk.BOTTOM)
-        self.audit_status_var = tk.StringVar(value="CLI Audit: Ready")
+        self.audit_status_var = tk.StringVar(
+            value=self.locale.t("status_bar.audit_ready", default="CLI Audit: Ready")
+        )
         ttk.Label(footer, textvariable=self.audit_status_var, style="Subtle.TLabel").pack(
             side=tk.LEFT, fill=tk.X, expand=True
         )
         self.cli_bin_label = ttk.Label(
             footer,
-            text=f"Backend CLI: {' '.join(self.bridge.cli_base_command())}",
+            text=self.locale.t(
+                "status_bar.backend_cli",
+                default=f"Backend CLI: {' '.join(self.bridge.cli_base_command())}",
+                cli_command=" ".join(self.bridge.cli_base_command()),
+            ),
             style="Subtle.TLabel",
         )
         self.cli_bin_label.pack(side=tk.RIGHT)
@@ -205,19 +245,22 @@ class DesktopLoggerStudio:
     def _build_dashboard_tab(self) -> None:
         pal = PALETTES[self.theme_name]
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="1. Live Dashboard")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.live_dashboard", default="1. Live Dashboard"),
+        )
 
         # KPI Cards
         kpi_row = ttk.Frame(tab)
         kpi_row.pack(fill=tk.X, pady=(0, 8))
         self.kpi_vars: dict[str, tk.StringVar] = {}
         kpi_specs = [
-            ("state", "CLI Engine"),
-            ("cycles", "Cycles"),
-            ("batches", "Batches"),
-            ("samples", "Samples"),
-            ("queue", "Queue Depth"),
-            ("errors", "Poll / Sink Errors"),
+            ("state", self.locale.t("cards.cli_engine", default="CLI Engine")),
+            ("cycles", self.locale.t("cards.cycles", default="Cycles")),
+            ("batches", self.locale.t("cards.batches", default="Batches")),
+            ("samples", self.locale.t("cards.samples", default="Samples")),
+            ("queue", self.locale.t("cards.queue_depth", default="Queue Depth")),
+            ("errors", self.locale.t("cards.poll_sink_errors", default="Poll / Sink Errors")),
         ]
         for key, label in kpi_specs:
             card = ttk.Frame(kpi_row, style="Card.TFrame", padding=(12, 8))
@@ -231,19 +274,28 @@ class DesktopLoggerStudio:
         act_row = ttk.Frame(tab)
         act_row.pack(fill=tk.X, pady=4)
         ttk.Button(
-            act_row, text="Run Single Cycle (CLI --once)", command=self.action_run_once
+            act_row,
+            text=self.locale.t("buttons.run_single_cycle", default="Run Single Cycle (CLI --once)"),
+            command=self.action_run_once,
         ).pack(side=tk.LEFT, padx=3)
-        ttk.Button(act_row, text="Probe All DUTs (CLI probe)", command=self.action_probe_all).pack(
-            side=tk.LEFT, padx=3
-        )
         ttk.Button(
-            act_row, text="Validate Config (CLI validate)", command=self.action_validate_saved
+            act_row,
+            text=self.locale.t("buttons.probe_all_duts", default="Probe All DUTs (CLI probe)"),
+            command=self.action_probe_all,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            act_row,
+            text=self.locale.t("buttons.validate_config", default="Validate Config (CLI validate)"),
+            command=self.action_validate_saved,
         ).pack(side=tk.LEFT, padx=3)
 
         # Live Canvas telemetry chart
         ttk.Label(
             tab,
-            text="Real-Time SNMP Numeric Series (streamed from `ezsnmp-data-logger run --json`):",
+            text=self.locale.t(
+                "sections.realtime_series",
+                default="Real-Time SNMP Numeric Series (streamed from `ezsnmp-data-logger run --json`):",
+            ),
         ).pack(anchor=tk.W, pady=(6, 2))
         self.chart_canvas = tk.Canvas(
             tab,
@@ -259,7 +311,10 @@ class DesktopLoggerStudio:
         bottom_split.pack(fill=tk.BOTH, expand=True)
 
         log_frame = ttk.Frame(bottom_split)
-        ttk.Label(log_frame, text="Live CLI JSON Event Stream:").pack(anchor=tk.W)
+        ttk.Label(
+            log_frame,
+            text=self.locale.t("sections.live_event_stream", default="Live CLI JSON Event Stream:"),
+        ).pack(anchor=tk.W)
         self.cli_log_text = tk.Text(
             log_frame,
             height=9,
@@ -272,17 +327,26 @@ class DesktopLoggerStudio:
         bottom_split.add(log_frame, weight=3)
 
         audit_frame = ttk.Frame(bottom_split)
-        ttk.Label(audit_frame, text="Behind-the-Scenes CLI Command Audit:").pack(anchor=tk.W)
+        ttk.Label(
+            audit_frame,
+            text=self.locale.t(
+                "sections.command_audit", default="Behind-the-Scenes CLI Command Audit:"
+            ),
+        ).pack(anchor=tk.W)
         self.audit_tree = ttk.Treeview(
             audit_frame,
             columns=("time", "rc", "ms", "cmd"),
             show="headings",
             height=8,
         )
-        self.audit_tree.heading("time", text="UTC Time")
-        self.audit_tree.heading("rc", text="Exit")
-        self.audit_tree.heading("ms", text="ms")
-        self.audit_tree.heading("cmd", text="Executed CLI Command")
+        self.audit_tree.heading(
+            "time", text=self.locale.t("table_headers.utc_time", default="UTC Time")
+        )
+        self.audit_tree.heading("rc", text=self.locale.t("table_headers.exit", default="Exit"))
+        self.audit_tree.heading("ms", text=self.locale.t("table_headers.ms", default="ms"))
+        self.audit_tree.heading(
+            "cmd", text=self.locale.t("table_headers.command", default="Executed CLI Command")
+        )
         self.audit_tree.column("time", width=90, stretch=False)
         self.audit_tree.column("rc", width=45, stretch=False)
         self.audit_tree.column("ms", width=65, stretch=False)
@@ -293,13 +357,19 @@ class DesktopLoggerStudio:
     def _build_duts_tab(self) -> None:
         pal = PALETTES[self.theme_name]
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="2. DUTs & Metrics")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.duts_and_metrics", default="2. DUTs & Metrics"),
+        )
 
         pane = ttk.PanedWindow(tab, orient=tk.HORIZONTAL)
         pane.pack(fill=tk.BOTH, expand=True)
 
         left = ttk.Frame(pane, padding=(0, 0, 8, 0))
-        ttk.Label(left, text="Configured DUTs:").pack(anchor=tk.W)
+        ttk.Label(
+            left,
+            text=self.locale.t("sections.configured_duts", default="Configured DUTs:"),
+        ).pack(anchor=tk.W)
         self.dut_listbox = tk.Listbox(
             left,
             bg=pal["card"],
@@ -313,12 +383,16 @@ class DesktopLoggerStudio:
 
         dut_btns = ttk.Frame(left)
         dut_btns.pack(fill=tk.X)
-        ttk.Button(dut_btns, text="+ Add DUT", command=self.action_add_dut).pack(
-            side=tk.LEFT, padx=2
-        )
-        ttk.Button(dut_btns, text="- Remove", command=self.action_remove_dut).pack(
-            side=tk.LEFT, padx=2
-        )
+        ttk.Button(
+            dut_btns,
+            text=self.locale.t("buttons.add_dut", default="+ Add DUT"),
+            command=self.action_add_dut,
+        ).pack(side=tk.LEFT, padx=2)
+        ttk.Button(
+            dut_btns,
+            text=self.locale.t("buttons.remove_dut", default="- Remove"),
+            command=self.action_remove_dut,
+        ).pack(side=tk.LEFT, padx=2)
         pane.add(left, weight=1)
 
         right = ttk.Frame(pane)
@@ -345,21 +419,61 @@ class DesktopLoggerStudio:
         }
 
         fields = [
-            ("DUT Name:", "name", 0, 0),
-            ("Host / IP:", "dut_ip", 0, 2),
-            ("Poll ms (0=global):", "poll_interval_ms", 0, 4),
-            ("SNMP Mode:", "mode", 1, 0),
-            ("SNMP Version:", "version", 1, 2),
-            ("Community:", "community", 1, 4),
-            ("UDP Port:", "port_number", 2, 0),
-            ("Timeout (s):", "timeout_seconds", 2, 2),
-            ("Retries:", "retries", 2, 4),
-            ("v3 SecLevel:", "security_level", 3, 0),
-            ("v3 Username:", "security_username", 3, 2),
-            ("v3 AuthProto:", "auth_protocol", 3, 4),
-            ("v3 AuthPass:", "auth_passphrase", 4, 0),
-            ("v3 PrivProto:", "privacy_protocol", 4, 2),
-            ("v3 PrivPass:", "privacy_passphrase", 4, 4),
+            (self.locale.t("labels.dut_name_colon", default="DUT Name:"), "name", 0, 0),
+            (self.locale.t("labels.host_ip_colon", default="Host / IP:"), "dut_ip", 0, 2),
+            (
+                self.locale.t("labels.poll_ms_colon", default="Poll ms (0=global):"),
+                "poll_interval_ms",
+                0,
+                4,
+            ),
+            (self.locale.t("labels.snmp_mode_colon", default="SNMP Mode:"), "mode", 1, 0),
+            (self.locale.t("labels.snmp_version_colon", default="SNMP Version:"), "version", 1, 2),
+            (self.locale.t("labels.community_colon", default="Community:"), "community", 1, 4),
+            (self.locale.t("labels.udp_port_colon", default="UDP Port:"), "port_number", 2, 0),
+            (
+                self.locale.t("labels.timeout_colon", default="Timeout (s):"),
+                "timeout_seconds",
+                2,
+                2,
+            ),
+            (self.locale.t("labels.retries_colon", default="Retries:"), "retries", 2, 4),
+            (
+                self.locale.t("labels.v3_seclevel_colon", default="v3 SecLevel:"),
+                "security_level",
+                3,
+                0,
+            ),
+            (
+                self.locale.t("labels.v3_username_colon", default="v3 Username:"),
+                "security_username",
+                3,
+                2,
+            ),
+            (
+                self.locale.t("labels.v3_authproto_colon", default="v3 AuthProto:"),
+                "auth_protocol",
+                3,
+                4,
+            ),
+            (
+                self.locale.t("labels.v3_authpass_colon", default="v3 AuthPass:"),
+                "auth_passphrase",
+                4,
+                0,
+            ),
+            (
+                self.locale.t("labels.v3_privproto_colon", default="v3 PrivProto:"),
+                "privacy_protocol",
+                4,
+                2,
+            ),
+            (
+                self.locale.t("labels.v3_privpass_colon", default="v3 PrivPass:"),
+                "privacy_passphrase",
+                4,
+                4,
+            ),
         ]
         for label_txt, key, r, c in fields:
             ttk.Label(form, text=label_txt).grid(row=r, column=c, sticky=tk.W, padx=4, pady=3)
@@ -393,20 +507,29 @@ class DesktopLoggerStudio:
 
         chk_row = ttk.Frame(right)
         chk_row.pack(fill=tk.X, pady=4)
-        ttk.Checkbutton(chk_row, text="DUT Enabled", variable=self.dut_vars["enabled"]).pack(
-            side=tk.LEFT, padx=4
-        )
+        ttk.Checkbutton(
+            chk_row,
+            text=self.locale.t("labels.dut_enabled_check", default="DUT Enabled"),
+            variable=self.dut_vars["enabled"],
+        ).pack(side=tk.LEFT, padx=4)
         ttk.Button(
             chk_row,
-            text="Apply DUT Changes to JSON",
+            text=self.locale.t("buttons.apply_dut_changes", default="Apply DUT Changes to JSON"),
             style="Accent.TButton",
             command=self.action_apply_dut,
         ).pack(side=tk.LEFT, padx=8)
         ttk.Button(
-            chk_row, text="Probe This DUT via CLI", command=self.action_probe_selected_dut
+            chk_row,
+            text=self.locale.t("buttons.probe_selected_dut", default="Probe This DUT via CLI"),
+            command=self.action_probe_selected_dut,
         ).pack(side=tk.LEFT, padx=4)
 
-        ttk.Label(right, text="DUT Polled Metrics (ezsnmp OIDs):").pack(anchor=tk.W, pady=(8, 2))
+        ttk.Label(
+            right,
+            text=self.locale.t(
+                "sections.dut_polled_metrics", default="DUT Polled Metrics (ezsnmp OIDs):"
+            ),
+        ).pack(anchor=tk.W, pady=(8, 2))
         self.metrics_tree = ttk.Treeview(
             right,
             columns=("name", "oid", "op", "rep"),
@@ -414,10 +537,18 @@ class DesktopLoggerStudio:
             height=8,
         )
         for col, title, width in [
-            ("name", "Metric Name", 160),
-            ("oid", "OID / Symbolic MIB", 260),
-            ("op", "Operation", 90),
-            ("rep", "Max Repeaters", 100),
+            ("name", self.locale.t("table_headers.metric_name", default="Metric Name"), 160),
+            (
+                "oid",
+                self.locale.t("table_headers.oid_symbolic", default="OID / Symbolic MIB"),
+                260,
+            ),
+            ("op", self.locale.t("table_headers.operation", default="Operation"), 90),
+            (
+                "rep",
+                self.locale.t("table_headers.max_repeaters", default="Max Repeaters"),
+                100,
+            ),
         ]:
             self.metrics_tree.heading(col, text=title)
             self.metrics_tree.column(col, width=width)
@@ -428,9 +559,13 @@ class DesktopLoggerStudio:
         self.new_metric_name = tk.StringVar(value="sysUpTime")
         self.new_metric_oid = tk.StringVar(value="1.3.6.1.2.1.1.3.0")
         self.new_metric_op = tk.StringVar(value="get")
-        ttk.Label(m_add, text="Name:").pack(side=tk.LEFT)
+        ttk.Label(m_add, text=self.locale.t("labels.metric_name_colon", default="Name:")).pack(
+            side=tk.LEFT
+        )
         ttk.Entry(m_add, textvariable=self.new_metric_name, width=14).pack(side=tk.LEFT, padx=3)
-        ttk.Label(m_add, text="OID:").pack(side=tk.LEFT)
+        ttk.Label(m_add, text=self.locale.t("labels.metric_oid_colon", default="OID:")).pack(
+            side=tk.LEFT
+        )
         ttk.Entry(m_add, textvariable=self.new_metric_oid, width=22).pack(side=tk.LEFT, padx=3)
         ttk.Combobox(
             m_add,
@@ -439,18 +574,25 @@ class DesktopLoggerStudio:
             width=10,
             state="readonly",
         ).pack(side=tk.LEFT, padx=3)
-        ttk.Button(m_add, text="+ Add Metric", command=self.action_add_metric).pack(
-            side=tk.LEFT, padx=3
-        )
-        ttk.Button(m_add, text="- Delete Selected", command=self.action_remove_metric).pack(
-            side=tk.LEFT, padx=3
-        )
+        ttk.Button(
+            m_add,
+            text=self.locale.t("buttons.add_metric", default="+ Add Metric"),
+            command=self.action_add_metric,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            m_add,
+            text=self.locale.t("buttons.remove_metric", default="- Delete Selected"),
+            command=self.action_remove_metric,
+        ).pack(side=tk.LEFT, padx=3)
 
         pane.add(right, weight=3)
 
     def _build_ezsnmp_studio_tab(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="3. EzSnmp GET / WALK / SET")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.ezsnmp_studio", default="3. EzSnmp GET / WALK / SET"),
+        )
 
         ctrl = ttk.Frame(tab)
         ctrl.pack(fill=tk.X, pady=(0, 8))
@@ -462,13 +604,17 @@ class DesktopLoggerStudio:
         self.req_set_val_var = tk.StringVar(value="")
         self.req_record_var = tk.BooleanVar(value=False)
 
-        ttk.Label(ctrl, text="DUT:").grid(row=0, column=0, sticky=tk.W, padx=4, pady=3)
+        ttk.Label(ctrl, text=self.locale.t("labels.dut_colon", default="DUT:")).grid(
+            row=0, column=0, sticky=tk.W, padx=4, pady=3
+        )
         self.req_dut_combo = ttk.Combobox(
             ctrl, textvariable=self.req_dut_var, width=18, state="readonly"
         )
         self.req_dut_combo.grid(row=0, column=1, padx=4, pady=3)
 
-        ttk.Label(ctrl, text="Operation:").grid(row=0, column=2, sticky=tk.W, padx=4, pady=3)
+        ttk.Label(ctrl, text=self.locale.t("labels.operation_colon", default="Operation:")).grid(
+            row=0, column=2, sticky=tk.W, padx=4, pady=3
+        )
         ttk.Combobox(
             ctrl,
             textvariable=self.req_op_var,
@@ -477,14 +623,17 @@ class DesktopLoggerStudio:
             state="readonly",
         ).grid(row=0, column=3, padx=4, pady=3)
 
-        ttk.Label(ctrl, text="OID(s) (comma-sep):").grid(
-            row=0, column=4, sticky=tk.W, padx=4, pady=3
-        )
+        ttk.Label(
+            ctrl,
+            text=self.locale.t("labels.oids_comma_sep", default="OID(s) (comma-sep):"),
+        ).grid(row=0, column=4, sticky=tk.W, padx=4, pady=3)
         ttk.Entry(ctrl, textvariable=self.req_oid_var, width=28).grid(
             row=0, column=5, padx=4, pady=3
         )
 
-        ttk.Label(ctrl, text="SET Type:").grid(row=1, column=0, sticky=tk.W, padx=4, pady=3)
+        ttk.Label(ctrl, text=self.locale.t("labels.set_type_colon", default="SET Type:")).grid(
+            row=1, column=0, sticky=tk.W, padx=4, pady=3
+        )
         ttk.Combobox(
             ctrl,
             textvariable=self.req_set_type_var,
@@ -493,26 +642,34 @@ class DesktopLoggerStudio:
             state="readonly",
         ).grid(row=1, column=1, sticky=tk.W, padx=4, pady=3)
 
-        ttk.Label(ctrl, text="SET Value:").grid(row=1, column=2, sticky=tk.W, padx=4, pady=3)
+        ttk.Label(ctrl, text=self.locale.t("labels.set_value_colon", default="SET Value:")).grid(
+            row=1, column=2, sticky=tk.W, padx=4, pady=3
+        )
         ttk.Entry(ctrl, textvariable=self.req_set_val_var, width=22).grid(
             row=1, column=3, columnspan=2, sticky=tk.EW, padx=4, pady=3
         )
 
         ttk.Checkbutton(
             ctrl,
-            text="Also persist response to enabled sinks (--record)",
+            text=self.locale.t(
+                "labels.persist_to_sinks_check",
+                default="Also persist response to enabled sinks (--record)",
+            ),
             variable=self.req_record_var,
         ).grid(row=1, column=5, sticky=tk.W, padx=4)
 
         ttk.Button(
             ctrl,
-            text="Execute via CLI",
+            text=self.locale.t("buttons.execute_via_cli", default="Execute via CLI"),
             style="Accent.TButton",
             command=self.action_execute_ezsnmp_request,
         ).grid(row=0, column=6, rowspan=2, padx=8)
 
         self.req_summary_var = tk.StringVar(
-            value="Ready to run on-demand ezsnmp request/set via CLI."
+            value=self.locale.t(
+                "status_bar.ready_ondemand",
+                default="Ready to run on-demand ezsnmp request/set via CLI.",
+            )
         )
         ttk.Label(tab, textvariable=self.req_summary_var).pack(anchor=tk.W, pady=(0, 4))
 
@@ -522,12 +679,24 @@ class DesktopLoggerStudio:
             show="headings",
         )
         for col, title, w in [
-            ("oid", "OID", 220),
-            ("index", "Index", 70),
-            ("snmp_type", "SNMP Type", 110),
-            ("raw", "Raw Value (ezsnmp)", 260),
-            ("typed", "Normalized Type", 110),
-            ("status", "Status", 70),
+            ("oid", self.locale.t("table_headers.oid", default="OID"), 220),
+            ("index", self.locale.t("table_headers.index", default="Index"), 70),
+            (
+                "snmp_type",
+                self.locale.t("table_headers.snmp_type", default="SNMP Type"),
+                110,
+            ),
+            (
+                "raw",
+                self.locale.t("table_headers.raw_value", default="Raw Value (ezsnmp)"),
+                260,
+            ),
+            (
+                "typed",
+                self.locale.t("table_headers.normalized_type", default="Normalized Type"),
+                110,
+            ),
+            ("status", self.locale.t("table_headers.status", default="Status"), 70),
         ]:
             self.req_tree.heading(col, text=title)
             self.req_tree.column(col, width=w)
@@ -535,7 +704,10 @@ class DesktopLoggerStudio:
 
     def _build_sinks_and_gui_tab(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="4. Sinks & JSON Settings")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.sinks_and_settings", default="4. Sinks & JSON Settings"),
+        )
 
         self.settings_vars: dict[str, tk.Variable] = {
             "poll_interval_ms": tk.StringVar(value="1000"),
@@ -552,6 +724,7 @@ class DesktopLoggerStudio:
             "prom_port": tk.StringVar(value="9761"),
             "gui_frontend": tk.StringVar(value="auto"),
             "gui_theme": tk.StringVar(value=self.theme_name),
+            "gui_locale": tk.StringVar(value=self.locale.locale),
             "gui_refresh_ms": tk.StringVar(value="1000"),
             "gui_port": tk.StringVar(value="8765"),
         }
@@ -560,18 +733,87 @@ class DesktopLoggerStudio:
         grid.pack(fill=tk.X)
 
         rows = [
-            ("Logger Poll Interval (ms):", "poll_interval_ms", 0, 0),
-            ("Bounded Queue Depth:", "queue_depth", 0, 2),
-            ("Worker Threads:", "worker_threads", 1, 0),
-            ("Max Cycles (0=continuous):", "max_cycles", 1, 2),
-            ("SQLite3 Path:", "sqlite_path", 2, 0),
-            ("CSV Directory:", "csv_dir", 3, 0),
-            ("JSONL Directory:", "jsonl_dir", 4, 0),
-            ("Prometheus HTTP Port:", "prom_port", 5, 0),
-            ("GUI Frontend (auto|tk|web):", "gui_frontend", 6, 0),
-            ("GUI Theme (dark|light):", "gui_theme", 6, 2),
-            ("GUI Refresh (ms):", "gui_refresh_ms", 7, 0),
-            ("Web Studio Port:", "gui_port", 7, 2),
+            (
+                self.locale.t(
+                    "labels.logger_poll_interval",
+                    default="Logger Poll Interval (ms):",
+                ),
+                "poll_interval_ms",
+                0,
+                0,
+            ),
+            (
+                self.locale.t("labels.bounded_queue_depth", default="Bounded Queue Depth:"),
+                "queue_depth",
+                0,
+                2,
+            ),
+            (
+                self.locale.t("labels.worker_threads", default="Worker Threads:"),
+                "worker_threads",
+                1,
+                0,
+            ),
+            (
+                self.locale.t("labels.max_cycles", default="Max Cycles (0=continuous):"),
+                "max_cycles",
+                1,
+                2,
+            ),
+            (
+                self.locale.t("labels.sqlite3_path", default="SQLite3 Path:"),
+                "sqlite_path",
+                2,
+                0,
+            ),
+            (
+                self.locale.t("labels.csv_directory", default="CSV Directory:"),
+                "csv_dir",
+                3,
+                0,
+            ),
+            (
+                self.locale.t("labels.jsonl_directory", default="JSONL Directory:"),
+                "jsonl_dir",
+                4,
+                0,
+            ),
+            (
+                self.locale.t("labels.prometheus_port", default="Prometheus HTTP Port:"),
+                "prom_port",
+                5,
+                0,
+            ),
+            (
+                self.locale.t("labels.gui_frontend", default="GUI Frontend (auto|tk|web):"),
+                "gui_frontend",
+                6,
+                0,
+            ),
+            (
+                self.locale.t("labels.gui_theme", default="GUI Theme (dark|light):"),
+                "gui_theme",
+                6,
+                2,
+            ),
+            (
+                self.locale.t("labels.gui_locale", default="GUI Locale / Language (en|es):"),
+                "gui_locale",
+                7,
+                0,
+            ),
+            (
+                self.locale.t("labels.web_studio_port", default="Web Studio Port:"),
+                "gui_port",
+                7,
+                2,
+            ),
+            (
+                self.locale.t("labels.gui_refresh", default="GUI Refresh (ms):"),
+                "gui_refresh_ms",
+                8,
+                0,
+            ),
         ]
         for lbl, key, r, c in rows:
             ttk.Label(grid, text=lbl).grid(row=r, column=c, sticky=tk.W, padx=6, pady=4)
@@ -591,33 +833,55 @@ class DesktopLoggerStudio:
                     width=18,
                     state="readonly",
                 )
+            elif key == "gui_locale":
+                w = ttk.Combobox(
+                    grid,
+                    textvariable=self.settings_vars[key],
+                    values=self.locale.supported_locales(),
+                    width=18,
+                    state="readonly",
+                )
             else:
                 w = ttk.Entry(grid, textvariable=self.settings_vars[key], width=24)
             w.grid(row=r, column=c + 1, sticky=tk.W, padx=6, pady=4)
 
         ttk.Checkbutton(
-            grid, text="Enable SQLite3 Sink", variable=self.settings_vars["sqlite_enabled"]
+            grid,
+            text=self.locale.t("labels.enable_sqlite3", default="Enable SQLite3 Sink"),
+            variable=self.settings_vars["sqlite_enabled"],
         ).grid(row=2, column=2, sticky=tk.W, padx=6)
         ttk.Checkbutton(
-            grid, text="Enable CSV Sink", variable=self.settings_vars["csv_enabled"]
+            grid,
+            text=self.locale.t("labels.enable_csv", default="Enable CSV Sink"),
+            variable=self.settings_vars["csv_enabled"],
         ).grid(row=3, column=2, sticky=tk.W, padx=6)
         ttk.Checkbutton(
-            grid, text="Enable JSONL Sink", variable=self.settings_vars["jsonl_enabled"]
+            grid,
+            text=self.locale.t("labels.enable_jsonl", default="Enable JSONL Sink"),
+            variable=self.settings_vars["jsonl_enabled"],
         ).grid(row=4, column=2, sticky=tk.W, padx=6)
         ttk.Checkbutton(
-            grid, text="Enable Prometheus Sink", variable=self.settings_vars["prom_enabled"]
+            grid,
+            text=self.locale.t("labels.enable_prometheus", default="Enable Prometheus Sink"),
+            variable=self.settings_vars["prom_enabled"],
         ).grid(row=5, column=2, sticky=tk.W, padx=6)
 
         ttk.Button(
             tab,
-            text="Save Runtime, Sink & GUI Settings to JSON",
+            text=self.locale.t(
+                "buttons.save_settings",
+                default="Save Runtime, Sink & GUI Settings to JSON",
+            ),
             style="Accent.TButton",
             command=self.action_apply_settings_tab,
         ).pack(anchor=tk.W, pady=12)
 
     def _build_explorer_tab(self) -> None:
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="5. Data Explorer")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.data_explorer", default="5. Data Explorer"),
+        )
 
         bar = ttk.Frame(tab)
         bar.pack(fill=tk.X, pady=(0, 8))
@@ -625,15 +889,25 @@ class DesktopLoggerStudio:
         self.exp_metric_var = tk.StringVar()
         self.exp_limit_var = tk.StringVar(value="100")
 
-        ttk.Label(bar, text="Filter DUT:").pack(side=tk.LEFT)
+        ttk.Label(bar, text=self.locale.t("labels.filter_dut_colon", default="Filter DUT:")).pack(
+            side=tk.LEFT
+        )
         ttk.Entry(bar, textvariable=self.exp_dut_var, width=16).pack(side=tk.LEFT, padx=4)
-        ttk.Label(bar, text="Filter Metric:").pack(side=tk.LEFT)
+        ttk.Label(
+            bar,
+            text=self.locale.t("labels.filter_metric_colon", default="Filter Metric:"),
+        ).pack(side=tk.LEFT)
         ttk.Entry(bar, textvariable=self.exp_metric_var, width=16).pack(side=tk.LEFT, padx=4)
-        ttk.Label(bar, text="Limit:").pack(side=tk.LEFT)
+        ttk.Label(bar, text=self.locale.t("labels.limit_colon", default="Limit:")).pack(
+            side=tk.LEFT
+        )
         ttk.Entry(bar, textvariable=self.exp_limit_var, width=8).pack(side=tk.LEFT, padx=4)
         ttk.Button(
             bar,
-            text="Query Stored Samples (CLI inspect)",
+            text=self.locale.t(
+                "buttons.query_stored_samples",
+                default="Query Stored Samples (CLI inspect)",
+            ),
             style="Accent.TButton",
             command=self.action_inspect_sinks,
         ).pack(side=tk.LEFT, padx=8)
@@ -644,13 +918,21 @@ class DesktopLoggerStudio:
             show="headings",
         )
         for col, title, w in [
-            ("ts", "Timestamp (ns)", 160),
-            ("dut", "DUT", 130),
-            ("metric", "Metric", 140),
-            ("oid", "OID", 200),
-            ("stype", "SNMP Type", 100),
-            ("raw", "Value", 220),
-            ("sink", "Sink", 80),
+            (
+                "ts",
+                self.locale.t("table_headers.timestamp_ns", default="Timestamp (ns)"),
+                160,
+            ),
+            ("dut", self.locale.t("table_headers.dut", default="DUT"), 130),
+            ("metric", self.locale.t("table_headers.metric", default="Metric"), 140),
+            ("oid", self.locale.t("table_headers.oid", default="OID"), 200),
+            (
+                "stype",
+                self.locale.t("table_headers.snmp_type", default="SNMP Type"),
+                100,
+            ),
+            ("raw", self.locale.t("table_headers.value", default="Value"), 220),
+            ("sink", self.locale.t("table_headers.sink", default="Sink"), 80),
         ]:
             self.inspect_tree.heading(col, text=title)
             self.inspect_tree.column(col, width=w)
@@ -659,12 +941,17 @@ class DesktopLoggerStudio:
     def _build_json_tab(self) -> None:
         pal = PALETTES[self.theme_name]
         tab = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(tab, text="6. Raw JSON & Schema")
+        self.notebook.add(
+            tab,
+            text=self.locale.t("tabs.raw_json_schema", default="6. Raw JSON & Schema"),
+        )
 
         top = ttk.Frame(tab)
         top.pack(fill=tk.X, pady=(0, 6))
         self.tpl_var = tk.StringVar(value="demo")
-        ttk.Label(top, text="Template:").pack(side=tk.LEFT)
+        ttk.Label(top, text=self.locale.t("labels.template_colon", default="Template:")).pack(
+            side=tk.LEFT
+        )
         ttk.Combobox(
             top,
             textvariable=self.tpl_var,
@@ -672,23 +959,37 @@ class DesktopLoggerStudio:
             width=12,
             state="readonly",
         ).pack(side=tk.LEFT, padx=4)
-        ttk.Button(top, text="Load CLI Template", command=self.action_load_template).pack(
-            side=tk.LEFT, padx=3
-        )
         ttk.Button(
-            top, text="Validate Editor JSON via CLI", command=self.action_validate_editor
+            top,
+            text=self.locale.t("buttons.load_template", default="Load CLI Template"),
+            command=self.action_load_template,
         ).pack(side=tk.LEFT, padx=3)
         ttk.Button(
             top,
-            text="Save Editor JSON",
+            text=self.locale.t(
+                "buttons.validate_editor_json",
+                default="Validate Editor JSON via CLI",
+            ),
+            command=self.action_validate_editor,
+        ).pack(side=tk.LEFT, padx=3)
+        ttk.Button(
+            top,
+            text=self.locale.t("buttons.save_editor_json", default="Save Editor JSON"),
             style="Accent.TButton",
             command=self.action_save_editor_json,
         ).pack(side=tk.LEFT, padx=3)
-        ttk.Button(top, text="Show JSON Schema", command=self.action_show_schema).pack(
-            side=tk.LEFT, padx=3
-        )
+        ttk.Button(
+            top,
+            text=self.locale.t("buttons.show_json_schema", default="Show JSON Schema"),
+            command=self.action_show_schema,
+        ).pack(side=tk.LEFT, padx=3)
 
-        self.json_status_var = tk.StringVar(value="All configuration is stored in JSON.")
+        self.json_status_var = tk.StringVar(
+            value=self.locale.t(
+                "status_bar.all_config_stored_json",
+                default="All configuration is stored in JSON.",
+            )
+        )
         ttk.Label(tab, textvariable=self.json_status_var).pack(anchor=tk.W, pady=(0, 4))
 
         self.json_editor = tk.Text(
@@ -706,7 +1007,13 @@ class DesktopLoggerStudio:
     def reload_from_disk(self) -> None:
         raw = self.bridge.load_config_text()
         self.config_doc = json.loads(raw)
-        self.cfg_path_var.set(f"JSON Config: {self.bridge.config_path}")
+        self.cfg_path_var.set(
+            self.locale.t(
+                "labels.json_config",
+                default=f"JSON Config: {self.bridge.config_path}",
+                path=self.bridge.config_path,
+            )
+        )
 
         self.json_editor.delete("1.0", tk.END)
         self.json_editor.insert("1.0", raw)
@@ -759,6 +1066,9 @@ class DesktopLoggerStudio:
         gui = self.config_doc.get("gui", {})
         self.settings_vars["gui_frontend"].set(str(gui.get("frontend", "auto")))
         self.settings_vars["gui_theme"].set(str(gui.get("theme", self.theme_name)))
+        self.settings_vars["gui_locale"].set(
+            str(gui.get("locale") or gui.get("language") or self.locale.locale)
+        )
         self.settings_vars["gui_refresh_ms"].set(str(gui.get("refresh_interval_ms", 1000)))
         self.settings_vars["gui_port"].set(str(gui.get("port", 8765)))
 
@@ -809,8 +1119,17 @@ class DesktopLoggerStudio:
 
     def action_open_config(self) -> None:
         chosen = filedialog.askopenfilename(
-            title="Open ezsnmp_data_logger JSON Config",
-            filetypes=[("JSON Configuration", "*.json"), ("All Files", "*.*")],
+            title=self.locale.t(
+                "dialogs.open_config_title",
+                default="Open ezsnmp_data_logger JSON Config",
+            ),
+            filetypes=[
+                (
+                    self.locale.t("dialogs.filetype_json", default="JSON Configuration"),
+                    "*.json",
+                ),
+                (self.locale.t("dialogs.filetype_all", default="All Files"), "*.*"),
+            ],
         )
         if chosen:
             self.bridge.stop_run()
@@ -872,7 +1191,12 @@ class DesktopLoggerStudio:
                     ),
                 )
         self.req_summary_var.set(
-            f"CLI probe completed across {probe_payload.get('count', 0)} DUT(s) -> {total_samples} sample(s)."
+            self.locale.t(
+                "status_bar.probe_summary",
+                default=f"CLI probe completed across {probe_payload.get('count', 0)} DUT(s) -> {total_samples} sample(s).",
+                count=probe_payload.get("count", 0),
+                total=total_samples,
+            )
         )
 
     def action_validate_saved(self) -> None:
@@ -881,11 +1205,22 @@ class DesktopLoggerStudio:
         rep = res.get("data") or {}
         if rep.get("valid"):
             self.json_status_var.set(
-                f"VALID: {rep.get('enabled_duts', 0)} DUTs, {rep.get('total_metrics', 0)} metrics, {rep.get('enabled_sinks', 0)} sinks."
+                self.locale.t(
+                    "status_bar.validation_passed",
+                    default=f"CLI Validation PASSED ({rep.get('enabled_duts', 0)} DUTs, {rep.get('enabled_sinks', 0)} sinks).",
+                    duts=rep.get("enabled_duts", 0),
+                    sinks=rep.get("enabled_sinks", 0),
+                )
             )
         else:
             errs = "; ".join(rep.get("errors", [res.get("stderr", "Validation failed")]))
-            self.json_status_var.set(f"INVALID: {errs}")
+            self.json_status_var.set(
+                self.locale.t(
+                    "status_bar.validation_failed",
+                    default=f"CLI Validation FAILED: {errs}",
+                    errors=errs,
+                )
+            )
 
     def action_add_dut(self) -> None:
         duts = self.config_doc.setdefault("duts", [])
@@ -978,7 +1313,12 @@ class DesktopLoggerStudio:
         record = bool(self.req_record_var.get())
 
         if not dut or not raw_oids:
-            self.req_summary_var.set("Select a DUT and specify at least one OID.")
+            self.req_summary_var.set(
+                self.locale.t(
+                    "dialogs.select_dut_and_oid",
+                    default="Select a DUT and specify at least one OID.",
+                )
+            )
             return
 
         if op == "set":
@@ -999,7 +1339,9 @@ class DesktopLoggerStudio:
         payload = res.get("data") or {}
         if not res["ok"]:
             err_msg = payload.get("error") or res.get("stderr", "CLI request failed").strip()
-            self.req_summary_var.set(f"Error: {err_msg}")
+            self.req_summary_var.set(
+                self.locale.t("status_bar.ezsnmp_error", default=f"Error: {err_msg}", error=err_msg)
+            )
             return
 
         samples = payload.get("samples", [])
@@ -1017,7 +1359,14 @@ class DesktopLoggerStudio:
                 ),
             )
         self.req_summary_var.set(
-            f"OK: {op.upper()} on {dut} returned {len(samples)} sample(s) in {payload.get('latency_ms', 0):.2f} ms."
+            self.locale.t(
+                "status_bar.ezsnmp_ok",
+                default=f"OK: {op.upper()} on {dut} returned {len(samples)} sample(s) in {payload.get('latency_ms', 0):.2f} ms.",
+                op=op.upper(),
+                dut=dut,
+                samples=len(samples),
+                ms=payload.get("latency_ms", 0.0),
+            )
         )
 
     def action_apply_settings_tab(self) -> None:
@@ -1064,8 +1413,12 @@ class DesktopLoggerStudio:
         gui = self.config_doc.setdefault("gui", {})
         gui["frontend"] = str(self.settings_vars["gui_frontend"].get())
         gui["theme"] = str(self.settings_vars["gui_theme"].get())
+        gui["locale"] = str(self.settings_vars["gui_locale"].get()).strip().lower()
         gui["refresh_interval_ms"] = int(self.settings_vars["gui_refresh_ms"].get() or 1000)
         gui["port"] = int(self.settings_vars["gui_port"].get() or 8765)
+
+        if gui["locale"] and gui["locale"] != self.locale.locale:
+            self.locale.set_locale(gui["locale"])
 
         if gui["theme"] != self.theme_name:
             self.theme_name = "light" if gui["theme"] == "light" else "dark"
@@ -1106,7 +1459,11 @@ class DesktopLoggerStudio:
             self.json_editor.delete("1.0", tk.END)
             self.json_editor.insert("1.0", res["stdout"])
             self.json_status_var.set(
-                f"Loaded '{self.tpl_var.get()}' template from CLI — click 'Save Editor JSON' to apply."
+                self.locale.t(
+                    "status_bar.template_loaded",
+                    default=f"Loaded '{self.tpl_var.get()}' template from CLI — click 'Save Editor JSON' to apply.",
+                    template=self.tpl_var.get(),
+                )
             )
 
     def action_validate_editor(self) -> None:
@@ -1116,34 +1473,65 @@ class DesktopLoggerStudio:
         rep = res.get("data") or {}
         if rep.get("valid"):
             self.json_status_var.set(
-                f"CLI Validation PASSED ({rep.get('enabled_duts', 0)} DUTs, {rep.get('enabled_sinks', 0)} sinks)."
+                self.locale.t(
+                    "status_bar.validation_passed",
+                    default=f"CLI Validation PASSED ({rep.get('enabled_duts', 0)} DUTs, {rep.get('enabled_sinks', 0)} sinks).",
+                    duts=rep.get("enabled_duts", 0),
+                    sinks=rep.get("enabled_sinks", 0),
+                )
             )
         else:
             errs = "; ".join(rep.get("errors", [res.get("stderr", "Invalid JSON")]))
-            self.json_status_var.set(f"CLI Validation FAILED: {errs}")
+            self.json_status_var.set(
+                self.locale.t(
+                    "status_bar.validation_failed",
+                    default=f"CLI Validation FAILED: {errs}",
+                    errors=errs,
+                )
+            )
 
     def action_save_editor_json(self) -> None:
         raw = self.json_editor.get("1.0", tk.END)
         try:
             res = self.bridge.save_config_text(raw)
         except Exception as exc:
-            messagebox.showerror("Invalid JSON Syntax", str(exc), parent=self.root)
+            messagebox.showerror(
+                self.locale.t("dialogs.invalid_json_title", default="Invalid JSON Syntax"),
+                str(exc),
+                parent=self.root,
+            )
             return
         self._update_audit_banner(res.get("audit"))
         self.reload_from_disk()
         rep = res.get("data") or {}
         if rep.get("valid"):
-            self.json_status_var.set("Saved JSON configuration and verified VALID via CLI.")
+            self.json_status_var.set(
+                self.locale.t(
+                    "status_bar.saved_json_valid",
+                    default="Saved JSON configuration and verified VALID via CLI.",
+                )
+            )
         else:
             errs = "; ".join(rep.get("errors", []))
-            self.json_status_var.set(f"Saved JSON with validation errors: {errs}")
+            self.json_status_var.set(
+                self.locale.t(
+                    "status_bar.saved_json_invalid",
+                    default=f"Saved JSON with validation errors: {errs}",
+                    errors=errs,
+                )
+            )
 
     def action_show_schema(self) -> None:
         res = self.bridge.schema()
         self._update_audit_banner(res.get("audit"))
         if res["ok"]:
             win = tk.Toplevel(self.root)
-            win.title("JSON Schema (Draft 2020-12) — CLI `schema`")
+            win.title(
+                self.locale.t(
+                    "app.schema_title",
+                    default="JSON Schema (Draft 2020-12) — CLI `schema`",
+                )
+            )
             win.geometry("760x580")
             txt = tk.Text(win, font=("Courier", 10))
             txt.pack(fill=tk.BOTH, expand=True)
@@ -1156,7 +1544,13 @@ class DesktopLoggerStudio:
         rc = audit.get("exit_code")
         rc_str = "running" if rc is None else str(rc)
         self.audit_status_var.set(
-            f"Last CLI Command [{rc_str}, {audit.get('duration_ms', 0)} ms]: {audit.get('command', '')}"
+            self.locale.t(
+                "status_bar.last_command",
+                default=f"Last CLI Command [{rc_str}, {audit.get('duration_ms', 0)} ms]: {audit.get('command', '')}",
+                exit_code=rc_str,
+                duration_ms=audit.get("duration_ms", 0),
+                command=audit.get("command", ""),
+            )
         )
 
     def _draw_chart(self, series_map: dict[str, list[dict[str, Any]]]) -> None:
@@ -1180,7 +1574,10 @@ class DesktopLoggerStudio:
             c.create_text(
                 w / 2,
                 h / 2,
-                text="Start CLI Logger or click 'Run Single Cycle' to stream real-time SNMP series",
+                text=self.locale.t(
+                    "status_bar.chart_empty",
+                    default="Start CLI Logger or click 'Run Single Cycle' to stream real-time SNMP series",
+                ),
                 fill=pal["muted"],
             )
             return
@@ -1292,8 +1689,11 @@ class DesktopLoggerStudio:
         self.root.destroy()
 
 
-def launch_desktop_gui(bridge: CliSubprocessBridge) -> int:
+def launch_desktop_gui(
+    bridge: CliSubprocessBridge,
+    locale_mgr: LocaleManager | None = None,
+) -> int:
     """Launch the cross-platform tkinter.ttk Desktop Studio mainloop."""
-    studio = DesktopLoggerStudio(bridge, schedule_refresh=True)
+    studio = DesktopLoggerStudio(bridge, schedule_refresh=True, locale_mgr=locale_mgr)
     studio.root.mainloop()
     return 0

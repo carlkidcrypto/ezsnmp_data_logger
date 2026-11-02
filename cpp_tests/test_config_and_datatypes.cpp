@@ -62,6 +62,16 @@ TEST(ConfigTest, TemplatesValidateAndRoundTripCleanly) {
    std::string schema = config_json_schema(2);
    EXPECT_NE(schema.find("https://json-schema.org/draft/2020-12/schema"), std::string::npos);
    EXPECT_NE(schema.find("frontend"), std::string::npos);
+
+   std::string const gui_locale_json = R"({
+      "gui": {"frontend": "tk", "locale": "es", "locale_file": "/custom/locale.json"},
+      "sinks": [{"type": "csv", "dir": "./data"}]
+   })";
+   LoggerConfig cfg_loc = LoggerConfig::from_json(gui_locale_json);
+   EXPECT_EQ(cfg_loc.gui.locale, "es");
+   EXPECT_EQ(cfg_loc.gui.locale_file, "/custom/locale.json");
+   std::string const dumped = cfg_loc.to_json(2);
+   EXPECT_NE(dumped.find("\"locale\": \"es\""), std::string::npos);
 }
 
 TEST(ConfigTest, RejectsInvalidSnmpAndSinkConfigurations) {

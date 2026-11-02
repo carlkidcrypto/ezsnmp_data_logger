@@ -388,6 +388,8 @@ LoggerConfig parse_from_value(json::Value const& root, ValidationReport& report)
          cfg.gui.host = gobj->value_string("host", cfg.gui.host);
          cfg.gui.port = gobj->value_int("port", cfg.gui.port);
          cfg.gui.theme = gobj->value_string("theme", cfg.gui.theme);
+         cfg.gui.locale = gobj->value_string("locale", cfg.gui.locale);
+         cfg.gui.locale_file = gobj->value_string("locale_file", cfg.gui.locale_file);
          cfg.gui.window_width = gobj->value_int("window_width", cfg.gui.window_width);
          cfg.gui.window_height = gobj->value_int("window_height", cfg.gui.window_height);
          cfg.gui.refresh_interval_ms =
@@ -524,6 +526,10 @@ std::string LoggerConfig::to_json(int indent) const {
    gobj["host"] = gui.host;
    gobj["port"] = gui.port;
    gobj["theme"] = gui.theme;
+   gobj["locale"] = gui.locale;
+   if (!gui.locale_file.empty()) {
+      gobj["locale_file"] = gui.locale_file;
+   }
    gobj["window_width"] = gui.window_width;
    gobj["window_height"] = gui.window_height;
    gobj["refresh_interval_ms"] = gui.refresh_interval_ms;

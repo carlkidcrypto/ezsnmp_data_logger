@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from .cli_bridge import CliSubprocessBridge
+from .locale_manager import LocaleManager
 
 
 def can_use_tkinter_display() -> bool:
@@ -79,18 +80,37 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="Override path to the ezsnmp-data-logger CLI executable.",
     )
+    parser.add_argument(
+        "--locale",
+        default="",
+        help="Override gui.locale ('en', 'es', etc.) for UI titles, buttons, and bars.",
+    )
+    parser.add_argument(
+        "--locale-file",
+        default="",
+        help="Path to custom locale.json file defining UI strings.",
+    )
     args = parser.parse_args(argv)
 
     bridge = CliSubprocessBridge(Path(args.config), cli_override=args.cli_executable)
     cfg = bridge.load_config_dict()
     gui_cfg = cfg.get("gui", {}) if isinstance(cfg.get("gui"), dict) else {}
 
+    locale_code = (
+        args.locale or str(gui_cfg.get("locale", "")) or str(gui_cfg.get("language", "en"))
+    )
+    locale_file = args.locale_file or str(gui_cfg.get("locale_file", ""))
+    locale_mgr = LocaleManager(
+        locale=locale_code,
+        locale_file=locale_file if locale_file else None,
+    )
+
     chosen = select_frontend(args.frontend or str(gui_cfg.get("frontend", "auto")))
     if chosen == "tk":
         try:
             from .desktop_tk import launch_desktop_gui
 
-            return launch_desktop_gui(bridge)
+            return launch_desktop_gui(bridge, locale_mgr=locale_mgr)
         except Exception as exc:
             print(
                 f"[ezsnmp-data-logger-gui] Native Tk desktop unavailable ({exc}); "
@@ -103,7 +123,19 @@ def main(argv: list[str] | None = None) -> int:
     host = args.host or str(gui_cfg.get("host", "127.0.0.1"))
     port = args.port if args.port >= 0 else int(gui_cfg.get("port", 8765))
     open_browser = False if args.no_browser else bool(gui_cfg.get("open_browser", True))
-    return launch_web_gui(bridge, host=host, port=port, open_browser=open_browser)
+    return launch_web_gui(
+        bridge,
+        locale_mgr=locale_mgr,
+        host=host,
+        port=port,
+        open_browser=open_browser,
+    )
 
 
-__all__ = ["CliSubprocessBridge", "can_use_tkinter_display", "main", "select_frontend"]
+__all__ = [
+    "CliSubprocessBridge",
+    "LocaleManager",
+    "can_use_tkinter_display",
+    "main",
+    "select_frontend",
+]

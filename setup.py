@@ -412,7 +412,7 @@ class BuildPy(_build_py):
 setup(
     packages=find_packages(include=["ezsnmp_data_logger", "ezsnmp_data_logger.*"]),
     package_data={
-        "ezsnmp_data_logger.gui": ["static/*"],
+        "ezsnmp_data_logger.gui": ["static/*", "locale.json"],
         "ezsnmp_data_logger": [".dylibs/*", "libs/*", "*.dll"],
     },
     include_package_data=True,
