@@ -1,8 +1,8 @@
 """Locale and internationalization manager for ezsnmp_data_logger GUIs.
 
-Loads `locale.json` to externalize all user-facing UI strings (titles, buttons,
-tabs, cards, sections, table headers, labels, and dialog messages) for
-effortless customization and multi-language deployment across desktop and web.
+Loads `locale.json` where strings are defined in the format:
+`{"LOCALE_KEY_NAME": {"en": "...", "es": "...", ...}}`
+for effortless per-key translation and multi-language deployment across desktop and web.
 """
 
 from __future__ import annotations
@@ -15,7 +15,11 @@ DEFAULT_LOCALE_PATH = Path(__file__).resolve().parent / "locale.json"
 
 
 class LocaleManager:
-    """Manages string resolution, language selection, and fallback for GUIs."""
+    """Manages string resolution, language selection, and fallback for GUIs.
+
+    Supports the key-centric format:
+    `{"LOCALE_KEY_NAME": {"en": "...", "es": "...", ...}}`
+    """
 
     def __init__(
         self,
@@ -30,7 +34,6 @@ class LocaleManager:
     def reload(self) -> None:
         """Load or reload locale definitions from JSON file."""
         if not self.locale_file.is_file():
-            # Fall back to built-in default locale if custom file is missing
             self.locale_file = DEFAULT_LOCALE_PATH
 
         try:
@@ -39,43 +42,51 @@ class LocaleManager:
             if self.locale_file != DEFAULT_LOCALE_PATH and DEFAULT_LOCALE_PATH.is_file():
                 self._catalog = json.loads(DEFAULT_LOCALE_PATH.read_text(encoding="utf-8"))
             else:
-                self._catalog = {"default_locale": "en", "locales": {"en": {}}}
+                self._catalog = {}
 
     def supported_locales(self) -> list[str]:
         """Return list of supported locale codes in the loaded catalog."""
-        locales = self._catalog.get("locales", {})
-        if isinstance(locales, dict):
-            return sorted(locales.keys())
-        return ["en"]
+        langs: set[str] = {"en"}
+        for entry in self._catalog.values():
+            if isinstance(entry, dict):
+                langs.update(k.strip().lower() for k in entry.keys() if isinstance(k, str))
+        return sorted(langs)
 
     def set_locale(self, locale: str) -> None:
         """Switch active locale (e.g. 'en', 'es')."""
         if locale:
             self.locale = locale.strip().lower()
 
-    def _resolve_nested(self, container: Any, path: str) -> Any | None:
-        parts = path.split(".")
-        curr = container
-        for p in parts:
-            if isinstance(curr, dict) and p in curr:
-                curr = curr[p]
-            else:
-                return None
-        return curr
-
     def t(self, key: str, default: str | None = None, **kwargs: Any) -> str:
-        """Translate a dotted key into the active locale with keyword formatting.
+        """Translate a key into the active locale with keyword formatting.
 
-        Falls back to 'en' if not found in active locale, or default / key.
+        Looks up `_catalog[key][locale]`, falling back to `_catalog[key]['en']`
+        or `default` / `key`.
         """
-        locales = self._catalog.get("locales", {})
-        active_dict = locales.get(self.locale) if isinstance(locales, dict) else None
-        val = self._resolve_nested(active_dict, key) if active_dict else None
+        entry = self._catalog.get(key)
+        val: Any | None = None
 
-        # Fallback to default/en locale
-        if val is None and self.locale != "en":
-            en_dict = locales.get("en") if isinstance(locales, dict) else None
-            val = self._resolve_nested(en_dict, key) if en_dict else None
+        if isinstance(entry, dict):
+            val = entry.get(self.locale)
+            if val is None and self.locale != "en":
+                val = entry.get("en")
+        elif entry is not None and not isinstance(entry, dict):
+            val = entry
+
+        # Fallback to dotted path traversal if catalog is nested
+        if val is None and "." in key:
+            parts = key.split(".")
+            curr: Any = self._catalog
+            for p in parts:
+                if isinstance(curr, dict) and p in curr:
+                    curr = curr[p]
+                else:
+                    curr = None
+                    break
+            if isinstance(curr, dict):
+                val = curr.get(self.locale) or curr.get("en")
+            elif isinstance(curr, str):
+                val = curr
 
         if val is None:
             val = default if default is not None else key
@@ -87,26 +98,22 @@ class LocaleManager:
                 return val
         return str(val) if val is not None else ""
 
-    def get_locale_dict(self, locale: str | None = None) -> dict[str, Any]:
-        """Return dictionary of all strings for a locale (falling back to English)."""
+    def get_locale_dict(self, locale: str | None = None) -> dict[str, str]:
+        """Return flat dictionary mapping each key to its string for the requested locale."""
         loc = (locale or self.locale).strip().lower()
-        locales = self._catalog.get("locales", {})
-        base_en = locales.get("en", {}) if isinstance(locales, dict) else {}
-        target = locales.get(loc, {}) if isinstance(locales, dict) else {}
-
-        # Merge target over base English
-        merged: dict[str, Any] = {}
-        for section, sec_val in base_en.items():
-            if isinstance(sec_val, dict):
-                merged[section] = dict(sec_val)
-                target_sec = target.get(section, {})
-                if isinstance(target_sec, dict):
-                    merged[section].update(target_sec)
-            else:
-                merged[section] = target.get(section, sec_val)
-        return merged
+        res: dict[str, str] = {}
+        for key, entry in self._catalog.items():
+            if isinstance(entry, dict):
+                v = entry.get(loc)
+                if v is None:
+                    v = entry.get("en")
+                if v is not None:
+                    res[key] = str(v)
+            elif isinstance(entry, str):
+                res[key] = entry
+        return res
 
 
 def get_default_locale_manager() -> LocaleManager:
-    """Return a singleton or standard LocaleManager instance."""
+    """Return a default LocaleManager instance configured for English."""
     return LocaleManager(locale="en")

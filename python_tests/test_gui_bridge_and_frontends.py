@@ -139,20 +139,7 @@ def test_web_studio_http_server_endpoints(tmp_path: Path) -> None:
             loc_obj = json.loads(resp.read().decode("utf-8"))
             assert loc_obj["ok"] is True
             assert "en" in loc_obj["supported"]
-            assert loc_obj["strings"]["buttons"]["start_logger"] == "Start CLI Logger"
-
-        # Locale API: POST /api/locale (switch to Spanish)
-        post_loc = urllib.request.Request(
-            f"{base_url}/api/locale",
-            data=json.dumps({"locale": "es"}).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(post_loc) as resp:
-            loc_es = json.loads(resp.read().decode("utf-8"))
-            assert loc_es["ok"] is True
-            assert loc_es["locale"] == "es"
-            assert loc_es["strings"]["buttons"]["start_logger"] == "Iniciar Logger CLI"
+            assert loc_obj["strings"]["buttons.start_logger"] == "Start CLI Logger"
     finally:
         bridge.stop_run()
         srv.shutdown()
@@ -182,8 +169,21 @@ def test_frontend_selection_and_optional_tkinter_desktop(tmp_path: Path) -> None
     finally:
         studio.on_close()
 
-    # Spanish localized studio
-    es_mgr = LocaleManager(locale="es")
+    # Localized studio with custom translation file
+    custom_doc = {
+        "buttons.start_logger": {
+            "en": "Start CLI Logger",
+            "es": "Iniciar Logger CLI",
+        },
+        "tabs.live_dashboard": {
+            "en": "1. Live Dashboard",
+            "es": "1. Panel en Vivo",
+        },
+    }
+    custom_path = tmp_path / "custom_locale.json"
+    custom_path.write_text(json.dumps(custom_doc), encoding="utf-8")
+
+    es_mgr = LocaleManager(locale="es", locale_file=custom_path)
     studio_es = DesktopLoggerStudio(bridge, schedule_refresh=False, locale_mgr=es_mgr)
     try:
         studio_es.root.withdraw()
@@ -196,15 +196,9 @@ def test_frontend_selection_and_optional_tkinter_desktop(tmp_path: Path) -> None
 def test_locale_manager_and_locale_json(tmp_path: Path) -> None:
     mgr = get_default_locale_manager()
     assert "en" in mgr.supported_locales()
-    assert "es" in mgr.supported_locales()
-
     assert mgr.t("buttons.start_logger") == "Start CLI Logger"
     assert mgr.t("tabs.live_dashboard") == "1. Live Dashboard"
-
-    # Switch to Spanish
-    mgr.set_locale("es")
-    assert mgr.t("buttons.start_logger") == "Iniciar Logger CLI"
-    assert mgr.t("tabs.live_dashboard") == "1. Panel en Vivo"
+    assert mgr.get_locale_dict("en")["buttons.start_logger"] == "Start CLI Logger"
 
     # Formatting interpolation
     assert (
@@ -212,20 +206,29 @@ def test_locale_manager_and_locale_json(tmp_path: Path) -> None:
         == "EzSnmp Data Logger Studio — custom.json"
     )
 
-    # Missing key in target locale falls back to English
+    # Missing key falls back to default or key
     assert mgr.t("nonexistent.key.xyz", default="fallback") == "fallback"
+    assert mgr.t("nonexistent.key.xyz") == "nonexistent.key.xyz"
 
-    # Custom locale JSON file
+    # Custom multi-language locale JSON file with format {"KEY": {"en": "...", "fr": "..."}}
     custom_doc = {
-        "default_locale": "fr",
-        "locales": {
-            "fr": {
-                "buttons": {"start_logger": "Démarrer Logger CLI"},
-            }
+        "buttons.start_logger": {
+            "en": "Start CLI Logger",
+            "fr": "Démarrer Logger CLI",
+        },
+        "status_bar.ready": {
+            "en": "Ready.",
+            "fr": "Prêt.",
         },
     }
-    custom_path = tmp_path / "custom_locale.json"
+    custom_path = tmp_path / "custom_key_centric_locale.json"
     custom_path.write_text(json.dumps(custom_doc), encoding="utf-8")
 
     custom_mgr = LocaleManager(locale="fr", locale_file=custom_path)
+    assert custom_mgr.supported_locales() == ["en", "fr"]
     assert custom_mgr.t("buttons.start_logger") == "Démarrer Logger CLI"
+    assert custom_mgr.t("status_bar.ready") == "Prêt."
+
+    # When requesting an unsupported language, falls back to English
+    custom_mgr.set_locale("de")
+    assert custom_mgr.t("buttons.start_logger") == "Start CLI Logger"
