@@ -90,7 +90,25 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="Path to custom locale.json file defining UI strings.",
     )
+    parser.add_argument(
+        "--install-launcher",
+        action="store_true",
+        help="Install native cross-platform desktop application launcher with custom icon (.app on macOS, .desktop on Linux).",
+    )
+    parser.add_argument(
+        "--launcher-dir",
+        type=Path,
+        default=None,
+        help="Target directory for desktop launcher (defaults to ~/Applications or ~/.local/share/applications).",
+    )
     args = parser.parse_args(argv)
+
+    if args.install_launcher:
+        from .launcher import install_desktop_launcher
+
+        path = install_desktop_launcher(target_dir=args.launcher_dir)
+        print(f"[ezsnmp-data-logger-gui] Installed desktop launcher at: {path}")
+        return 0
 
     bridge = CliSubprocessBridge(Path(args.config), cli_override=args.cli_executable)
     cfg = bridge.load_config_dict()

@@ -4,13 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="app.header_title">EzSnmp Data Logger — Cross-Platform CLI Studio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body data-theme="dark">
   <header class="topbar">
-    <div>
-      <h1 data-i18n="app.header_title">EzSnmp Data Logger Studio</h1>
-      <p id="config-subtitle" class="subtitle" data-i18n="app.loading_config">Loading JSON configuration...</p>
+    <div class="brand">
+      <img src="/favicon.svg" class="brand-icon" alt="EzSnmp Logo" width="38" height="38" />
+      <div>
+        <h1 data-i18n="app.header_title">EzSnmp Data Logger Studio</h1>
+        <p id="config-subtitle" class="subtitle" data-i18n="app.loading_config">Loading JSON configuration...</p>
+      </div>
     </div>
     <div class="toolbar">
       <select id="lang-select" class="btn" title="Language / Locale"></select>
