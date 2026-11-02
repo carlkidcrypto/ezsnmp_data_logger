@@ -62,6 +62,16 @@ Each key in ``locale.json`` is mapped to an object containing language translati
 - **Browser Studio Switching:** Switch languages instantly from the language dropdown in the top navigation toolbar, backed by ``GET /api/locale`` and ``POST /api/locale``.
 - **Graceful Fallback:** Any key or translation not defined in a custom language file automatically falls back to the canonical English string.
 
+Interactive Selectable Telemetry Series
+=======================================
+
+In Tab 1 (Live Dashboard), both Desktop Tkinter and Browser Web Studio support interactive field selection:
+
+- **View One or Many Series:** Toggle individual series on or off by clicking their checkbuttons (Desktop Tk) or series chips/pills (Web Studio).
+- **Auto-Rescaling Y-Axis:** When high-value metrics (e.g. ``sysUpTime``) are deselected, the Y-axis immediately rescales to fit smaller metrics (e.g. ``cpuLoad1m``, ``chassisTempC``) with high fidelity.
+- **Quick Actions:** Use **Select All** and **Clear All** buttons to instantly manage visibility across all monitored fields.
+- **Canvas Legend Interaction:** In Desktop Tkinter, clicking any legend entry directly on the chart canvas toggles its visibility.
+
 Custom Branding Icons & Desktop Application Launchers
 =====================================================
 
