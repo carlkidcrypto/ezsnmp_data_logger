@@ -107,3 +107,4 @@ extend-exclude = '''
 
 [tool.pytest.ini_options]
 testpaths = ["python_tests"]
+pythonpath = ["."]

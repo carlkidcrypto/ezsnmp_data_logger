@@ -33,8 +33,16 @@ function resolveDotted(obj, path) {
 }
 
 function t(key, fallback) {
-  const val = resolveDotted(localeStrings, key);
-  return (typeof val === "string") ? val : (fallback ?? key);
+  if (localeStrings && typeof localeStrings === "object") {
+    if (key in localeStrings && typeof localeStrings[key] === "string") {
+      return localeStrings[key];
+    }
+    const val = resolveDotted(localeStrings, key);
+    if (typeof val === "string") {
+      return val;
+    }
+  }
+  return fallback !== undefined ? fallback : key;
 }
 
 function applyTranslations() {

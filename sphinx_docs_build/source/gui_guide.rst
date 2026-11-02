@@ -40,11 +40,25 @@ Launching the GUI
 Multi-Language Localization (``locale.json``)
 =============================================
 
-All user-facing UI strings (titles, buttons, status bars, tabs, KPI cards, table headers, form labels, and dialog messages) across both the native Desktop Studio and the Browser Web Studio are externalized into ``locale.json``:
+All user-facing UI strings (titles, buttons, status bars, tabs, KPI cards, table headers, form labels, and dialog messages) across both the native Desktop Studio and the Browser Web Studio are externalized into ``locale.json``.
 
-- **Built-in Catalogs:** Comes pre-packaged with English (``"en"``) and Spanish (``"es"``).
-- **Persistent Configuration:** Configure your preferred language directly in the JSON configuration under ``"gui": { "locale": "es" }`` (or ``"locale_file": "path/to/custom.json"``).
+Each key in ``locale.json`` is mapped to an object containing language translations as needed:
+
+.. code-block:: json
+
+   {
+     "buttons.start_logger": {
+       "en": "Start CLI Logger",
+       "es": "Iniciar Logger CLI"
+     },
+     "buttons.stop_logger": {
+       "en": "Stop CLI Logger"
+     }
+   }
+
+- **Baseline Language:** Standardizes on English (``"en"``) as the primary baseline language for all keys. Additional language translations (e.g. ``"es"``, ``"fr"``) can be added per key as needed.
+- **Persistent Configuration:** Configure your preferred language directly in the JSON configuration under ``"gui": { "locale": "en" }`` (or ``"locale_file": "path/to/custom.json"``).
 - **Desktop Studio Switching:** Switch between languages live via the combobox in Tab 4 (Sinks & JSON Settings).
 - **Browser Studio Switching:** Switch languages instantly from the language dropdown in the top navigation toolbar, backed by ``GET /api/locale`` and ``POST /api/locale``.
-- **Graceful Fallback:** Any key not defined in a custom language file automatically falls back to the canonical English string.
+- **Graceful Fallback:** Any key or translation not defined in a custom language file automatically falls back to the canonical English string.
 
