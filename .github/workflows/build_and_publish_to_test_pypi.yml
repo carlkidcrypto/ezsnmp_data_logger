@@ -87,4 +87,5 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: dist/
           verify-metadata: false
+          skip-existing: true
           print-hash: true
