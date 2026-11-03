@@ -1,0 +1,43 @@
+name: Build Distribution
+description: Build sdist and download built wheels.
+
+inputs:
+  packages-dir:
+    description: Directory containing distributions to publish
+    required: false
+    default: "dist/"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Set up dependencies
+      uses: carlkidcrypto/os-specific-runner@6bfb32d4934b42e6817f3f4109c9f3c26abc9fab # v2.3.1
+      with:
+        linux: |
+          sudo bash ./tools/prepare_linux_netsnmp.sh
+          python3 tools/prepare_sqlite3_amalgamation.py
+          python3 tools/prepare_ezsnmp_source.py
+
+    - name: Install build tools
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip build wheel
+
+    - name: Build a source tarball
+      shell: bash
+      run: |
+        export PATH="/usr/local/bin:$PATH"
+        export EZSNMP_NETSNMP_CONFIG=/usr/local/bin/net-snmp-config
+        python -m build --sdist --outdir ${{ inputs.packages-dir }} .
+
+    - name: Download Wheels
+      uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-wheels-*
+        merge-multiple: true
+        path: ${{ inputs.packages-dir }}

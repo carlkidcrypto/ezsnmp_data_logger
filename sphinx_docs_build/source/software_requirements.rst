@@ -305,3 +305,11 @@ Testing, Documentation & CI/CD Requirements
 - **[CICD-01]** GitHub Actions workflows in ``.github/workflows/`` **Shall**
   keep matrix job counts strictly under 256, scope ``concurrency.group`` by
   ``${{ github.workflow }}``, and pass ``yamllint`` and ``actionlint``.
+
+- **[CICD-02]** Automated release publishing workflows **Shall** support
+  distributing multi-platform binary wheels and source distributions to PyPI
+  and TestPyPI (``build_and_publish_to_pypi.yml``,
+  ``build_and_publish_to_test_pypi.yml``) using ``cibuildwheel`` and
+  ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows, and
+  publishing self-contained Node.js N-API packages to npm
+  (``build_and_publish_to_npm.yml``) with automatic prerelease tag resolution.
