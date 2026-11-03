@@ -61,6 +61,7 @@ Code Formatting & Workflow Linting
 * **C++17 Formatting:** ``clang-format -i include/ezsnmp_data_logger/*.h src/*.cpp cpp_tests/*.h cpp_tests/*.cpp`` (excluding generated ``src/ezsnmp_data_logger_wrap.cxx``)
 * **Python Formatting:** ``black .`` (configured in ``pyproject.toml`` to skip SWIG-generated ``ezsnmp_data_logger/ezsnmp_data_logger.py`` and ``third_party/``)
 * **GitHub Actions Workflows:** ``yamllint -c .yamllint .github/workflows/*.yml`` and ``actionlint``
+* **Automated Dependency Maintenance (Dependabot):** ``.github/dependabot.yml`` configures weekly version updates for GitHub Actions, Python, npm, NuGet, and Go ecosystems.
 
 Software Requirements Governance
 ================================

@@ -54,3 +54,37 @@ def test_winget_manifest_generation(tmp_path: Path) -> None:
         content = p.read_text(encoding="utf-8")
         assert "carlkidcrypto.EzSnmpDataLogger" in content
         assert "2026.11.1-alpha.0" in content
+
+
+def test_dependabot_configuration() -> None:
+    dependabot_path = REPO_ROOT / ".github" / "dependabot.yml"
+    assert dependabot_path.is_file(), ".github/dependabot.yml must exist"
+    content = dependabot_path.read_text(encoding="utf-8")
+    assert "version: 2" in content
+    assert 'package-ecosystem: "github-actions"' in content
+    assert 'package-ecosystem: "pip"' in content
+    assert 'package-ecosystem: "npm"' in content
+    assert 'package-ecosystem: "nuget"' in content
+    assert 'package-ecosystem: "gomod"' in content
+
+    try:
+        import yaml
+
+        data = yaml.safe_load(content)
+        assert data.get("version") == 2
+        updates = data.get("updates", [])
+        assert len(updates) >= 5
+        ecosystem_dirs = {(u.get("package-ecosystem"), u.get("directory")) for u in updates}
+        assert ("github-actions", "/") in ecosystem_dirs
+        assert ("pip", "/") in ecosystem_dirs
+        assert ("npm", "/bindings/javascript") in ecosystem_dirs
+        assert ("nuget", "/bindings/csharp") in ecosystem_dirs
+        assert ("gomod", "/bindings/go") in ecosystem_dirs
+        assert ("pip", "/sphinx_docs_build") in ecosystem_dirs
+        assert ("pip", "/sphinx_docs_build/landing") in ecosystem_dirs
+        for u in updates:
+            d = u.get("directory", "")
+            target_dir = REPO_ROOT if d == "/" else REPO_ROOT / d.lstrip("/")
+            assert target_dir.is_dir(), f"Dependabot target directory {d} does not exist"
+    except ImportError:
+        pass
