@@ -4,7 +4,9 @@ project = "EzSnmp Data Logger"
 copyright = "2024-%Y, carlkidcrypto"
 author = "carlkidcrypto"
 
-extensions = []
+extensions = [
+    "sphinx.ext.githubpages",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = []

@@ -286,10 +286,12 @@ Testing, Documentation & CI/CD Requirements
   (``python``, ``javascript``, ``csharp``, ``go``).
 
 - **[DOC-01]** Documentation in ``sphinx_docs_build/`` **Shall** use Sphinx +
-  ``furo`` + ``sphinx.ext.autodoc`` + Doxygen XML + ``breathe`` alongside
-  ``sphinx_docs_build/landing/`` with ``VERSION_LIST_START`` /
-  ``VERSION_LIST_END`` markers matching sibling ``carlkidcrypto``
-  repositories, building cleanly with ``SPHINXOPTS="-W"``.
+  ``furo`` + ``sphinx.ext.autodoc`` + ``sphinx.ext.githubpages`` + Doxygen XML
+  + ``breathe`` alongside ``sphinx_docs_build/landing/`` with
+  ``VERSION_LIST_START`` / ``VERSION_LIST_END`` markers matching sibling
+  ``carlkidcrypto`` repositories, maintaining a ``.nojekyll`` sentinel file in
+  ``docs/`` to disable Jekyll processing on GitHub Pages, building cleanly
+  with ``SPHINXOPTS="-W"``.
 
 - **[DOC-02]** Documentation **Shall** provide a dedicated multi-OS
   installation guide (``installation.rst``) for macOS, Windows, Linux, and

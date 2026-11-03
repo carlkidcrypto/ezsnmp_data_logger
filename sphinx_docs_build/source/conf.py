@@ -17,6 +17,7 @@ release = "v2026.11.1a0"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
     "breathe",
 ]
 
