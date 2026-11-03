@@ -138,3 +138,17 @@ def test_smart_workflow_triggers_and_runners() -> None:
         assert (
             "carlkidcrypto/os-specific-runner" in wf_content
         ), f"{wf_name} missing carlkidcrypto/os-specific-runner"
+
+    # PyPI and TestPyPI distribution workflows pre-provision third_party/ezsnmp
+    pypi_workflows = [
+        "build_and_publish_to_pypi.yml",
+        "build_and_publish_to_test_pypi.yml",
+    ]
+    for wf_name in pypi_workflows:
+        wf_path = workflows_dir / wf_name
+        assert wf_path.is_file(), f"{wf_name} must exist"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert (
+            "repository: carlkidcrypto/ezsnmp" in wf_content
+        ), f"{wf_name} must checkout carlkidcrypto/ezsnmp"
+        assert "path: third_party/ezsnmp" in wf_content, f"{wf_name} must target third_party/ezsnmp"

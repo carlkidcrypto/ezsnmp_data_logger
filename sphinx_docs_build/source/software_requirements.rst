@@ -312,8 +312,9 @@ Testing, Documentation & CI/CD Requirements
   distributing multi-platform binary wheels and source distributions to PyPI
   and TestPyPI (``build_and_publish_to_pypi.yml``,
   ``build_and_publish_to_test_pypi.yml``) using ``cibuildwheel`` and
-  ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows, and
-  publishing self-contained Node.js N-API packages to npm
+  ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows,
+  pre-provisioning embedded C++17 dependencies (``third_party/ezsnmp``) with
+  retry resilience, and publishing self-contained Node.js packages to npm
   (``build_and_publish_to_npm.yml``) with automatic prerelease tag resolution.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
