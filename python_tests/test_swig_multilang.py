@@ -9,6 +9,7 @@ import pytest
 
 import ezsnmp_data_logger as edl
 from tools.generate_swig_bindings import SWIG_LANGUAGE_TARGETS, generate_for_language
+from tools.generate_winget_manifest import generate_manifests
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -36,3 +37,20 @@ def test_swig_generates_wrappers_for_all_4_targets(tmp_path: Path) -> None:
         res = generate_for_language(swig_bin, lang, tmp_path)
         assert res["ok"] is True, f"SWIG codegen failed for {lang}: {res['stderr']}"
         assert len(res["generated_files"]) >= 1
+
+
+def test_winget_manifest_generation(tmp_path: Path) -> None:
+    manifests = generate_manifests(
+        package_id="carlkidcrypto.EzSnmpDataLogger",
+        package_version="2026.11.1-alpha.0",
+        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.1-alpha.0/ezsnmp-win-x64.zip",
+        installer_sha256="aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+        out_dir=tmp_path,
+        architecture="x64",
+    )
+    assert set(manifests.keys()) == {"version", "locale", "installer"}
+    for p in manifests.values():
+        assert p.is_file()
+        content = p.read_text(encoding="utf-8")
+        assert "carlkidcrypto.EzSnmpDataLogger" in content
+        assert "2026.11.1-alpha.0" in content
