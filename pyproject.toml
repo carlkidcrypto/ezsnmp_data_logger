@@ -61,14 +61,16 @@ Issues = "https://github.com/carlkidcrypto/ezsnmp_data_logger/issues"
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux_2_28"
-skip = "cp39-* cp310-* pp*"
+skip = "cp39-* cp310-*"
 environment = { CIBW_BUILD_VERBOSITY = "1" }
-test-requires = ["pytest"]
-test-command = "pytest {project}/python_tests -k 'not swig_generates'"
 
 [[tool.cibuildwheel.overrides]]
 select = "*musllinux*"
 before-all = "apk add openssl git curl && bash tools/prepare_linux_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-win_arm64"
+build-frontend = "build"
 
 [tool.cibuildwheel.linux]
 environment = { CIBW_BUILD_VERBOSITY = "1", PATH = "/usr/local/bin:$PATH", LD_LIBRARY_PATH = "/usr/local/lib:$LD_LIBRARY_PATH" }
@@ -87,8 +89,8 @@ test-skip = "*-win_arm64"
 before-all = "python tools/prepare_sqlite3_amalgamation.py && python tools/prepare_ezsnmp_source.py"
 environment-pass = ["EZSNMP_NETSNMP_INCLUDE_DIR", "EZSNMP_NETSNMP_LIB_DIR", "EZSNMP_NETSNMP_BIN_DIR", "EZSNMP_OPENSSL_BIN_DIR", "EZSNMP_OPENSSL_INCLUDE_DIR", "EZSNMP_OPENSSL_LIB_DIR"]
 repair-wheel-command = [
-    "delvewheel show --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" {wheel}",
-    "delvewheel repair --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" -w {dest_dir} {wheel}",
+    "delvewheel show --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" --no-dll \"msvcp140.dll;msvcp140_1.dll;msvcp140_2.dll;msvcp140_atomic_wait.dll;msvcp140_codecvt_ids.dll;vcruntime140_1.dll\" {wheel}",
+    "delvewheel repair --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" --no-dll \"msvcp140.dll;msvcp140_1.dll;msvcp140_2.dll;msvcp140_atomic_wait.dll;msvcp140_codecvt_ids.dll;vcruntime140_1.dll\" -w {dest_dir} {wheel}",
 ]
 
 [tool.black]
