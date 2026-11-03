@@ -29,17 +29,17 @@ jobs:
         python-version: ["3.12", "3.13"]
     steps:
       - name: Checkout ezsnmp_data_logger
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.10.28a0)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
           path: third_party/ezsnmp
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 

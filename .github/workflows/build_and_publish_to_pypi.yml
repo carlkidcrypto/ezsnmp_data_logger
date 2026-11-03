@@ -44,7 +44,7 @@ jobs:
             arch: ARM64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build and upload wheels
         uses: ./.github/actions/build-wheels
@@ -64,7 +64,7 @@ jobs:
     needs: build_wheels
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build distribution
         uses: ./.github/actions/build-distribution
