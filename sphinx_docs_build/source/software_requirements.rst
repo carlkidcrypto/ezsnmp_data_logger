@@ -327,3 +327,10 @@ Testing, Documentation & CI/CD Requirements
   Python (root and Sphinx docs), npm (``bindings/javascript``), NuGet
   (``bindings/csharp``), and Go (``bindings/go``), grouping package updates
   and respecting agentic workflow exclusions.
+
+- **[CICD-05]** SonarQube Cloud automatic analysis **Shall** be configured
+  via root ``.sonarcloud.properties`` targeting an A rating across security,
+  reliability, and maintainability, excluding documentation (``docs/**``,
+  ``sphinx_docs_build/**``), workflows (``.github/**``), vendored dependencies
+  (``third_party/**``), and generated SWIG artifacts from code smells and
+  copy-paste duplication metrics.

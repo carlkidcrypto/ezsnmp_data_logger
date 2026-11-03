@@ -14,6 +14,9 @@ EzSnmp Data Logger
    * - |Tests Python|
      - |SWIG Multi-Language|
      - |License|
+   * - |Quality Gate Status|
+     - |Security Rating|
+     - |Maintainability Rating|
 
 .. |Python Code Style| image:: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
     :target: https://github.com/psf/black
@@ -33,6 +36,15 @@ EzSnmp Data Logger
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/swig_multilang.yml
 .. |License| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/blob/main/LICENSE
+.. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=carlkidcrypto_ezsnmp_data_logger&metric=alert_status
+    :target: https://sonarcloud.io/summary/new_code?id=carlkidcrypto_ezsnmp_data_logger
+    :alt: Quality Gate Status
+.. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=carlkidcrypto_ezsnmp_data_logger&metric=security_rating
+    :target: https://sonarcloud.io/summary/new_code?id=carlkidcrypto_ezsnmp_data_logger
+    :alt: Security Rating
+.. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=carlkidcrypto_ezsnmp_data_logger&metric=sqale_rating
+    :target: https://sonarcloud.io/summary/new_code?id=carlkidcrypto_ezsnmp_data_logger
+    :alt: Maintainability Rating
 
 Introduction
 ------------

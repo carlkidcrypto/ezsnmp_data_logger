@@ -88,3 +88,16 @@ def test_dependabot_configuration() -> None:
             assert target_dir.is_dir(), f"Dependabot target directory {d} does not exist"
     except ImportError:
         pass
+
+
+def test_sonarcloud_configuration() -> None:
+    sonar_path = REPO_ROOT / ".sonarcloud.properties"
+    assert sonar_path.is_file(), ".sonarcloud.properties must exist"
+    content = sonar_path.read_text(encoding="utf-8")
+    assert "sonar.exclusions" in content
+    assert "sonar.cpd.exclusions" in content
+    assert "docs/**" in content
+    assert ".github/**" in content
+    assert "third_party/**" in content
+    assert "python_tests/**" in content
+    assert "cpp_tests/**" in content

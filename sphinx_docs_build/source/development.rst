@@ -62,6 +62,7 @@ Code Formatting & Workflow Linting
 * **Python Formatting:** ``black .`` (configured in ``pyproject.toml`` to skip SWIG-generated ``ezsnmp_data_logger/ezsnmp_data_logger.py`` and ``third_party/``)
 * **GitHub Actions Workflows:** ``yamllint -c .yamllint .github/workflows/*.yml`` and ``actionlint``
 * **Automated Dependency Maintenance (Dependabot):** ``.github/dependabot.yml`` configures weekly version updates for GitHub Actions, Python, npm, NuGet, and Go ecosystems.
+* **Code Quality & Static Analysis (SonarQube Cloud):** Root ``.sonarcloud.properties`` configures Automatic Analysis scope to achieve an A rating across security, reliability, and maintainability.
 
 Software Requirements Governance
 ================================
