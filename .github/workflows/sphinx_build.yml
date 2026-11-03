@@ -72,6 +72,9 @@ jobs:
           mkdir -p source/_static source/_templates
           make html SPHINXOPTS="-W"
 
+      - name: Ensure .nojekyll exists for GitHub Pages
+        run: touch docs/.nojekyll
+
       - name: Upload artifact for GitHub Pages
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         uses: actions/upload-pages-artifact@v3
@@ -203,6 +206,7 @@ jobs:
           cd sphinx_docs_build/landing
           mkdir -p source/_static source/_templates
           make html SPHINXOPTS="-W"
+          touch "${{ github.workspace }}/docs/.nojekyll"
 
       - name: Create Pull Request with versioned docs
         uses: peter-evans/create-pull-request@v7
