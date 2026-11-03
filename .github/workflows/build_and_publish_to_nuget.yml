@@ -35,10 +35,10 @@ jobs:
             rid: win-x64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -74,7 +74,7 @@ jobs:
           python3 bindings/csharp/build_self_contained.py
 
       - name: Upload C# runtime artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: csharp-runtime-${{ matrix.rid }}
           path: bindings/csharp/runtimes/${{ matrix.rid }}/**
@@ -84,10 +84,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-runtimes
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python for SWIG generation
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -98,14 +98,14 @@ jobs:
         run: python3 tools/generate_swig_bindings.py --languages csharp --output-dir bindings/csharp/generated
 
       - name: Download all C# runtimes
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: csharp-runtime-*
           path: bindings/csharp/runtimes
           merge-multiple: true
 
       - name: Set up .NET 8 SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
@@ -114,7 +114,7 @@ jobs:
           dotnet pack bindings/csharp/EzSnmpDataLogger.csproj -c Release -o dist-nuget
 
       - name: Upload NuGet Package Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-package
           path: dist-nuget/*.nupkg

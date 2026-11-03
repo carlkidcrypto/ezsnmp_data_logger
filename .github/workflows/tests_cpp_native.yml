@@ -28,10 +28,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout ezsnmp_data_logger
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.10.28a0)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
           ref: v2026.10.28a0
