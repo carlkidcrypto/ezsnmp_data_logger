@@ -101,3 +101,40 @@ def test_sonarcloud_configuration() -> None:
     assert "third_party/**" in content
     assert "python_tests/**" in content
     assert "cpp_tests/**" in content
+
+
+def test_smart_workflow_triggers_and_runners() -> None:
+    workflows_dir = REPO_ROOT / ".github" / "workflows"
+    assert workflows_dir.is_dir()
+
+    # Workflows implementing smart changed-files preflight jobs
+    smart_workflows = [
+        "tests_python.yml",
+        "tests_cpp_native.yml",
+        "swig_multilang.yml",
+        "sphinx_build.yml",
+    ]
+    for wf_name in smart_workflows:
+        wf_path = workflows_dir / wf_name
+        assert wf_path.is_file(), f"{wf_name} must exist"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert (
+            "tj-actions/changed-files" in wf_content
+        ), f"{wf_name} missing tj-actions/changed-files"
+        assert "check-source-changes:" in wf_content, f"{wf_name} missing check-source-changes job"
+        assert "outputs.any_changed" in wf_content, f"{wf_name} missing any_changed output"
+
+    # Workflows utilizing carlkidcrypto/os-specific-runner for multi-OS step consolidation
+    runner_workflows = [
+        "tests_python.yml",
+        "tests_cpp_native.yml",
+        "swig_multilang.yml",
+        "build_and_publish_to_nuget.yml",
+    ]
+    for wf_name in runner_workflows:
+        wf_path = workflows_dir / wf_name
+        assert wf_path.is_file(), f"{wf_name} must exist"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert (
+            "carlkidcrypto/os-specific-runner" in wf_content
+        ), f"{wf_name} missing carlkidcrypto/os-specific-runner"

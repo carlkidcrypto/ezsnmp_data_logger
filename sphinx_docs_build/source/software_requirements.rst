@@ -334,3 +334,11 @@ Testing, Documentation & CI/CD Requirements
   ``sphinx_docs_build/**``), workflows (``.github/**``), vendored dependencies
   (``third_party/**``), and generated SWIG artifacts from code smells and
   copy-paste duplication metrics.
+
+- **[CICD-06]** Continuous integration workflows **Shall** incorporate smart
+  file-change detection via ``tj-actions/changed-files`` to skip redundant
+  multi-platform matrix runner executions when pull requests only touch
+  unrelated subsystems, and **Shall** consolidate multi-OS conditionals
+  using ``carlkidcrypto/os-specific-runner`` across Ubuntu, macOS, and
+  Windows.
+

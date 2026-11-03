@@ -42,22 +42,18 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install system dependencies (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y swig libsnmp-dev libssl-dev patchelf
-          sudo bash ./tools/prepare_linux_netsnmp.sh
-
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install swig pkg-config net-snmp openssl@3
-          sudo bash ./tools/prepare_macos_netsnmp.sh
-
-      - name: Install SWIG (Windows)
-        if: runner.os == 'Windows'
-        run: choco install swig -y
+      - name: Install system dependencies
+        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        with:
+          linux: |
+            sudo apt-get update
+            sudo apt-get install -y swig libsnmp-dev libssl-dev patchelf
+            sudo bash ./tools/prepare_linux_netsnmp.sh
+          macos: |
+            brew install swig pkg-config net-snmp openssl@3
+            sudo bash ./tools/prepare_macos_netsnmp.sh
+          windows: |
+            choco install swig -y
 
       - name: Prepare Net-SNMP for Windows
         if: runner.os == 'Windows'

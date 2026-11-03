@@ -7,7 +7,15 @@ concurrency:
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'bindings/**'
+      - 'cpp_tests/**'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'bindings/**'
+      - 'cpp_tests/**'
   release:
     types: [published]
   workflow_dispatch:
@@ -17,9 +25,41 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/verify_syntax.yml
-  sphinx_docs_build:
+
+  check-source-changes:
     needs: verify-syntax
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      run_job: ${{ steps.changed-files.outputs.any_changed }}
+    steps:
+      - name: Checkout Sourcecode
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes in documentation sources
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        with:
+          files: |
+            sphinx_docs_build/**
+            docs/**
+            include/**
+            src/**
+            .doxygen
+            README.rst
+            HOWTOAI.rst
+            setup.py
+            pyproject.toml
+            .github/workflows/sphinx_build.yml
+
+  sphinx_docs_build:
+    needs: [verify-syntax, check-source-changes]
+    if: |
+      github.event_name == 'release' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && needs.check-source-changes.outputs.run_job == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
