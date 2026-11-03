@@ -321,3 +321,9 @@ Testing, Documentation & CI/CD Requirements
   GitHub Packages (``build_and_publish_to_nuget.yml``), and generating
   validated WinGet community manifests with automated repository submission
   (``build_and_publish_to_winget.yml``, ``tools/generate_winget_manifest.py``).
+
+- **[CICD-04]** Automated dependency maintenance **Shall** be configured via
+  ``.github/dependabot.yml`` with weekly updates across GitHub Actions,
+  Python (root and Sphinx docs), npm (``bindings/javascript``), NuGet
+  (``bindings/csharp``), and Go (``bindings/go``), grouping package updates
+  and respecting agentic workflow exclusions.
