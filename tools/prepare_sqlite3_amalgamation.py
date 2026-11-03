@@ -33,7 +33,19 @@ def _download_archive(url: str, dest: Path) -> None:
     curl_bin = shutil.which("curl")
     if curl_bin:
         res = subprocess.run(
-            [curl_bin, "--proto", "=https", "-fsSL", "-o", str(dest), url],
+            [
+                curl_bin,
+                "--proto",
+                "=https",
+                "-fsSL",
+                "--retry",
+                "3",
+                "--retry-delay",
+                "2",
+                "-o",
+                str(dest),
+                url,
+            ],
             capture_output=True,
             text=True,
             check=False,

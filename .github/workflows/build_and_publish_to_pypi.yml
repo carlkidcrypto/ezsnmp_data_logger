@@ -46,6 +46,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.10.28a0)
+        uses: actions/checkout@v7
+        with:
+          repository: carlkidcrypto/ezsnmp
+          ref: v2026.10.28a0
+          path: third_party/ezsnmp
+
       - name: Build and upload wheels
         uses: ./.github/actions/build-wheels
         with:
@@ -65,6 +72,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.10.28a0)
+        uses: actions/checkout@v7
+        with:
+          repository: carlkidcrypto/ezsnmp
+          ref: v2026.10.28a0
+          path: third_party/ezsnmp
 
       - name: Build distribution
         uses: ./.github/actions/build-distribution

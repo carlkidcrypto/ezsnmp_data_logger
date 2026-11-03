@@ -7,6 +7,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -39,10 +40,20 @@ def ensure_ezsnmp_source(target_dir: Path | None = None, tag: str = EZSNMP_CALSE
         raise RuntimeError("git is required to fetch carlkidcrypto/ezsnmp sources")
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [git_bin, "clone", "--depth", "1", "--branch", tag, EZSNMP_REPO_URL, str(dest)],
-        check=True,
-    )
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            if dest.exists():
+                shutil.rmtree(dest, ignore_errors=True)
+            subprocess.run(
+                [git_bin, "clone", "--depth", "1", "--branch", tag, EZSNMP_REPO_URL, str(dest)],
+                check=True,
+            )
+            return dest
+        except subprocess.CalledProcessError:
+            if attempt == max_retries:
+                raise
+            time.sleep(2 * attempt)
     return dest
 
 
