@@ -313,3 +313,9 @@ Testing, Documentation & CI/CD Requirements
   ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows, and
   publishing self-contained Node.js N-API packages to npm
   (``build_and_publish_to_npm.yml``) with automatic prerelease tag resolution.
+
+- **[CICD-03]** Automated release publishing workflows **Shall** support
+  building and packaging multi-runtime C# (.NET 8) packages to NuGet and
+  GitHub Packages (``build_and_publish_to_nuget.yml``), and generating
+  validated WinGet community manifests with automated repository submission
+  (``build_and_publish_to_winget.yml``, ``tools/generate_winget_manifest.py``).

@@ -1,0 +1,54 @@
+name: WinGet Distributions
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-syntax:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify_syntax.yml
+
+  publish-winget:
+    name: Publish release to WinGet
+    runs-on: windows-latest
+    needs: verify-syntax
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Generate WinGet Manifests
+        shell: bash
+        run: |
+          python tools/generate_winget_manifest.py --out-dir dist-winget
+
+      - name: Upload WinGet Manifest Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: winget-manifests
+          path: dist-winget/**
+
+      - name: Submit to WinGet Community Repository
+        if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@v2
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_ACC_TOKEN }}
+        with:
+          identifier: carlkidcrypto.EzSnmpDataLogger
+          installers-regex: '\.exe$|\.zip$'
+          token: ${{ secrets.WINGET_ACC_TOKEN }}
+          fork-user: carlkidcrypto
