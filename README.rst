@@ -85,54 +85,107 @@ Architecture Overview
                                   |     JSONL / PostgreSQL / Prom    |
                                   +----------------------------------+
 
-Quick Start
------------
+Installation
+------------
 
-Install Self-Contained Python Package (CalSemVer Alpha)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``ezsnmp_data_logger`` distributes **100% self-contained** binary wheels for **macOS**, **Windows**, and **Linux** (both ``manylinux`` and ``musllinux``). Users **never need to install external Net-SNMP, OpenSSL, or SQLite3 libraries**.
+
+macOS (Apple Silicon & Intel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
+   python3 -m pip install --upgrade pip
    python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.1a0"
 
-CLI Usage
-~~~~~~~~~
+   # Install native macOS Application Launcher in ~/Applications with Retina icon:
+   ezsnmp-data-logger-gui --install-launcher
+
+Windows (Windows 10 / 11 / Server)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: powershell
+
+   py -m pip install --upgrade pip
+   py -m pip install --pre "ezsnmp-data-logger>=2026.11.1a0"
+
+   # Install Windows desktop launcher shortcut with custom icon:
+   ezsnmp-data-logger-gui --install-launcher
+
+Linux (Ubuntu, Debian, Fedora, RHEL, Arch, Alpine)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   # Generate a starter JSON configuration
-   ezsnmp-data-logger init-config --template minimal --output my_logger.json
+   python3 -m pip install --upgrade pip
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.1a0"
 
-   # Validate the JSON configuration
-   ezsnmp-data-logger validate --config my_logger.json --json
+   # Install desktop launcher (.desktop) in ~/.local/share/applications/:
+   ezsnmp-data-logger-gui --install-launcher
 
-   # Run a single polling cycle across all configured DUTs
-   ezsnmp-data-logger run --config configs/minimal_stub.json --once --json
+CLI Usage Reference
+-------------------
 
-   # Run continuous polling (streams JSON events when --json is passed)
-   ezsnmp-data-logger run --config configs/example.json --max-cycles 10 --json
-
-   # On-demand SNMP GET / WALK / SET via ezsnmp SessionBase
-   ezsnmp-data-logger probe --config configs/example.json --json
-   ezsnmp-data-logger request --config configs/example.json --dut edge-router-1 --op walk --oid 1.3.6.1.2.1.1 --json
-   ezsnmp-data-logger set --config configs/example.json --dut edge-router-1 --oid 1.3.6.1.2.1.1.6.0 --type s --value "Lab Rack 4" --json
-
-   # Inspect stored telemetry across SQLite3 / JSONL / CSV sinks
-   ezsnmp-data-logger inspect --config configs/minimal_stub.json --limit 25 --json
-
-Cross-Platform GUI Usage (Linux, macOS, Windows)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``ezsnmp-data-logger`` CLI provides unified access to the C++17 telemetry engine. Passing ``--json`` outputs structured JSON for scripting and automation.
 
 .. code-block:: bash
 
-   # Launch native cross-platform tkinter.ttk Desktop Studio (falls back to Browser Studio headless)
-   ezsnmp-data-logger-gui --config configs/example.json
+   # 1. Generate starter JSON configuration template ('demo', 'minimal', or 'all_sinks')
+   ezsnmp-data-logger init-config --template demo --output configs/my_lab.json
 
-   # Or launch the cross-platform Browser Studio explicitly
-   ezsnmp-data-logger gui --config configs/example.json --frontend web --port 8765
+   # 2. Validate configuration syntax, schema, and SNMP credentials
+   ezsnmp-data-logger validate --config configs/my_lab.json --json
+
+   # 3. Probe all configured DUTs for network reachability (non-destructive)
+   ezsnmp-data-logger probe --config configs/my_lab.json --json
+
+   # 4. Run an on-demand SNMP GET / WALK / BULKWALK query
+   ezsnmp-data-logger request --config configs/my_lab.json \
+       --dut edge-router-01 --op walk --oid 1.3.6.1.2.1.1 --json
+
+   # 5. Run an on-demand SNMP SET operation (ASN.1 types: i, u, s, x, d, n, o, t, a)
+   ezsnmp-data-logger set --config configs/my_lab.json \
+       --dut edge-router-01 --oid 1.3.6.1.2.1.1.4.0 --type s --value "admin@example.com" --json
+
+   # 6. Run a single polling cycle across all DUTs and exit
+   ezsnmp-data-logger run --config configs/my_lab.json --once --json
+
+   # 7. Run continuous polling loop with streaming NDJSON event output
+   ezsnmp-data-logger run --config configs/my_lab.json --interval-ms 1000 --json
+
+   # 8. Query recent stored telemetry rows from SQLite3, CSV, or JSONL sinks
+   ezsnmp-data-logger inspect --config configs/my_lab.json --limit 25 --json
+
+   # 9. Inspect compiled capabilities and version
+   ezsnmp-data-logger version --json
+
+Cross-Platform GUI Usage (Desktop & Web Studio)
+-----------------------------------------------
+
+``ezsnmp_data_logger`` includes two zero-external-dependency GUI frontends that interact strictly with the CLI behind the scenes:
+
+- **Native Desktop Studio (**``tkinter.ttk``**):** Native Aqua (macOS), Win32 (Windows), and X11/Wayland (Linux) application with custom window titlebar icons, dynamic macOS Dock icon, real-time Canvas charts, and **interactive selectable series filtering (Select All, Clear All, and auto-rescaling Y-axis)**.
+- **Browser Web Studio (**``HTML5/SVG``**):** Lightweight browser-based studio running on standard-library HTTP server, featuring custom vector SVG favicons and responsive series filter chips.
+
+.. code-block:: bash
+
+   # Auto-detects display: launches native Desktop Tkinter window or Browser Studio
+   ezsnmp-data-logger gui --config configs/example.json
+
+   # Force Native Desktop Tkinter Studio
+   ezsnmp-data-logger-gui --config configs/example.json --frontend tk
+
+   # Force Browser Web Studio on http://127.0.0.1:8765
+   ezsnmp-data-logger-gui --config configs/example.json --frontend web --port 8765
+
+   # Run on a headless remote server (bind to all interfaces without popping browser)
+   ezsnmp-data-logger-gui --config configs/example.json --frontend web --host 0.0.0.0 --port 8765 --no-browser
+
+   # Switch language (e.g. Spanish 'es' or custom locale JSON)
+   ezsnmp-data-logger-gui --config configs/example.json --locale es
 
 Generate SWIG Bindings (Python, Node.js, C#, Go)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------
 
 .. code-block:: bash
 

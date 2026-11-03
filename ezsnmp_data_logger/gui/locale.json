@@ -478,5 +478,17 @@
   },
   "tabs.sinks_and_settings": {
     "en": "4. Sinks & JSON Settings"
+  },
+  "labels.visible_series": {
+    "en": "Visible Series:"
+  },
+  "buttons.select_all": {
+    "en": "Select All"
+  },
+  "buttons.clear_all": {
+    "en": "Clear All"
+  },
+  "status_bar.no_series_selected": {
+    "en": "No series selected. Select one or more fields above to view telemetry."
   }
 }

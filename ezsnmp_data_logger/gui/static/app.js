@@ -97,11 +97,60 @@ async function switchLocale(newLocale) {
   } catch (_e) {}
 }
 
+const selectedSeries = new Set();
+let userModifiedSeries = false;
+let lastSeriesMap = {};
+
+function updateSeriesPills(seriesMap) {
+  const container = document.getElementById("chart-series-selector");
+  if (!container) return;
+  const allNames = Object.keys(seriesMap || {});
+  if (allNames.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  // If user hasn't customized selection, select all series by default
+  if (!userModifiedSeries) {
+    allNames.forEach((n) => selectedSeries.add(n));
+  }
+
+  let html = "";
+  allNames.forEach((name, idx) => {
+    const color = COLORS[idx % COLORS.length];
+    const isSel = selectedSeries.has(name);
+    html += `
+      <div class="series-pill ${isSel ? "active" : ""}" data-series="${name}" style="${isSel ? `border-color:${color};color:${color}` : ""}">
+        <span class="dot">${isSel ? "●" : "○"}</span>
+        <span>${name}</span>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll(".series-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const name = pill.dataset.series;
+      userModifiedSeries = true;
+      if (selectedSeries.has(name)) {
+        selectedSeries.delete(name);
+      } else {
+        selectedSeries.add(name);
+      }
+      updateSeriesPills(lastSeriesMap);
+      renderChart(lastSeriesMap);
+    });
+  });
+}
+
 function renderChart(seriesMap) {
+  lastSeriesMap = seriesMap || {};
+  updateSeriesPills(seriesMap);
+
   const svg = document.getElementById("telemetry-chart");
   const W = 900, H = 240, padL = 55, padR = 20, padT = 26, padB = 24;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const entries = Object.entries(seriesMap || {}).filter(([, pts]) => pts && pts.length > 0);
+  const allEntries = Object.entries(seriesMap || {}).filter(([, pts]) => pts && pts.length > 0);
 
   let html = "";
   for (let i = 0; i < 5; i++) {
@@ -109,7 +158,7 @@ function renderChart(seriesMap) {
     html += `<line x1="${padL}" y1="${y}" x2="${padL + plotW}" y2="${y}" stroke="#334155" stroke-dasharray="3,4"/>`;
   }
 
-  if (entries.length === 0) {
+  if (allEntries.length === 0) {
     const emptyMsg = t(
       "status_bar.chart_empty_web",
       'Start CLI Logger or click "Run 1 Cycle (--once)" to stream SNMP telemetry'
@@ -119,7 +168,20 @@ function renderChart(seriesMap) {
     return;
   }
 
-  const allVals = entries.flatMap(([, pts]) => pts.map((p) => Number(p.value)));
+  // Filter to active series
+  const activeEntries = allEntries.filter(([name]) => selectedSeries.has(name));
+
+  if (activeEntries.length === 0) {
+    const noSelMsg = t(
+      "status_bar.no_series_selected",
+      "No series selected. Select one or more fields above to view telemetry."
+    );
+    html += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#94a3b8" font-size="13">${noSelMsg}</text>`;
+    svg.innerHTML = html;
+    return;
+  }
+
+  const allVals = activeEntries.flatMap(([, pts]) => pts.map((p) => Number(p.value)));
   let vmin = Math.min(...allVals), vmax = Math.max(...allVals);
   if (Math.abs(vmax - vmin) < 1e-9) { vmin -= 1; vmax += 1; }
 
@@ -127,8 +189,9 @@ function renderChart(seriesMap) {
   html += `<text x="${padL - 8}" y="${padT + plotH}" text-anchor="end" fill="#94a3b8" font-size="11">${vmin.toFixed(1)}</text>`;
 
   let lx = padL;
-  entries.slice(0, 6).forEach(([name, pts], idx) => {
-    const color = COLORS[idx % COLORS.length];
+  activeEntries.forEach(([name, pts]) => {
+    const allIdx = allEntries.findIndex(([n]) => n === name);
+    const color = COLORS[(allIdx >= 0 ? allIdx : 0) % COLORS.length];
     html += `<text x="${lx}" y="16" fill="${color}" font-size="12" font-weight="600">● ${name}</text>`;
     lx += Math.min(220, name.length * 7 + 30);
 
@@ -236,6 +299,26 @@ function setupEvents() {
     await apiPost("/api/run/once");
     await pollStatus();
   });
+
+  const btnChartAll = document.getElementById("btn-chart-all");
+  if (btnChartAll) {
+    btnChartAll.addEventListener("click", () => {
+      userModifiedSeries = true;
+      Object.keys(lastSeriesMap || {}).forEach((n) => selectedSeries.add(n));
+      updateSeriesPills(lastSeriesMap);
+      renderChart(lastSeriesMap);
+    });
+  }
+
+  const btnChartNone = document.getElementById("btn-chart-none");
+  if (btnChartNone) {
+    btnChartNone.addEventListener("click", () => {
+      userModifiedSeries = true;
+      selectedSeries.clear();
+      updateSeriesPills(lastSeriesMap);
+      renderChart(lastSeriesMap);
+    });
+  }
 
   document.getElementById("btn-probe-all").addEventListener("click", async () => {
     const res = await apiPost("/api/probe", {});

@@ -31,4 +31,4 @@ exclude_patterns = []
 html_theme = "furo"
 html_baseurl = "https://carlkidcrypto.github.io/ezsnmp_data_logger/html/"
 html_title = "EzSnmp Data Logger Documentation"
-html_static_path = []
+html_static_path = ["_static"]

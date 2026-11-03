@@ -51,7 +51,15 @@
       </div>
 
       <div class="card">
-        <h3 data-i18n="sections.realtime_telemetry_web">Real-Time SNMP Numeric Telemetry (streamed from <code>ezsnmp-data-logger run --json</code>)</h3>
+        <div class="chart-header">
+          <h3 data-i18n="sections.realtime_telemetry_web">Real-Time SNMP Numeric Telemetry (streamed from <code>ezsnmp-data-logger run --json</code>)</h3>
+          <div class="chart-actions">
+            <span class="chart-filter-label" data-i18n="labels.visible_series">Visible Series:</span>
+            <button id="btn-chart-all" class="btn btn-sm" data-i18n="buttons.select_all">Select All</button>
+            <button id="btn-chart-none" class="btn btn-sm" data-i18n="buttons.clear_all">Clear All</button>
+          </div>
+        </div>
+        <div id="chart-series-selector" class="series-pills"></div>
         <svg id="telemetry-chart" viewBox="0 0 900 240" preserveAspectRatio="none"></svg>
       </div>
 

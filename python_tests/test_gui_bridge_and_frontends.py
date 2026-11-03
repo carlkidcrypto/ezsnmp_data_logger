@@ -177,6 +177,30 @@ def test_frontend_selection_and_optional_tkinter_desktop(tmp_path: Path) -> None
         studio.action_inspect_sinks()
         studio.refresh_live_state(reschedule=False)
         assert int(studio.kpi_vars["batches"].get()) >= 1
+
+        # Interactive series selection controls on telemetry chart
+        series_data = {
+            "router1::cpu": [{"value": 12.5}, {"value": 15.0}],
+            "router1::temp": [{"value": 42.0}, {"value": 43.5}],
+            "router1::uptime": [{"value": 900000.0}, {"value": 900010.0}],
+        }
+        studio._draw_chart(series_data)
+        assert len(studio._series_vars) >= 3
+        assert studio._series_vars["router1::cpu"].get() is True
+
+        # Clear all series
+        studio.action_clear_all_series()
+        assert all(v.get() is False for v in studio._series_vars.values())
+
+        # Select only one series
+        studio._series_vars["router1::temp"].set(True)
+        studio._draw_chart(series_data)
+        active = [k for k, v in studio._series_vars.items() if v.get()]
+        assert active == ["router1::temp"]
+
+        # Select all series
+        studio.action_select_all_series()
+        assert all(v.get() is True for v in studio._series_vars.values())
     finally:
         studio.on_close()
 

@@ -389,14 +389,49 @@ class DesktopLoggerStudio:
             command=self.action_validate_saved,
         ).pack(side=tk.LEFT, padx=3)
 
-        # Live Canvas telemetry chart
+        # Live Canvas telemetry chart with selectable series controls
+        chart_ctrl_frame = ttk.Frame(tab, style="Panel.TFrame")
+        chart_ctrl_frame.pack(fill=tk.X, pady=(6, 2))
+
         ttk.Label(
-            tab,
+            chart_ctrl_frame,
             text=self.locale.t(
                 "sections.realtime_series",
                 default="Real-Time SNMP Numeric Series (streamed from `ezsnmp-data-logger run --json`):",
             ),
-        ).pack(anchor=tk.W, pady=(6, 2))
+            style="Panel.TLabel",
+        ).pack(side=tk.LEFT, anchor=tk.W)
+
+        chart_act_box = ttk.Frame(chart_ctrl_frame, style="Panel.TFrame")
+        chart_act_box.pack(side=tk.RIGHT)
+
+        ttk.Label(
+            chart_act_box,
+            text=self.locale.t("labels.visible_series", default="Visible Series:"),
+            style="Panel.TLabel",
+        ).pack(side=tk.LEFT, padx=(0, 4))
+
+        ttk.Button(
+            chart_act_box,
+            text=self.locale.t("buttons.select_all", default="Select All"),
+            command=self.action_select_all_series,
+        ).pack(side=tk.LEFT, padx=2)
+
+        ttk.Button(
+            chart_act_box,
+            text=self.locale.t("buttons.clear_all", default="Clear All"),
+            command=self.action_clear_all_series,
+        ).pack(side=tk.LEFT, padx=2)
+
+        # Dynamic series selector checkbuttons container
+        self.series_selector_frame = ttk.Frame(tab, style="Panel.TFrame", padding=(2, 2))
+        self.series_selector_frame.pack(fill=tk.X, pady=(0, 4))
+        self._series_vars: dict[str, tk.BooleanVar] = {}
+        self._series_cbs: dict[str, ttk.Checkbutton] = {}
+        self._last_series_map: dict[str, list[dict[str, Any]]] = {}
+        self._user_modified_series: bool = False
+        self._legend_hitboxes: list[tuple[float, float, float, float, str]] = []
+
         self.chart_canvas = tk.Canvas(
             tab,
             height=220,
@@ -405,6 +440,7 @@ class DesktopLoggerStudio:
             highlightbackground=pal["border"],
         )
         self.chart_canvas.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
+        self.chart_canvas.bind("<Button-1>", self._on_canvas_click)
 
         # Live CLI stdout JSON stream console + CLI Audit list
         bottom_split = ttk.PanedWindow(tab, orient=tk.HORIZONTAL)
@@ -1653,10 +1689,59 @@ class DesktopLoggerStudio:
             )
         )
 
+    def action_select_all_series(self) -> None:
+        """Select all available series for plotting."""
+        self._user_modified_series = True
+        for var in self._series_vars.values():
+            var.set(True)
+        self._draw_chart(self._last_series_map)
+
+    def action_clear_all_series(self) -> None:
+        """Deselect all series from plotting."""
+        self._user_modified_series = True
+        for var in self._series_vars.values():
+            var.set(False)
+        self._draw_chart(self._last_series_map)
+
+    def _on_series_toggle(self) -> None:
+        """Callback when a series checkbutton is toggled."""
+        self._user_modified_series = True
+        self._draw_chart(self._last_series_map)
+
+    def _on_canvas_click(self, event: tk.Event[Any]) -> None:
+        """Toggle a series when clicked in the canvas legend."""
+        x, y = event.x, event.y
+        for x1, y1, x2, y2, s_name in self._legend_hitboxes:
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                var = self._series_vars.get(s_name)
+                if var is not None:
+                    self._user_modified_series = True
+                    var.set(not var.get())
+                    self._draw_chart(self._last_series_map)
+                break
+
     def _draw_chart(self, series_map: dict[str, list[dict[str, Any]]]) -> None:
+        self._last_series_map = series_map or {}
         pal = PALETTES[self.theme_name]
         c = self.chart_canvas
         c.delete("all")
+        self._legend_hitboxes.clear()
+
+        # Update dynamic series selector checkbuttons
+        all_series = list(self._last_series_map.keys())
+        for s_name in all_series:
+            if s_name not in self._series_vars:
+                var = tk.BooleanVar(value=True if not self._user_modified_series else False)
+                self._series_vars[s_name] = var
+                cb = ttk.Checkbutton(
+                    self.series_selector_frame,
+                    text=f"● {s_name}",
+                    variable=var,
+                    command=self._on_series_toggle,
+                )
+                cb.pack(side=tk.LEFT, padx=4)
+                self._series_cbs[s_name] = cb
+
         w = max(320, c.winfo_width())
         h = max(140, c.winfo_height())
 
@@ -1669,7 +1754,7 @@ class DesktopLoggerStudio:
             y = pad_t + (plot_h * i) / 4.0
             c.create_line(pad_l, y, pad_l + plot_w, y, fill=pal["border"], dash=(2, 4))
 
-        non_empty = [(k, pts) for k, pts in series_map.items() if pts]
+        non_empty = [(k, pts) for k, pts in self._last_series_map.items() if pts]
         if not non_empty:
             c.create_text(
                 w / 2,
@@ -1682,7 +1767,47 @@ class DesktopLoggerStudio:
             )
             return
 
-        all_vals = [float(p["value"]) for _, pts in non_empty for p in pts]
+        # Filter down to selected active series
+        active_series = [
+            (k, pts)
+            for k, pts in non_empty
+            if self._series_vars.get(k, tk.BooleanVar(value=True)).get()
+        ]
+
+        # Draw legend items on canvas with hitboxes (active = bright color, inactive = muted)
+        legend_x = pad_l
+        for idx, (series_name, pts) in enumerate(non_empty):
+            is_active = self._series_vars.get(series_name, tk.BooleanVar(value=True)).get()
+            color = SERIES_COLORS[idx % len(SERIES_COLORS)] if is_active else pal["muted"]
+            icon_mark = "●" if is_active else "○"
+            item_id = c.create_text(
+                legend_x,
+                10,
+                text=f"{icon_mark} {series_name}",
+                anchor=tk.W,
+                fill=color,
+                font=("TkDefaultFont", 9, "bold" if is_active else "normal"),
+            )
+            bbox = c.bbox(item_id)
+            if bbox:
+                self._legend_hitboxes.append(
+                    (bbox[0] - 2, bbox[1] - 2, bbox[2] + 2, bbox[3] + 2, series_name)
+                )
+            legend_x += min(210, len(series_name) * 7 + 28)
+
+        if not active_series:
+            c.create_text(
+                w / 2,
+                h / 2,
+                text=self.locale.t(
+                    "status_bar.no_series_selected",
+                    default="No series selected. Select one or more fields above to view telemetry.",
+                ),
+                fill=pal["muted"],
+            )
+            return
+
+        all_vals = [float(p["value"]) for _, pts in active_series for p in pts]
         vmin = min(all_vals)
         vmax = max(all_vals)
         if abs(vmax - vmin) < 1e-9:
@@ -1706,18 +1831,9 @@ class DesktopLoggerStudio:
             font=("Courier", 8),
         )
 
-        legend_x = pad_l
-        for idx, (series_name, pts) in enumerate(non_empty[:6]):
-            color = SERIES_COLORS[idx % len(SERIES_COLORS)]
-            c.create_text(
-                legend_x,
-                10,
-                text=f"● {series_name}",
-                anchor=tk.W,
-                fill=color,
-                font=("TkDefaultFont", 9, "bold"),
-            )
-            legend_x += min(210, len(series_name) * 7 + 28)
+        for series_name, pts in active_series:
+            orig_idx = [k for k, _ in non_empty].index(series_name)
+            color = SERIES_COLORS[orig_idx % len(SERIES_COLORS)]
 
             if len(pts) == 1:
                 y = pad_t + plot_h - ((pts[0]["value"] - vmin) / (vmax - vmin)) * plot_h
