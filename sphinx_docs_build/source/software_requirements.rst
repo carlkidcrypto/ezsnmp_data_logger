@@ -344,3 +344,9 @@ Testing, Documentation & CI/CD Requirements
   using ``carlkidcrypto/os-specific-runner`` across Ubuntu, macOS, and
   Windows.
 
+- **[CICD-07]** Python wheel packaging **Shall** utilize parallel multi-core
+  compilation (via ``EZSNMP_BUILD_JOBS`` and ``ThreadPoolExecutor``), fast
+  dependency isolation via ``build[uv]``, and cross-version deterministic C++
+  object caching (via ``EZSNMP_OBJECT_CACHE_DIR``) across matrix runners.
+
+

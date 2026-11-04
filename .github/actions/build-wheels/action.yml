@@ -39,6 +39,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-cibw-cache-${{ inputs.label || inputs.arch }}-
 
+    - name: Cache Python-independent C++ objects
+      if: runner.os != 'Linux'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/ezsnmp-obj-cache
+        key: ${{ runner.os }}-obj-cache-${{ inputs.arch }}-${{ hashFiles('include/**', 'src/**/*.cpp', 'setup.py', 'tools/**') }}
+        restore-keys: |
+          ${{ runner.os }}-obj-cache-${{ inputs.arch }}-
+
     - name: Cache vcpkg installed
       if: runner.os == 'Windows' && (inputs.arch == 'x86' || inputs.arch == 'ARM64')
       uses: actions/cache@v4
@@ -76,6 +85,7 @@ runs:
       env:
         CIBW_BUILD: ${{ inputs.cibw-build }}
         CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
+        EZSNMP_OBJECT_CACHE_DIR: ${{ runner.temp }}/ezsnmp-obj-cache
       with:
         linux: python -m cibuildwheel --output-dir wheelhouse --platform linux;
         macos: |
