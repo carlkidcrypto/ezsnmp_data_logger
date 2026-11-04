@@ -42,7 +42,7 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "black>=24.0.0",
-    "cibuildwheel>=2.22.0",
+    "cibuildwheel[uv]>=2.22.0",
     "yamllint>=1.35.0",
     "sphinx>=7.0.0",
     "furo",
@@ -61,8 +61,9 @@ Issues = "https://github.com/carlkidcrypto/ezsnmp_data_logger/issues"
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux_2_28"
+build-frontend = "build[uv]"
 skip = "cp39-* cp310-*"
-environment = { CIBW_BUILD_VERBOSITY = "1" }
+environment = { CIBW_BUILD_VERBOSITY = "1", EZSNMP_BUILD_JOBS = "auto" }
 
 [[tool.cibuildwheel.overrides]]
 select = "*musllinux*"
@@ -73,13 +74,13 @@ select = "*-win_arm64"
 build-frontend = "build"
 
 [tool.cibuildwheel.linux]
-environment = { CIBW_BUILD_VERBOSITY = "1", PATH = "/usr/local/bin:$PATH", LD_LIBRARY_PATH = "/usr/local/lib:$LD_LIBRARY_PATH" }
+environment = { CIBW_BUILD_VERBOSITY = "1", EZSNMP_BUILD_JOBS = "auto", EZSNMP_OBJECT_CACHE_DIR = "/tmp/ezsnmp-obj-cache", PATH = "/usr/local/bin:$PATH", LD_LIBRARY_PATH = "/usr/local/lib:$LD_LIBRARY_PATH" }
 before-all = "bash tools/prepare_linux_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
 repair-wheel-command = "auditwheel repair --strip -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
 archs = "arm64"
-environment = { PATH = "/usr/local/bin:/opt/homebrew/bin:$PATH", EZSNMP_NETSNMP_CONFIG = "/usr/local/bin/net-snmp-config", EZSNMP_OPENSSL_INCLUDE_DIR = "/usr/local/include:/opt/homebrew/opt/openssl@3/include:/usr/local/opt/openssl@3/include", EZSNMP_OPENSSL_LIB_DIR = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib", DYLD_LIBRARY_PATH = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib" }
+environment = { PATH = "/usr/local/bin:/opt/homebrew/bin:$PATH", EZSNMP_BUILD_JOBS = "auto", EZSNMP_NETSNMP_CONFIG = "/usr/local/bin/net-snmp-config", EZSNMP_OPENSSL_INCLUDE_DIR = "/usr/local/include:/opt/homebrew/opt/openssl@3/include:/usr/local/opt/openssl@3/include", EZSNMP_OPENSSL_LIB_DIR = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib", DYLD_LIBRARY_PATH = "/usr/local/lib:/opt/homebrew/opt/openssl@3/lib:/usr/local/opt/openssl@3/lib" }
 before-all = "HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@3 && sudo bash tools/prepare_macos_netsnmp.sh && python3 tools/prepare_sqlite3_amalgamation.py && python3 tools/prepare_ezsnmp_source.py"
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
@@ -87,7 +88,8 @@ repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest
 archs = ["AMD64", "x86", "ARM64"]
 test-skip = "*-win_arm64"
 before-all = "python tools/prepare_sqlite3_amalgamation.py && python tools/prepare_ezsnmp_source.py"
-environment-pass = ["EZSNMP_NETSNMP_INCLUDE_DIR", "EZSNMP_NETSNMP_LIB_DIR", "EZSNMP_NETSNMP_BIN_DIR", "EZSNMP_OPENSSL_BIN_DIR", "EZSNMP_OPENSSL_INCLUDE_DIR", "EZSNMP_OPENSSL_LIB_DIR"]
+environment = { EZSNMP_NETSNMP_USE_DLL = "1", EZSNMP_BUILD_JOBS = "auto" }
+environment-pass = ["EZSNMP_NETSNMP_INCLUDE_DIR", "EZSNMP_NETSNMP_LIB_DIR", "EZSNMP_NETSNMP_BIN_DIR", "EZSNMP_OPENSSL_BIN_DIR", "EZSNMP_OPENSSL_INCLUDE_DIR", "EZSNMP_OPENSSL_LIB_DIR", "EZSNMP_BUILD_JOBS", "EZSNMP_OBJECT_CACHE_DIR"]
 repair-wheel-command = [
     "delvewheel show --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" --no-dll \"msvcp140.dll;msvcp140_1.dll;msvcp140_2.dll;msvcp140_atomic_wait.dll;msvcp140_codecvt_ids.dll;vcruntime140_1.dll\" {wheel}",
     "delvewheel repair --add-path \"%EZSNMP_NETSNMP_BIN_DIR%;%EZSNMP_OPENSSL_BIN_DIR%\" --no-dll \"msvcp140.dll;msvcp140_1.dll;msvcp140_2.dll;msvcp140_atomic_wait.dll;msvcp140_codecvt_ids.dll;vcruntime140_1.dll\" -w {dest_dir} {wheel}",

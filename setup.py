@@ -9,6 +9,9 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from setuptools import Extension, find_packages, setup
@@ -18,6 +21,14 @@ from setuptools.command.build_py import build_py as _build_py
 ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR / "tools") not in sys.path:
     sys.path.insert(0, str(ROOT_DIR / "tools"))
+
+from build_utils import (
+    collect_files_with_suffixes,
+    compute_object_cache_key,
+    is_python_independent_source,
+    is_up_to_date,
+    resolve_build_jobs,
+)
 
 if sys.platform == "darwin":
     os.environ.setdefault("ARCHFLAGS", f"-arch {platform.machine()}")
@@ -318,7 +329,67 @@ def _configure_extension() -> Extension:
 
 
 class SwigBuildExt(build_ext):
-    """Run SWIG 4.x, compile embedded SQLite3 C amalgamation, and build C++17 extension."""
+    """Run SWIG 4.x, compile embedded SQLite3 C amalgamation, and build C++17 extension in parallel."""
+
+    def _get_compiler_identity(self) -> dict:
+        compiler_type = getattr(self.compiler, "compiler_type", "")
+        if compiler_type == "msvc":
+            cc_bin = getattr(self.compiler, "cc", None)
+            opts_attr = "compile_options_debug" if self.debug else "compile_options"
+            opts = list(getattr(self.compiler, opts_attr, []) or [])
+            cmd = ([cc_bin] if cc_bin else []) + opts
+            resolved_bin = (
+                cc_bin
+                if (cc_bin and os.path.isfile(cc_bin))
+                else (shutil.which(cc_bin) if cc_bin else None)
+            )
+        else:
+            raw_cmd = (
+                getattr(self.compiler, "compiler_so_cxx", None)
+                or getattr(self.compiler, "compiler_cxx", None)
+                or getattr(self.compiler, "compiler_so", None)
+                or []
+            )
+            cmd = [str(part) for part in raw_cmd]
+            resolved_bin = shutil.which(cmd[0]) if cmd else None
+
+        bin_meta = None
+        if resolved_bin and os.path.isfile(resolved_bin):
+            try:
+                stat = os.stat(resolved_bin)
+                bin_meta = [resolved_bin, stat.st_size, int(stat.st_mtime)]
+            except OSError:
+                bin_meta = [resolved_bin]
+
+        return {
+            "compiler_type": compiler_type,
+            "cmd": [str(part) for part in cmd],
+            "bin_meta": bin_meta,
+        }
+
+    def _compile_unit(self, unit: dict) -> None:
+        start_time = time.perf_counter()
+        self.compiler.compile(
+            [unit["src"]],
+            output_dir=unit["output_dir"],
+            macros=list(unit["macros"]),
+            include_dirs=list(unit["include_dirs"]),
+            debug=self.debug,
+            extra_postargs=list(unit["extra_args"]),
+            depends=list(unit.get("depends") or []),
+        )
+        delta = time.perf_counter() - start_time
+        print(f"\t[PROFILE] Compiled {unit['src']} in {delta:.3f}s")
+
+        cache_path = unit.get("cache_path")
+        if cache_path and os.path.isfile(unit["obj"]):
+            try:
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                tmp_cache = f"{cache_path}.{os.getpid()}.{threading.get_ident()}.tmp"
+                shutil.copy2(unit["obj"], tmp_cache)
+                os.replace(tmp_cache, cache_path)
+            except OSError:
+                pass
 
     def run(self) -> None:
         swig_bin = shutil.which("swig")
@@ -332,22 +403,37 @@ class SwigBuildExt(build_ext):
 
         wrap_out = ROOT_DIR / "src" / "ezsnmp_data_logger_wrap.cxx"
         py_outdir = ROOT_DIR / "ezsnmp_data_logger"
+        py_wrapper = py_outdir / "ezsnmp_data_logger.py"
         iface = ROOT_DIR / "interface" / "ezsnmp_data_logger.i"
 
-        cmd = [
-            swig_bin,
-            "-c++",
-            "-std=c++17",
-            "-python",
-            f"-I{ROOT_DIR / 'include'}",
-            f"-I{ROOT_DIR / 'interface'}",
-            "-outdir",
-            str(py_outdir),
-            "-o",
-            str(wrap_out),
-            str(iface),
-        ]
-        subprocess.run(cmd, check=True)
+        swig_inputs = [str(iface)] + collect_files_with_suffixes(
+            [ROOT_DIR / "include"], (".h", ".hpp")
+        )
+        swig_outputs = [str(wrap_out), str(py_wrapper)]
+
+        if (
+            not self.force
+            and wrap_out.is_file()
+            and py_wrapper.is_file()
+            and is_up_to_date(swig_outputs, swig_inputs)
+        ):
+            print("\t[PROFILE] SWIG generated wrappers are up-to-date, skipping SWIG step.")
+        else:
+            cmd = [
+                swig_bin,
+                "-c++",
+                "-std=c++17",
+                "-python",
+                f"-I{ROOT_DIR / 'include'}",
+                f"-I{ROOT_DIR / 'interface'}",
+                "-outdir",
+                str(py_outdir),
+                "-o",
+                str(wrap_out),
+                str(iface),
+            ]
+            subprocess.run(cmd, check=True)
+
         super().run()
 
         should_bundle = (
@@ -369,16 +455,51 @@ class SwigBuildExt(build_ext):
                         bundle_native_package.bundle_artifact(cand)
 
     def build_extensions(self) -> None:
+        if not self.extensions:
+            return
+
         is_msvc = getattr(self.compiler, "compiler_type", "") == "msvc"
         build_temp = self.build_temp or "build/temp"
         os.makedirs(build_temp, exist_ok=True)
+
+        if hasattr(self.compiler, "initialize") and not getattr(self.compiler, "initialized", True):
+            self.compiler.initialize()
 
         # Strip -Wstrict-prototypes if present on POSIX compilers when building C++
         compiler_so = getattr(self.compiler, "compiler_so", None)
         if isinstance(compiler_so, list) and "-Wstrict-prototypes" in compiler_so:
             compiler_so.remove("-Wstrict-prototypes")
 
+        jobs = resolve_build_jobs(self.parallel)
+        compiler_identity = self._get_compiler_identity()
+        compiler_macros = list(getattr(self.compiler, "macros", []) or [])
+        header_files = collect_files_with_suffixes(
+            [
+                ROOT_DIR / "include",
+                ROOT_DIR / "build" / "ezsnmp_vendor",
+                ROOT_DIR / "third_party" / "sqlite3",
+            ],
+            (".h", ".hpp"),
+        )
+        object_cache_dir = os.environ.get("EZSNMP_OBJECT_CACHE_DIR", "").strip()
+
+        units: list[dict] = []
+        ext_objects: dict[str, list[str]] = {}
+
         for ext in self.extensions:
+            ext_objs: list[str] = []
+            macros = list(ext.define_macros or [])
+            for undef in ext.undef_macros or []:
+                macros.append((undef,))
+
+            extra_args = list(ext.extra_compile_args or [])
+            if is_msvc and (
+                self.debug or any(f in extra_args for f in ("/Zi", "/ZI", "-Zi", "-ZI"))
+            ):
+                if "/FS" not in extra_args and "-FS" not in extra_args:
+                    extra_args.append("/FS")
+
+            # 1. Embedded SQLite amalgamation
             sqlite_c = getattr(ext, "_embedded_sqlite_c", None)
             if sqlite_c and os.path.isfile(sqlite_c):
                 c_macros = [
@@ -388,17 +509,130 @@ class SwigBuildExt(build_ext):
                     ("SQLITE_OMIT_LOAD_EXTENSION", "1"),
                 ]
                 c_postargs = ["/O2"] if is_msvc else ["-O2", "-fPIC", "-w"]
-                objs = self.compiler.compile(
-                    [sqlite_c],
-                    output_dir=build_temp,
-                    macros=c_macros,
-                    include_dirs=[os.path.dirname(sqlite_c)],
-                    debug=self.debug,
-                    extra_postargs=c_postargs,
-                )
-                ext.extra_objects = list(ext.extra_objects or []) + list(objs)
+                if is_msvc and "/FS" not in c_postargs:
+                    c_postargs.append("/FS")
+                sqlite_obj = self.compiler.object_filenames(
+                    [sqlite_c], strip_dir=False, output_dir=build_temp
+                )[0]
+                unit_sq = {
+                    "src": sqlite_c,
+                    "obj": sqlite_obj,
+                    "output_dir": build_temp,
+                    "macros": c_macros,
+                    "include_dirs": [os.path.dirname(sqlite_c)],
+                    "extra_args": c_postargs,
+                    "depends": [sqlite_c],
+                    "cache_path": None,
+                }
+                units.append(unit_sq)
+                ext_objs.append(sqlite_obj)
 
-        super().build_extensions()
+            # 2. Extension C++ sources
+            for src in ext.sources:
+                default_obj = self.compiler.object_filenames(
+                    [src], strip_dir=False, output_dir=build_temp
+                )[0]
+                unit = {
+                    "src": src,
+                    "obj": default_obj,
+                    "output_dir": build_temp,
+                    "macros": macros,
+                    "include_dirs": list(ext.include_dirs or []),
+                    "extra_args": extra_args,
+                    "depends": list(ext.depends or []),
+                    "cache_path": None,
+                }
+                units.append(unit)
+                ext_objs.append(default_obj)
+
+            ext_objects[ext.name] = ext_objs
+
+        # Pre-create all object output directories on the main thread
+        for unit in units:
+            obj_dir = os.path.dirname(unit["obj"])
+            if obj_dir:
+                os.makedirs(obj_dir, exist_ok=True)
+
+        units_to_compile: list[dict] = []
+        reused_local = 0
+        reused_cache = 0
+
+        for unit in units:
+            unit_deps = [unit["src"]] + unit["depends"] + header_files
+            if not self.force and is_up_to_date([unit["obj"]], unit_deps):
+                reused_local += 1
+                continue
+
+            if (
+                not self.force
+                and object_cache_dir
+                and is_python_independent_source(unit["src"])
+                and os.path.isfile(unit["src"])
+            ):
+                effective_macros = compiler_macros + list(unit["macros"])
+                cache_key = compute_object_cache_key(
+                    src_path=unit["src"],
+                    header_files=header_files,
+                    compiler_identity=compiler_identity,
+                    macros=effective_macros,
+                    non_python_incdirs=unit["include_dirs"],
+                    extra_args=unit["extra_args"],
+                    debug=bool(self.debug),
+                    plat_name=getattr(self, "plat_name", None),
+                )
+                obj_ext = os.path.splitext(unit["obj"])[1]
+                cache_path = os.path.join(object_cache_dir, f"{cache_key}{obj_ext}")
+                unit["cache_path"] = cache_path
+                if os.path.isfile(cache_path):
+                    shutil.copy2(cache_path, unit["obj"])
+                    reused_cache += 1
+                    continue
+
+            units_to_compile.append(unit)
+
+        # Schedule largest C/C++ sources first (LPT)
+        units_to_compile.sort(
+            key=lambda u: os.path.getsize(u["src"]) if os.path.isfile(u["src"]) else 0,
+            reverse=True,
+        )
+
+        print(
+            f"------- Compiling {len(units_to_compile)}/{len(units)} sources using "
+            f"{min(max(len(units_to_compile), 1), jobs)} worker(s) "
+            f"(max_jobs={jobs}, local_hits={reused_local}, cache_hits={reused_cache}) -------"
+        )
+
+        if units_to_compile:
+            worker_count = min(len(units_to_compile), jobs)
+            if worker_count == 1:
+                for unit in units_to_compile:
+                    self._compile_unit(unit)
+            else:
+                with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                    futures = [
+                        executor.submit(self._compile_unit, unit) for unit in units_to_compile
+                    ]
+                    for f in as_completed(futures):
+                        f.result()
+
+        # Link each extension sequentially
+        for ext in self.extensions:
+            ext_path = self.get_ext_fullpath(ext.name)
+            os.makedirs(os.path.dirname(ext_path), exist_ok=True)
+            objects = list(ext_objects[ext.name])
+            self._built_objects = objects[:]
+            self.compiler.link_shared_object(
+                objects,
+                ext_path,
+                libraries=self.get_libraries(ext),
+                library_dirs=ext.library_dirs,
+                runtime_library_dirs=ext.runtime_library_dirs,
+                extra_postargs=list(ext.extra_link_args or []),
+                export_symbols=self.get_export_symbols(ext),
+                debug=self.debug,
+                build_temp=build_temp,
+                target_lang="c++",
+            )
 
 
 class BuildPy(_build_py):
