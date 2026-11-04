@@ -16,7 +16,7 @@ Key Features
 ------------
 
 * **C++17 Core + EzSnmp Layer:** Uses ``ezsnmp`` ``SessionBase`` and ``Result`` for thread-safe SNMPv1/v2c/v3 requests and SET operations, decoupled from storage via a bounded queue.
-* **Self-Contained Packages (Zero Extra Libraries):** Statically embeds the SQLite3 C amalgamation and bundles Net-SNMP 5.10 + OpenSSL runtime libraries inside each language package, standardized on **CalSemVer** alpha releases (``2026.11.1a0``).
+* **Self-Contained Packages (Zero Extra Libraries):** Statically embeds the SQLite3 C amalgamation and bundles Net-SNMP 5.10 + OpenSSL runtime libraries inside each language package, standardized on **CalSemVer** alpha releases (``2026.11.3``).
 * **4 SWIG 4.x Target Languages:** Python, JavaScript (Node.js N-API), C# (.NET 8+), and Go (cgo).
 * **100% JSON Configuration:** Every engine, DUT, SNMPv3 USM, storage sink, and GUI setting lives in a validated JSON document.
 * **CLI + Behind-the-Scenes Cross-Platform GUI:** Full-featured CLI plus native ``tkinter.ttk`` Desktop Studio and Browser Web Studio across Linux, macOS, and Windows that drive the CLI behind the scenes.

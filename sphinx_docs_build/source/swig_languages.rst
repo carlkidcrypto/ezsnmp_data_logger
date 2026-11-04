@@ -52,7 +52,7 @@ Python (CalSemVer Alpha)
 
 .. code-block:: bash
 
-   pip install --pre "ezsnmp-data-logger>=2026.11.1a0"
+   pip install --pre "ezsnmp-data-logger>=2026.11.3"
 
 .. code-block:: python
 

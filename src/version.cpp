@@ -6,7 +6,7 @@
 
 namespace ezsnmp_data_logger {
 
-std::string version() { return "2026.11.1a0"; }
+std::string version() { return "2026.11.3"; }
 
 std::string ezsnmp_target_version() { return "2026.10.28a0"; }
 
