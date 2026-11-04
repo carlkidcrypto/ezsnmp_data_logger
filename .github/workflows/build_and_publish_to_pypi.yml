@@ -88,4 +88,5 @@ jobs:
         with:
           packages-dir: dist/
           verify-metadata: false
+          skip-existing: true
           print-hash: true
