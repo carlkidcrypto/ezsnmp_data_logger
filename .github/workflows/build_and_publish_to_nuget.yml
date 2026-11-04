@@ -79,6 +79,8 @@ jobs:
     name: Pack and Publish To NuGet
     runs-on: ubuntu-latest
     needs: build-runtimes
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
       - uses: actions/checkout@v7
 

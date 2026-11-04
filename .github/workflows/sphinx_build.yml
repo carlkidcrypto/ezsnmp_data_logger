@@ -249,7 +249,9 @@ jobs:
           touch "${{ github.workspace }}/docs/.nojekyll"
 
       - name: Create Pull Request with versioned docs
+        id: create-pr
         uses: peter-evans/create-pull-request@v8
+        continue-on-error: true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "docs: add versioned documentation for ${{ github.event.release.tag_name }}"
