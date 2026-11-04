@@ -349,4 +349,11 @@ Testing, Documentation & CI/CD Requirements
   dependency isolation via ``build[uv]``, and cross-version deterministic C++
   object caching (via ``EZSNMP_OBJECT_CACHE_DIR``) across matrix runners.
 
+- **[CICD-08]** Test deployment workflows
+  (``build_and_publish_to_test_pypi.yml``) **Shall** automatically trigger
+  on pushes to ``main`` guarded by smart change detection
+  (``tj-actions/changed-files``) over source and packaging files, ensuring
+  distribution packaging regressions fail prior to production release.
+
+
 
