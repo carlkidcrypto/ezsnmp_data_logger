@@ -317,7 +317,8 @@ Testing, Documentation & CI/CD Requirements
   retry resilience, skipping existing distribution artifacts idempotently,
   and publishing self-contained Node.js packages to npm
   (``build_and_publish_to_npm.yml``) with OIDC Trusted Publishing, Sigstore
-  provenance attestations, and automatic prerelease tag resolution.
+  provenance attestations, package lock caching, multi-core parallel native
+  addon compilation, and automatic prerelease tag resolution.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
