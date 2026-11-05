@@ -1,0 +1,563 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Self-Contained SWIG Multi-Language Distribution" href="swig_languages.html"><link rel="prev" title="CLI Guide" href="cli_guide.html">
+        <link rel="canonical" href="https://carlkidcrypto.github.io/ezsnmp_data_logger/html/gui_guide.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Cross-Platform GUI User Guide - EzSnmp Data Logger Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">EzSnmp Data Logger Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">EzSnmp Data Logger Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User &amp; Architecture Guides:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">System Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">JSON Configuration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_guide.html">CLI Guide</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Cross-Platform GUI User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="swig_languages.html">Self-Contained SWIG Multi-Language Distribution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API &amp; Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++17 API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="swig_interface_files.html">SWIG Interface File(s)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_api.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Module Index</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Engineering &amp; Governance:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="software_requirements.html">Software Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation_guide.html">Documentation Guide</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/gui_guide.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="cross-platform-gui-user-guide">
+<h1>Cross-Platform GUI User Guide<a class="headerlink" href="#cross-platform-gui-user-guide" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> provides a modern, responsive Graphical User Interface across <strong>Linux, macOS, and Windows</strong> that interacts <strong>strictly with the CLI behind the scenes</strong> via JSON payloads and child subprocesses.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#architecture-the-behind-the-scenes-cli-bridge" id="id2">Architecture: The Behind-the-Scenes CLI Bridge</a></p></li>
+<li><p><a class="reference internal" href="#two-cross-platform-frontends" id="id3">Two Cross-Platform Frontends</a></p></li>
+<li><p><a class="reference internal" href="#launching-the-gui" id="id4">Launching the GUI</a></p></li>
+<li><p><a class="reference internal" href="#detailed-tab-by-tab-walkthrough" id="id5">Detailed Tab-by-Tab Walkthrough</a></p>
+<ul>
+<li><p><a class="reference internal" href="#tab-1-live-dashboard" id="id6">Tab 1: Live Dashboard</a></p></li>
+<li><p><a class="reference internal" href="#tab-2-duts-metrics" id="id7">Tab 2: DUTs &amp; Metrics</a></p></li>
+<li><p><a class="reference internal" href="#tab-3-ezsnmp-get-walk-set-workbench" id="id8">Tab 3: EzSnmp GET / WALK / SET Workbench</a></p></li>
+<li><p><a class="reference internal" href="#tab-4-sinks-json-settings" id="id9">Tab 4: Sinks &amp; JSON Settings</a></p></li>
+<li><p><a class="reference internal" href="#tab-5-data-explorer" id="id10">Tab 5: Data Explorer</a></p></li>
+<li><p><a class="reference internal" href="#tab-6-raw-json-schema-validator" id="id11">Tab 6: Raw JSON &amp; Schema Validator</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#custom-branding-icons-desktop-application-launchers" id="id12">Custom Branding Icons &amp; Desktop Application Launchers</a></p></li>
+<li><p><a class="reference internal" href="#multi-language-localization-locale-json" id="id13">Multi-Language Localization (<code class="docutils literal notranslate"><span class="pre">locale.json</span></code>)</a></p></li>
+</ul>
+</nav>
+<section id="architecture-the-behind-the-scenes-cli-bridge">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Architecture: The Behind-the-Scenes CLI Bridge</a><a class="headerlink" href="#architecture-the-behind-the-scenes-cli-bridge" title="Link to this heading">¶</a></h2>
+<p>To guarantee that the GUI and CLI always produce 100% identical results and never diverge, the GUI contains <strong>zero duplicated SNMP or storage logic</strong>.</p>
+<p>Every user action in the interface (clicking a button, saving a setting, running a poll, probing a DUT) delegates to <code class="docutils literal notranslate"><span class="pre">CliSubprocessBridge</span></code>. The bridge spawns <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span> <span class="pre">&lt;subcommand&gt;</span> <span class="pre">--json</span></code> as a child process, parses the structured JSON response, and records the event in the <strong>Behind-the-Scenes CLI Command Audit Trail</strong>.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-------------------------------------------------------------------------+
+|   GUI Frontend (Native Tkinter Desktop Studio or Browser Web Studio)    |
++------------------------------------+------------------------------------+
+                                     |
+                      Executes: ezsnmp-data-logger &lt;cmd&gt; --json
+                                     v
++-------------------------------------------------------------------------+
+|   CliSubprocessBridge (Subprocess Execution &amp; Audit Logger)             |
+|   - Captures: UTC Time | Subcommand | Exit Code | Latency (ms)          |
+|   - Streams: Live NDJSON event lines from `run --json`                  |
++------------------------------------+------------------------------------+
+                                     |
+                                     v
++-------------------------------------------------------------------------+
+|   C++17 Telemetry Engine (EzSnmpPoller -&gt; BoundedQueue -&gt; Sinks)        |
++-------------------------------------------------------------------------+
+</pre></div>
+</div>
+</section>
+<section id="two-cross-platform-frontends">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Two Cross-Platform Frontends</a><a class="headerlink" href="#two-cross-platform-frontends" title="Link to this heading">¶</a></h2>
+<p>The GUI is configured in your JSON settings under <code class="docutils literal notranslate"><span class="pre">&quot;gui&quot;:</span> <span class="pre">{</span> <span class="pre">&quot;frontend&quot;:</span> <span class="pre">&quot;auto&quot;</span> <span class="pre">|</span> <span class="pre">&quot;tk&quot;</span> <span class="pre">|</span> <span class="pre">&quot;web&quot;</span> <span class="pre">}</span></code> (or via the <code class="docutils literal notranslate"><span class="pre">--frontend</span></code> command-line flag):</p>
+<ol class="arabic simple">
+<li><p><strong>Native Desktop Studio (**``tk``</strong>):**
+- Built on Python’s cross-platform standard-library <code class="docutils literal notranslate"><span class="pre">tkinter.ttk</span></code> (Linux X11/Wayland, macOS Aqua, Windows Win32).
+- Zero external GUI or WebKit dependencies required.
+- Features dark and light themes, real-time <code class="docutils literal notranslate"><span class="pre">Canvas</span></code> telemetry charts, interactive series checkbuttons, clickable canvas legends, and instant responsive layouts.</p></li>
+<li><p><strong>Browser Web Studio (**``web``</strong>):**
+- Built on Python’s standard-library <code class="docutils literal notranslate"><span class="pre">http.server.ThreadingHTTPServer</span></code> + responsive HTML5/SVG/CSS.
+- Zero external web frameworks (no Flask, Django, or FastAPI required).
+- Ideal for headless servers, Docker containers, remote clouds, WSL2, or SSH port-forwarding.</p></li>
+</ol>
+</section>
+<section id="launching-the-gui">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Launching the GUI</a><a class="headerlink" href="#launching-the-gui" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Auto-detect: launches native Desktop Tkinter Studio if a graphical display exists, else Web Studio</span>
+ezsnmp-data-logger<span class="w"> </span>gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json
+
+<span class="c1"># Force Native Desktop Tkinter Studio</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json<span class="w"> </span>--frontend<span class="w"> </span>tk
+
+<span class="c1"># Force Browser Web Studio on specified port</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json<span class="w"> </span>--frontend<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">8765</span>
+
+<span class="c1"># Launch on a remote headless server bound to all network interfaces</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json<span class="w"> </span>--frontend<span class="w"> </span>web<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8765</span><span class="w"> </span>--no-browser
+
+<span class="c1"># Launch in Spanish using the built-in 'es' catalog</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json<span class="w"> </span>--locale<span class="w"> </span>es
+
+<span class="c1"># Launch using a custom translation locale file</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--config<span class="w"> </span>configs/example.json<span class="w"> </span>--locale-file<span class="w"> </span>/path/to/my_locale.json
+</pre></div>
+</div>
+</section>
+<section id="detailed-tab-by-tab-walkthrough">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Detailed Tab-by-Tab Walkthrough</a><a class="headerlink" href="#detailed-tab-by-tab-walkthrough" title="Link to this heading">¶</a></h2>
+<section id="tab-1-live-dashboard">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Tab 1: Live Dashboard</a><a class="headerlink" href="#tab-1-live-dashboard" title="Link to this heading">¶</a></h3>
+<p>The primary monitoring cockpit for real-time telemetry observation:</p>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="_images/gui_dashboard_studio.png"><img alt="EzSnmp Data Logger — Live Dashboard Studio" src="_images/gui_dashboard_studio.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">EzSnmp Data Logger Studio — Live Dashboard monitoring real-time telemetry streaming from the CLI engine.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<ul class="simple">
+<li><p><strong>Telemetry KPI Grid:</strong>
+- <strong>CLI State:</strong> Indicates whether the background CLI polling engine is <code class="docutils literal notranslate"><span class="pre">IDLE</span></code> or <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code>.
+- <strong>Cycles:</strong> Total number of completed polling cycles.
+- <strong>Batches:</strong> Number of batches successfully dispatched to sinks.
+- <strong>Samples:</strong> Total individual numeric SNMP telemetry data points ingested.
+- <strong>Queue Depth:</strong> Current count of batches in the thread-safe bounded buffer.
+- <strong>Poll / Sink Errors:</strong> Error counter (e.g. <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">/</span> <span class="pre">0</span></code>) tracking network timeouts or storage write failures.</p></li>
+<li><p><strong>One-Click Action Buttons:</strong>
+- <strong>Run Single Cycle (CLI ``–once``):</strong> Spawns <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span> <span class="pre">run</span> <span class="pre">--once</span> <span class="pre">--json</span></code> to execute a single cycle across all DUTs, persisting data immediately.
+- <strong>Probe All DUTs (CLI ``probe``):</strong> Tests reachability of all configured devices without writing to persistent sinks.
+- <strong>Validate Config (CLI ``validate``):</strong> Runs full schema and credential validation on the active JSON file.</p></li>
+<li><p><strong>Real-Time Telemetry Chart with Selectable Series:</strong>
+- Renders live numeric SNMP telemetry streamed directly from child CLI process events.
+- <strong>Select One or Many Series:</strong> Use the checkbuttons (Desktop Tk) or filter chips/pills (Web Studio) above the chart to choose exactly which metrics to display.
+- <strong>Automatic Y-Axis Rescaling:</strong> When large-magnitude counters (e.g. <code class="docutils literal notranslate"><span class="pre">sysUpTime</span></code> ~8,600,000) are deselected, the Y-axis immediately rescales to lower-magnitude metrics (e.g. <code class="docutils literal notranslate"><span class="pre">cpuLoad1m</span></code> ~0.4, <code class="docutils literal notranslate"><span class="pre">chassisTempC</span></code> ~40°C), making subtle variations clearly visible.
+- <strong>Select All &amp; Clear All:</strong> Quickly toggle visibility across all available metrics.
+- <strong>Canvas Legend Interaction:</strong> In Desktop Tkinter, clicking any legend entry directly on the chart canvas toggles its visibility.</p></li>
+<li><p><strong>Live CLI JSON Event Stream Console:</strong>
+- Live console view displaying the exact NDJSON event lines streamed from the child <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span> <span class="pre">run</span> <span class="pre">--json</span></code> engine process.</p></li>
+<li><p><strong>Behind-the-Scenes CLI Command Audit Trail:</strong>
+- Live audit table tracking every action taken in the GUI with columns for <strong>UTC Time</strong>, <strong>Exit Code</strong>, <strong>Duration (ms)</strong>, and the exact <strong>Executed CLI Command</strong>.</p></li>
+</ul>
+</section>
+<section id="tab-2-duts-metrics">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Tab 2: DUTs &amp; Metrics</a><a class="headerlink" href="#tab-2-duts-metrics" title="Link to this heading">¶</a></h3>
+<p>Inspect and configure network Devices Under Test (DUTs):</p>
+<ul class="simple">
+<li><p><strong>Device Parameters:</strong> View and edit device names, IP addresses/hostnames, UDP ports (default 161), timeout intervals, and retry limits.</p></li>
+<li><p><strong>SNMP Version &amp; Credentials:</strong>
+- <strong>SNMPv1 &amp; SNMPv2c:</strong> Community strings (e.g. <code class="docutils literal notranslate"><span class="pre">public</span></code>).
+- <strong>SNMPv3:</strong> Security name, authentication protocol (<code class="docutils literal notranslate"><span class="pre">MD5</span></code> or <code class="docutils literal notranslate"><span class="pre">SHA</span></code>), authentication passphrases, privacy protocol (<code class="docutils literal notranslate"><span class="pre">DES</span></code> or <code class="docutils literal notranslate"><span class="pre">AES</span></code>), privacy keys, and security levels (<code class="docutils literal notranslate"><span class="pre">noAuthNoPriv</span></code>, <code class="docutils literal notranslate"><span class="pre">authNoPriv</span></code>, <code class="docutils literal notranslate"><span class="pre">authPriv</span></code>).</p></li>
+<li><p><strong>Metric Definitions:</strong> Configure metric names, target OIDs, ASN.1 data types, and collection rates per device.</p></li>
+</ul>
+</section>
+<section id="tab-3-ezsnmp-get-walk-set-workbench">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Tab 3: EzSnmp GET / WALK / SET Workbench</a><a class="headerlink" href="#tab-3-ezsnmp-get-walk-set-workbench" title="Link to this heading">¶</a></h3>
+<p>An interactive diagnostic laboratory to run ad-hoc SNMP operations against any configured device:</p>
+<ul class="simple">
+<li><p><strong>Operation Selector:</strong> Choose between <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">getnext</span></code>, <code class="docutils literal notranslate"><span class="pre">walk</span></code>, <code class="docutils literal notranslate"><span class="pre">bulkget</span></code>, <code class="docutils literal notranslate"><span class="pre">bulkwalk</span></code>, and <code class="docutils literal notranslate"><span class="pre">set</span></code>.</p></li>
+<li><p><strong>Target OID Field:</strong> Enter standard MIB OIDs or dotted numeric strings (e.g. <code class="docutils literal notranslate"><span class="pre">1.3.6.1.2.1.1.1.0</span></code>).</p></li>
+<li><p><strong>Record Checkbox:</strong> When checked, passes <code class="docutils literal notranslate"><span class="pre">--record</span></code> to the CLI, storing the returned samples directly into your configured persistence sinks.</p></li>
+<li><p><strong>Results Table:</strong> Displays returned variable bindings including OID, OID index, ASN.1 type tag, human-readable type name, raw value, and status.</p></li>
+</ul>
+</section>
+<section id="tab-4-sinks-json-settings">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Tab 4: Sinks &amp; JSON Settings</a><a class="headerlink" href="#tab-4-sinks-json-settings" title="Link to this heading">¶</a></h3>
+<p>Configure telemetry persistence destinations and GUI preferences:</p>
+<ul class="simple">
+<li><p><strong>Storage Sinks:</strong>
+- <strong>SQLite3:</strong> Embedded WAL-mode database path with automatic schema migrations.
+- <strong>JSONL:</strong> Newline-delimited JSON log file destination.
+- <strong>CSV:</strong> Comma-separated values log destination with timestamp headers.
+- <strong>Prometheus Exporter:</strong> Embedded HTTP exposition endpoint (e.g. <code class="docutils literal notranslate"><span class="pre">0.0.0.0:9100/metrics</span></code>) with gauge and counter metrics.
+- <strong>PostgreSQL / TimescaleDB:</strong> Connection URI for hypertable time-series storage.</p></li>
+<li><p><strong>GUI Preferences:</strong>
+- <strong>Theme:</strong> Switch between high-contrast <strong>Dark</strong> and clean <strong>Light</strong> themes.
+- <strong>Refresh Interval:</strong> Configure the polling state UI refresh rate (default 1000 ms).
+- <strong>Language / Locale:</strong> Switch UI language live via the locale dropdown.</p></li>
+</ul>
+</section>
+<section id="tab-5-data-explorer">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Tab 5: Data Explorer</a><a class="headerlink" href="#tab-5-data-explorer" title="Link to this heading">¶</a></h3>
+<p>Search and inspect historical telemetry rows without leaving the application:</p>
+<ul class="simple">
+<li><p>Query recent telemetry records directly from the embedded SQLite3 database.</p></li>
+<li><p>Filter by <strong>Device Under Test (DUT)</strong> and <strong>Metric Name</strong>.</p></li>
+<li><p>View timestamp (Unix nanoseconds and ISO-8601), device name, metric name, OID, SNMP data type, formatted value, and storage sink source.</p></li>
+</ul>
+</section>
+<section id="tab-6-raw-json-schema-validator">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Tab 6: Raw JSON &amp; Schema Validator</a><a class="headerlink" href="#tab-6-raw-json-schema-validator" title="Link to this heading">¶</a></h3>
+<p>Advanced direct configuration editing:</p>
+<ul class="simple">
+<li><p><strong>Live Syntax Validation:</strong> Validates JSON syntax in real time against the embedded C++ JSON schema validator.</p></li>
+<li><p><strong>Template Selector:</strong> Load built-in starter templates (<code class="docutils literal notranslate"><span class="pre">demo</span></code>, <code class="docutils literal notranslate"><span class="pre">minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">all_sinks</span></code>).</p></li>
+<li><p><strong>Save &amp; Apply:</strong> Saves changes directly to disk and reloads the engine state.</p></li>
+</ul>
+</section>
+</section>
+<section id="custom-branding-icons-desktop-application-launchers">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Custom Branding Icons &amp; Desktop Application Launchers</a><a class="headerlink" href="#custom-branding-icons-desktop-application-launchers" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> includes a custom branding icon and favicon suite, ensuring neither Desktop Studio nor Web Studio display generic Python or browser tab icons:</p>
+<ul class="simple">
+<li><p><strong>Browser Web Studio Favicons:</strong> Vector SVG (<code class="docutils literal notranslate"><span class="pre">favicon.svg</span></code>), Windows ICO (<code class="docutils literal notranslate"><span class="pre">favicon.ico</span></code>), multi-resolution PNGs (<code class="docutils literal notranslate"><span class="pre">favicon-32x32.png</span></code>, <code class="docutils literal notranslate"><span class="pre">favicon-16x16.png</span></code>), and Apple Touch Icon (<code class="docutils literal notranslate"><span class="pre">apple-touch-icon.png</span></code>).</p></li>
+<li><p><strong>Desktop Tkinter Window &amp; Dock Icon:</strong> Custom window titlebar icon (<code class="docutils literal notranslate"><span class="pre">app_icon.png</span></code> / <code class="docutils literal notranslate"><span class="pre">app_icon.ico</span></code>) and automatic macOS Dock icon configuration via standard Cocoa/AppKit integration (zero extra dependencies).</p></li>
+<li><p><strong>Desktop Application Launcher Installer:</strong> Install a native launcher with custom icons for your operating system:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install native launcher (~/Applications on macOS, ~/.local/share/applications on Linux)</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--install-launcher
+
+<span class="c1"># Or specify a custom destination directory (e.g. ~/Desktop)</span>
+ezsnmp-data-logger-gui<span class="w"> </span>--install-launcher<span class="w"> </span>--launcher-dir<span class="w"> </span>~/Desktop
+</pre></div>
+</div>
+</section>
+<section id="multi-language-localization-locale-json">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Multi-Language Localization (<code class="docutils literal notranslate"><span class="pre">locale.json</span></code>)</a><a class="headerlink" href="#multi-language-localization-locale-json" title="Link to this heading">¶</a></h2>
+<p>All user-facing UI strings (titles, buttons, status bars, tabs, KPI cards, table headers, form labels, and dialog messages) across both Desktop Studio and Web Studio are externalized into <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger/gui/locale.json</span></code>.</p>
+<p>Each key is mapped to an object containing language translations:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"buttons.start_logger"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"en"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Start CLI Logger"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"es"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Iniciar Logger CLI"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"buttons.stop_logger"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"en"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stop CLI Logger"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"labels.visible_series"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"en"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Visible Series:"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"buttons.select_all"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"en"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Select All"</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"buttons.clear_all"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"en"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Clear All"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>Baseline Language:</strong> Standardizes on English (<code class="docutils literal notranslate"><span class="pre">&quot;en&quot;</span></code>) as the primary baseline language for all keys. Additional language translations (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;es&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fr&quot;</span></code>) can be added per key as needed.</p></li>
+<li><p><strong>Persistent Configuration:</strong> Configure your preferred language directly in the JSON configuration under <code class="docutils literal notranslate"><span class="pre">&quot;gui&quot;:</span> <span class="pre">{</span> <span class="pre">&quot;locale&quot;:</span> <span class="pre">&quot;en&quot;</span> <span class="pre">}</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;locale_file&quot;:</span> <span class="pre">&quot;path/to/custom.json&quot;</span></code>).</p></li>
+<li><p><strong>Desktop Studio Switching:</strong> Switch between languages live via the combobox in Tab 4 (Sinks &amp; JSON Settings).</p></li>
+<li><p><strong>Browser Studio Switching:</strong> Switch languages instantly from the language dropdown in the top navigation toolbar.</p></li>
+<li><p><strong>Graceful Fallback:</strong> Any key or translation not defined in a custom language file automatically falls back to the canonical English string.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="swig_languages.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Self-Contained SWIG Multi-Language Distribution</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="cli_guide.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">CLI Guide</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024-2026, carlkidcrypto
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Cross-Platform GUI User Guide</a><ul>
+<li><a class="reference internal" href="#architecture-the-behind-the-scenes-cli-bridge">Architecture: The Behind-the-Scenes CLI Bridge</a></li>
+<li><a class="reference internal" href="#two-cross-platform-frontends">Two Cross-Platform Frontends</a></li>
+<li><a class="reference internal" href="#launching-the-gui">Launching the GUI</a></li>
+<li><a class="reference internal" href="#detailed-tab-by-tab-walkthrough">Detailed Tab-by-Tab Walkthrough</a><ul>
+<li><a class="reference internal" href="#tab-1-live-dashboard">Tab 1: Live Dashboard</a></li>
+<li><a class="reference internal" href="#tab-2-duts-metrics">Tab 2: DUTs &amp; Metrics</a></li>
+<li><a class="reference internal" href="#tab-3-ezsnmp-get-walk-set-workbench">Tab 3: EzSnmp GET / WALK / SET Workbench</a></li>
+<li><a class="reference internal" href="#tab-4-sinks-json-settings">Tab 4: Sinks &amp; JSON Settings</a></li>
+<li><a class="reference internal" href="#tab-5-data-explorer">Tab 5: Data Explorer</a></li>
+<li><a class="reference internal" href="#tab-6-raw-json-schema-validator">Tab 6: Raw JSON &amp; Schema Validator</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-branding-icons-desktop-application-launchers">Custom Branding Icons &amp; Desktop Application Launchers</a></li>
+<li><a class="reference internal" href="#multi-language-localization-locale-json">Multi-Language Localization (<code class="docutils literal notranslate"><span class="pre">locale.json</span></code>)</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=184295c1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
