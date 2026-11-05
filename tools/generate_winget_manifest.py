@@ -30,12 +30,12 @@ def _read_current_calsemver() -> str:
         for line in text.splitlines():
             if "PROJECT_VERSION_STRING" in line and '"' in line:
                 raw = line.split('"')[1].strip()
-                # If it's a PEP-440 alpha (e.g. 2026.11.4), convert to SemVer-2.0
+                # If it's a PEP-440 alpha (e.g. 2026.11.5), convert to SemVer-2.0
                 if "a" in raw and "-" not in raw:
                     prefix, num = raw.split("a", 1)
                     return f"{prefix}-alpha.{num}"
                 return raw
-    return "2026.11.4"
+    return "2026.11.5"
 
 
 def compute_sha256(path_or_url: str) -> str:
@@ -162,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", default="")
     parser.add_argument(
         "--installer-url",
-        default="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.4/ezsnmp_data_logger-windows-x64.zip",
+        default="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.5/ezsnmp_data_logger-windows-x64.zip",
     )
     parser.add_argument("--sha256", default="")
     parser.add_argument("--out-dir", default=str(REPO_ROOT / "dist-winget"))
