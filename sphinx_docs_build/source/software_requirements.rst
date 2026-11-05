@@ -46,11 +46,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.4a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.5a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.4-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.5-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.4``) for Git releases, Sphinx documentation
+  ``v2026.11.5``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -318,16 +318,17 @@ Testing, Documentation & CI/CD Requirements
   and publishing self-contained Node.js packages to npm
   (``build_and_publish_to_npm.yml``) with OIDC Trusted Publishing, Sigstore
   provenance attestations, package lock caching, multi-core parallel native
-  addon compilation, and automatic prerelease tag resolution.
+  addon compilation, idempotent skip detection, and prerelease tag resolution.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
   GitHub Packages (``build_and_publish_to_nuget.yml``) using strict C++17
   conformance (``CMAKE_CXX_EXTENSIONS=OFF``), OpenSSL include path
-  discovery across Linux and macOS, and OIDC Trusted Publishing authentication
-  (``NuGet/login@v1``) with duplicate skipping, and generating validated
-  WinGet community manifests with automated repository submission
-  (``build_and_publish_to_winget.yml``, ``tools/generate_winget_manifest.py``).
+  discovery across Linux and macOS, multi-core MSVC (``/MP``) parallel builds,
+  OIDC Trusted Publishing authentication (``NuGet/login@v1``) with duplicate
+  skipping, and generating validated WinGet community manifests with automated
+  repository submission (``build_and_publish_to_winget.yml``,
+  ``tools/generate_winget_manifest.py``).
 
 - **[CICD-04]** Automated dependency maintenance **Shall** be configured via
   ``.github/dependabot.yml`` with weekly updates across GitHub Actions,

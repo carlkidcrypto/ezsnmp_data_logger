@@ -24,6 +24,9 @@ jobs:
     needs: verify-syntax
     name: Build C# native runtime for ${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -108,6 +111,8 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: bindings/csharp/EzSnmpDataLogger.csproj
 
       - name: Build and Pack NuGet Package
         run: |

@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
-project(ezsnmp_data_logger VERSION 2026.11.4 LANGUAGES C CXX)
+project(ezsnmp_data_logger VERSION 2026.11.5 LANGUAGES C CXX)
 
-set(EZSNMP_DL_VERSION_STRING "2026.11.4")
+set(EZSNMP_DL_VERSION_STRING "2026.11.5")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(MSVC)
+  add_compile_options(/MP)
+endif()
 
 option(EZSNMP_DL_BUILD_TESTS "Build GoogleTest suite" OFF)
 set(EZSNMP_SOURCE_DIR "" CACHE PATH "Path to ezsnmp repository root")
