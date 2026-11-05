@@ -3,6 +3,7 @@ project(ezsnmp_data_logger_csharp VERSION 2026.11.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(../.. ezsnmp_data_logger_core)
