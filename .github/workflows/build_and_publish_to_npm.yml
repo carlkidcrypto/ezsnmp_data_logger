@@ -46,6 +46,8 @@ jobs:
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
+          cache: "npm"
+          cache-dependency-path: bindings/javascript/package-lock.json
 
       - name: Validate release tag
         if: github.ref_type == 'tag'
@@ -69,12 +71,12 @@ jobs:
 
       - name: Install Node dependencies
         working-directory: bindings/javascript
-        run: npm install
+        run: npm ci --ignore-scripts
 
       - name: Build native Node addon
         working-directory: bindings/javascript
         run: |
-          npx node-gyp rebuild
+          npx node-gyp rebuild -j "$(nproc)"
           python3 ../../tools/bundle_native_package.py build/Release/ezsnmp_data_logger.node
 
       - name: Inspect package contents (dry-run)
