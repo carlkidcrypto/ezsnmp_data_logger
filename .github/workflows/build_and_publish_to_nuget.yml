@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   verify-syntax:
@@ -79,6 +80,7 @@ jobs:
     name: Pack and Publish To NuGet
     runs-on: ubuntu-latest
     needs: build-runtimes
+    environment: build_and_publish_to_nuget
     env:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
@@ -117,12 +119,21 @@ jobs:
           name: nuget-package
           path: dist-nuget/*.nupkg
 
+      - name: Authenticate with NuGet.org (OIDC Trusted Publishing)
+        if: env.NUGET_API_KEY == ''
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: carlkidcrypto-nuget
+
       - name: Publish to NuGet.org
-        if: env.NUGET_API_KEY != ''
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          dotnet nuget push dist-nuget/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          API_KEY="${NUGET_API_KEY:-${{ steps.nuget-login.outputs.NUGET_API_KEY }}}"
+          if [ -n "$API_KEY" ]; then
+            dotnet nuget push dist-nuget/*.nupkg --api-key "$API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          else
+            echo "::warning ::No NuGet authentication provided; skipping NuGet.org upload. Distribution packages have been saved as workflow artifacts."
+          fi
 
       - name: Publish to GitHub Packages
         if: env.GITHUB_TOKEN != ''
