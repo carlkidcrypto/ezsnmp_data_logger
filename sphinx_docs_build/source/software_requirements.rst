@@ -316,7 +316,8 @@ Testing, Documentation & CI/CD Requirements
   pre-provisioning embedded C++17 dependencies (``third_party/ezsnmp``) with
   retry resilience, skipping existing distribution artifacts idempotently,
   and publishing self-contained Node.js packages to npm
-  (``build_and_publish_to_npm.yml``) with automatic prerelease tag resolution.
+  (``build_and_publish_to_npm.yml``) with OIDC Trusted Publishing, Sigstore
+  provenance attestations, and automatic prerelease tag resolution.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
