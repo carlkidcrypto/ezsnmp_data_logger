@@ -46,11 +46,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.3a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.4a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.3-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.4-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.3``) for Git releases, Sphinx documentation
+  ``v2026.11.4``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -316,7 +316,8 @@ Testing, Documentation & CI/CD Requirements
   pre-provisioning embedded C++17 dependencies (``third_party/ezsnmp``) with
   retry resilience, skipping existing distribution artifacts idempotently,
   and publishing self-contained Node.js packages to npm
-  (``build_and_publish_to_npm.yml``) with automatic prerelease tag resolution.
+  (``build_and_publish_to_npm.yml``) with OIDC Trusted Publishing, Sigstore
+  provenance attestations, and automatic prerelease tag resolution.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
