@@ -323,9 +323,10 @@ Testing, Documentation & CI/CD Requirements
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
   GitHub Packages (``build_and_publish_to_nuget.yml``) using strict C++17
-  conformance (``CMAKE_CXX_EXTENSIONS=OFF``) and OpenSSL include path
-  discovery across Linux and macOS, and generating validated WinGet
-  community manifests with automated repository submission
+  conformance (``CMAKE_CXX_EXTENSIONS=OFF``), OpenSSL include path
+  discovery across Linux and macOS, and OIDC Trusted Publishing authentication
+  (``NuGet/login@v1``) with duplicate skipping, and generating validated
+  WinGet community manifests with automated repository submission
   (``build_and_publish_to_winget.yml``, ``tools/generate_winget_manifest.py``).
 
 - **[CICD-04]** Automated dependency maintenance **Shall** be configured via
