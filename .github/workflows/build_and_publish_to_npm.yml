@@ -99,7 +99,12 @@ jobs:
           if [ -n "${NPM_TOKEN:-}" ]; then
             export NODE_AUTH_TOKEN="$NPM_TOKEN"
           fi
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "Notice: ${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm; skipping publish step."
+            exit 0
+          fi
           if [[ "$PACKAGE_VERSION" =~ - ]] || [[ "$PACKAGE_VERSION" =~ [a-zA-Z] ]]; then
             echo "Publishing prerelease version $PACKAGE_VERSION with tag 'next'..."
             npm publish --access public --provenance --tag next

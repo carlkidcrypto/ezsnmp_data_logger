@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import platform
 import subprocess
 import sys
@@ -43,7 +44,11 @@ def main() -> int:
         ["cmake", "-B", str(build_dir), "-S", str(CSHARP_DIR), "-DCMAKE_BUILD_TYPE=Release"],
         check=True,
     )
-    subprocess.run(["cmake", "--build", str(build_dir), "--config", "Release", "-j"], check=True)
+    jobs = str(os.cpu_count() or 4)
+    subprocess.run(
+        ["cmake", "--build", str(build_dir), "--config", "Release", "--parallel", jobs],
+        check=True,
+    )
 
     rid = _current_rid()
     native_dir = CSHARP_DIR / "runtimes" / rid / "native"
