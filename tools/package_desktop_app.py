@@ -2,6 +2,10 @@
 """Package EzSnmp Data Logger into standalone desktop applications.
 
 Generates:
+- Linux: Standalone executable (`EzSnmpDataLogger-Linux-<arch>`),
+  Debian package (`EzSnmpDataLogger-Linux-<arch>.deb`),
+  RPM package (`EzSnmpDataLogger-Linux-<arch>.rpm`),
+  and portable `.tar.gz` archive.
 - macOS: Standalone `.app` bundle (`EzSnmpDataLogger.app`),
   drag-and-drop disk image (`EzSnmpDataLogger-macOS-<arch>.dmg`),
   and `.zip` archive.
@@ -13,12 +17,15 @@ Generates:
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import platform
 import plistlib
 import shutil
 import subprocess
 import sys
+import tarfile
+import time
 import zipfile
 from pathlib import Path
 
@@ -171,6 +178,10 @@ def build_pyinstaller_cmd(
         icon_png = static_dir / "app_icon.png"
         if icon_png.is_file():
             cmd.extend(["--icon", str(icon_png)])
+
+        for so_file in (REPO_ROOT / "ezsnmp_data_logger").glob("_ezsnmp_data_logger*.so"):
+            cmd.extend(["--add-binary", f"{so_file}{sep}ezsnmp_data_logger"])
+
         cmd.extend(
             [
                 "--onefile",
@@ -349,6 +360,276 @@ def package_windows_artifacts(
     return results
 
 
+def build_deb_package(
+    staging_dir: Path,
+    output_deb_path: Path,
+) -> Path:
+    """Build a Debian .deb package using dpkg-deb if available, or pure Python fallback."""
+    dpkg_deb = shutil.which("dpkg-deb")
+    if dpkg_deb:
+        subprocess.run(
+            [dpkg_deb, "--build", "--root-owner-group", str(staging_dir), str(output_deb_path)],
+            check=True,
+        )
+        return output_deb_path
+
+    # Pure Python fallback: construct standard Unix ar archive with debian-binary, control.tar.gz, data.tar.gz
+    debian_binary = b"2.0\n"
+
+    # control.tar.gz
+    control_buf = io.BytesIO()
+    with tarfile.open(fileobj=control_buf, mode="w:gz") as tar:
+        for p in sorted((staging_dir / "DEBIAN").rglob("*")):
+            if p.is_file():
+                rel = p.relative_to(staging_dir / "DEBIAN")
+                tar.add(p, arcname=f"./{rel}")
+    control_data = control_buf.getvalue()
+
+    # data.tar.gz
+    data_buf = io.BytesIO()
+    with tarfile.open(fileobj=data_buf, mode="w:gz") as tar:
+        for p in sorted(staging_dir.rglob("*")):
+            if p.name == "DEBIAN" or "DEBIAN" in p.parts:
+                continue
+            rel = p.relative_to(staging_dir)
+            tar.add(p, arcname=f"./{rel}")
+    data_data = data_buf.getvalue()
+
+    with open(output_deb_path, "wb") as f:
+        f.write(b"!<arch>\n")
+        for name, chunk in [
+            ("debian-binary", debian_binary),
+            ("control.tar.gz", control_data),
+            ("data.tar.gz", data_data),
+        ]:
+            mtime = int(time.time())
+            hdr = f"{name:<16}{mtime:<12}0     0     100644  {len(chunk):<10}`\n"
+            f.write(hdr.encode("ascii"))
+            f.write(chunk)
+            if len(chunk) % 2 != 0:
+                f.write(b"\n")
+
+    return output_deb_path
+
+
+def package_linux_artifacts(
+    dist_dir: Path,
+    version: str,
+    arch: str,
+    skip_deb: bool = False,
+    skip_rpm: bool = False,
+) -> list[Path]:
+    """Generate standalone Linux executable copies, tarball, Debian (.deb) and RPM (.rpm) packages."""
+    exe_src = dist_dir / "EzSnmpDataLogger"
+    if not exe_src.is_file():
+        raise FileNotFoundError(f"Expected Linux executable not found at: {exe_src}")
+
+    arch_exe = dist_dir / f"EzSnmpDataLogger-Linux-{arch}"
+    shutil.copy2(exe_src, arch_exe)
+    arch_exe.chmod(0o755)
+    results = [arch_exe]
+
+    # 1. Desktop entry and static assets
+    desktop_file = dist_dir / "ezsnmp-data-logger.desktop"
+    desktop_content = """[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EzSnmp Data Logger
+GenericName=SNMP Data Logger
+Comment=Cross-Platform SNMP Telemetry Engine and Data Logger
+Exec=EzSnmpDataLogger %F
+Icon=ezsnmp-data-logger
+Terminal=false
+Categories=Network;Development;System;Utility;
+Keywords=snmp;telemetry;ezsnmp;data-logger;network;monitoring;
+StartupNotify=true
+StartupWMClass=EzSnmpDataLogger
+"""
+    desktop_file.write_text(desktop_content, encoding="utf-8")
+    desktop_file.chmod(0o644)
+
+    icon_src = REPO_ROOT / "ezsnmp_data_logger" / "gui" / "static" / "app_icon.png"
+    license_src = REPO_ROOT / "LICENSE"
+    readme_src = REPO_ROOT / "README.rst"
+
+    # 2. Portable compressed tarball (.tar.gz)
+    tar_path = dist_dir / f"EzSnmpDataLogger-Linux-{arch}.tar.gz"
+    print(f"Creating Linux tarball archive: {tar_path} ...")
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.add(exe_src, arcname="EzSnmpDataLogger")
+        tar.add(desktop_file, arcname="ezsnmp-data-logger.desktop")
+        if icon_src.is_file():
+            tar.add(icon_src, arcname="ezsnmp-data-logger.png")
+        if license_src.is_file():
+            tar.add(license_src, arcname="LICENSE")
+        if readme_src.is_file():
+            tar.add(readme_src, arcname="README.rst")
+    results.append(tar_path)
+
+    # Architecture mapping
+    deb_arch = "amd64" if arch in ("x64", "x86_64") else arch
+    rpm_arch = "x86_64" if arch in ("x64", "amd64") else arch
+    clean_version = version.replace("-", ".")
+
+    # 3. Debian package (.deb)
+    if not skip_deb:
+        deb_out = dist_dir / f"EzSnmpDataLogger-Linux-{arch}.deb"
+        deb_canonical = dist_dir / f"ezsnmp-data-logger_{version}_{deb_arch}.deb"
+        staging = dist_dir / "deb_staging"
+        if staging.exists():
+            shutil.rmtree(staging)
+
+        (staging / "DEBIAN").mkdir(parents=True, exist_ok=True)
+        (staging / "usr" / "bin").mkdir(parents=True, exist_ok=True)
+        (staging / "usr" / "share" / "applications").mkdir(parents=True, exist_ok=True)
+        (staging / "usr" / "share" / "pixmaps").mkdir(parents=True, exist_ok=True)
+        (staging / "usr" / "share" / "doc" / "EzSnmpDataLogger").mkdir(parents=True, exist_ok=True)
+
+        control_content = f"""Package: ezsnmp-data-logger
+Version: {version}
+Section: utils
+Priority: optional
+Architecture: {deb_arch}
+Maintainer: Carlos Santos <carlkidcrypto@users.noreply.github.com>
+Installed-Size: {int(exe_src.stat().st_size / 1024)}
+Description: EzSnmp Data Logger
+ Self-contained C++17 SNMP telemetry engine and data logger with SWIG
+ bindings, CLI, and GUI Studio.
+Homepage: https://carlkidcrypto.github.io/ezsnmp_data_logger/
+"""
+        (staging / "DEBIAN" / "control").write_text(control_content, encoding="utf-8")
+        shutil.copy2(exe_src, staging / "usr" / "bin" / "EzSnmpDataLogger")
+        (staging / "usr" / "bin" / "EzSnmpDataLogger").chmod(0o755)
+
+        # Symlink ezsnmp-data-logger -> EzSnmpDataLogger
+        os.symlink("EzSnmpDataLogger", str(staging / "usr" / "bin" / "ezsnmp-data-logger"))
+
+        shutil.copy2(
+            desktop_file, staging / "usr" / "share" / "applications" / "ezsnmp-data-logger.desktop"
+        )
+        if icon_src.is_file():
+            shutil.copy2(icon_src, staging / "usr" / "share" / "pixmaps" / "ezsnmp-data-logger.png")
+        if license_src.is_file():
+            shutil.copy2(
+                license_src, staging / "usr" / "share" / "doc" / "EzSnmpDataLogger" / "copyright"
+            )
+        if readme_src.is_file():
+            shutil.copy2(
+                readme_src, staging / "usr" / "share" / "doc" / "EzSnmpDataLogger" / "README.rst"
+            )
+
+        print(f"Building Debian package: {deb_out} ...")
+        build_deb_package(staging, deb_out)
+        shutil.copy2(deb_out, deb_canonical)
+        results.extend([deb_out, deb_canonical])
+        shutil.rmtree(staging, ignore_errors=True)
+
+    # 4. RPM package (.rpm)
+    if not skip_rpm:
+        rpm_out = dist_dir / f"EzSnmpDataLogger-Linux-{arch}.rpm"
+        rpm_canonical = dist_dir / f"ezsnmp-data-logger-{clean_version}-1.{rpm_arch}.rpm"
+        rpmbuild = shutil.which("rpmbuild")
+        alien = shutil.which("alien")
+
+        if rpmbuild:
+            rpm_top = dist_dir / "rpmbuild"
+            if rpm_top.exists():
+                shutil.rmtree(rpm_top)
+            for d in ["BUILD", "BUILDROOT", "RPMS", "SOURCES", "SPECS", "SRPMS"]:
+                (rpm_top / d).mkdir(parents=True, exist_ok=True)
+
+            shutil.copy2(exe_src, rpm_top / "SOURCES" / "EzSnmpDataLogger")
+            shutil.copy2(desktop_file, rpm_top / "SOURCES" / "ezsnmp-data-logger.desktop")
+            if icon_src.is_file():
+                shutil.copy2(icon_src, rpm_top / "SOURCES" / "ezsnmp-data-logger.png")
+            if license_src.is_file():
+                shutil.copy2(license_src, rpm_top / "SOURCES" / "LICENSE")
+
+            spec_content = f"""Name:           EzSnmpDataLogger
+Version:        {clean_version}
+Release:        1
+Summary:        Self-contained C++17 SNMP Telemetry Engine and Data Logger
+License:        MIT
+URL:            https://carlkidcrypto.github.io/ezsnmp_data_logger/
+Group:          Applications/System
+AutoReqProv:    no
+
+%description
+EzSnmp Data Logger provides high-performance SNMP telemetry ingestion,
+local storage sinks (SQLite3, JSONL, CSV, Prometheus, PostgreSQL), and
+unified CLI/GUI operation across Windows, Linux, and macOS.
+
+%install
+rm -rf %{{buildroot}}
+mkdir -p %{{buildroot}}/usr/bin
+mkdir -p %{{buildroot}}/usr/share/applications
+mkdir -p %{{buildroot}}/usr/share/pixmaps
+mkdir -p %{{buildroot}}/usr/share/doc/EzSnmpDataLogger
+
+install -m 755 %{{_sourcedir}}/EzSnmpDataLogger %{{buildroot}}/usr/bin/EzSnmpDataLogger
+ln -sf EzSnmpDataLogger %{{buildroot}}/usr/bin/ezsnmp-data-logger
+install -m 644 %{{_sourcedir}}/ezsnmp-data-logger.desktop %{{buildroot}}/usr/share/applications/ezsnmp-data-logger.desktop
+if [ -f "%{{_sourcedir}}/ezsnmp-data-logger.png" ]; then
+  install -m 644 %{{_sourcedir}}/ezsnmp-data-logger.png %{{buildroot}}/usr/share/pixmaps/ezsnmp-data-logger.png
+fi
+if [ -f "%{{_sourcedir}}/LICENSE" ]; then
+  install -m 644 %{{_sourcedir}}/LICENSE %{{buildroot}}/usr/share/doc/EzSnmpDataLogger/LICENSE
+fi
+
+%files
+/usr/bin/EzSnmpDataLogger
+/usr/bin/ezsnmp-data-logger
+/usr/share/applications/ezsnmp-data-logger.desktop
+%ghost /usr/share/pixmaps/ezsnmp-data-logger.png
+%ghost /usr/share/doc/EzSnmpDataLogger/LICENSE
+
+%changelog
+* Fri Nov 06 2026 Carlos Santos <carlkidcrypto@users.noreply.github.com> - {clean_version}-1
+- Multi-platform standalone distribution release
+"""
+            spec_file = rpm_top / "SPECS" / "EzSnmpDataLogger.spec"
+            spec_file.write_text(spec_content, encoding="utf-8")
+
+            print(f"Compiling RPM package with rpmbuild: {rpm_out} ...")
+            cmd = [
+                rpmbuild,
+                "-bb",
+                "--define",
+                f"_topdir {rpm_top.resolve()}",
+                "--target",
+                rpm_arch,
+                str(spec_file.resolve()),
+            ]
+            subprocess.run(cmd, check=True)
+
+            built_rpms = list((rpm_top / "RPMS").rglob("*.rpm"))
+            if built_rpms:
+                shutil.copy2(built_rpms[0], rpm_out)
+                shutil.copy2(built_rpms[0], rpm_canonical)
+                results.extend([rpm_out, rpm_canonical])
+            shutil.rmtree(rpm_top, ignore_errors=True)
+
+        elif alien and not skip_deb and (dist_dir / f"EzSnmpDataLogger-Linux-{arch}.deb").is_file():
+            deb_path = dist_dir / f"EzSnmpDataLogger-Linux-{arch}.deb"
+            print(f"Converting Debian package to RPM using alien: {rpm_out} ...")
+            subprocess.run(
+                [alien, "-r", "-c", "--target=" + rpm_arch, str(deb_path)], cwd=dist_dir, check=True
+            )
+            for f in dist_dir.glob("*.rpm"):
+                if f != rpm_out and f != rpm_canonical:
+                    shutil.copy2(f, rpm_out)
+                    shutil.copy2(f, rpm_canonical)
+                    results.extend([rpm_out, rpm_canonical])
+                    break
+        else:
+            print(
+                "Notice: Neither rpmbuild nor alien found; skipping RPM package generation "
+                "(standalone Linux binary, tarball, and Debian .deb packages ready)."
+            )
+
+    return results
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Package EzSnmp Data Logger for desktop distribution."
@@ -380,6 +661,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip Windows Inno Setup installer compilation.",
     )
+    parser.add_argument(
+        "--skip-deb",
+        action="store_true",
+        help="Skip Linux Debian .deb package creation.",
+    )
+    parser.add_argument(
+        "--skip-rpm",
+        action="store_true",
+        help="Skip Linux Red Hat .rpm package creation.",
+    )
     args = parser.parse_args(argv)
 
     target_os = resolve_platform(args.platform)
@@ -409,6 +700,13 @@ def main(argv: list[str] | None = None) -> int:
             dist_dir, ver, arch, skip_installer=args.skip_installer
         )
         print("Generated Windows artifacts:")
+        for a in artifacts:
+            print(f"  - {a}")
+    elif target_os == "linux":
+        artifacts = package_linux_artifacts(
+            dist_dir, ver, arch, skip_deb=args.skip_deb, skip_rpm=args.skip_rpm
+        )
+        print("Generated Linux artifacts:")
         for a in artifacts:
             print(f"  - {a}")
 

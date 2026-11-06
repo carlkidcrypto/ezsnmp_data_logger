@@ -138,7 +138,38 @@ Supported Distributions
 - **musl-based distributions:** Alpine Linux (3.18+).
 - Python 3.11, 3.12, 3.13, or 3.14.
 
-1. Install via pip
+1. Standalone Packages (.deb & .rpm) — No Python Required
+---------------------------------------------------------
+Pre-compiled standalone distributions bundling embedded dependencies,
+command aliases, desktop menu entries, and application icons are
+available from GitHub Releases:
+
+- **Debian / Ubuntu (.deb):**
+
+  .. code-block:: bash
+
+     # Install via dpkg or apt
+     sudo dpkg -i EzSnmpDataLogger-Linux-x86_64.deb
+     # or
+     sudo apt install ./EzSnmpDataLogger-Linux-x86_64.deb
+
+- **Fedora / RHEL / CentOS / openSUSE (.rpm):**
+
+  .. code-block:: bash
+
+     # Install via rpm or dnf
+     sudo rpm -i EzSnmpDataLogger-Linux-x86_64.rpm
+     # or
+     sudo dnf install ./EzSnmpDataLogger-Linux-x86_64.rpm
+
+- **Portable Archive (.tar.gz):**
+
+  .. code-block:: bash
+
+     tar -xzf EzSnmpDataLogger-Linux-x86_64.tar.gz
+     ./EzSnmpDataLogger cli version
+
+2. Install via pip
 ------------------
 On glibc systems:
 

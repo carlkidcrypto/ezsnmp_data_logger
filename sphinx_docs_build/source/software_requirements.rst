@@ -227,6 +227,11 @@ Self-Contained Multi-Language Packaging Requirements
   disk images (``EzSnmpDataLogger-macOS-<arch>.dmg``) with Retina ICNS
   icons and a drag-and-drop link to ``/Applications``.
 
+- **[PKG-09]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  Linux executables, Debian packages (``.deb``), Red Hat packages (``.rpm``),
+  and portable compressed archives (``.tar.gz``) bundling desktop entries
+  and application icons.
+
 Command-Line Interface (CLI) Requirements
 =========================================
 
@@ -409,6 +414,7 @@ Testing, Documentation & CI/CD Requirements
   distribution packaging regressions fail prior to production release.
 
 - **[CICD-12]** Desktop distribution workflows
-  (``build_and_publish_desktop_apps.yml``) **Shall** package standalone Windows
-  (``.exe``, ``-Setup.exe``, ``.zip``) and macOS (``.dmg``, ``.zip``) assets,
-  smoke test execution, and publish them to GitHub Releases upon publication.
+  (``build_and_publish_desktop_apps.yml``) **Shall** package standalone Linux
+  (``.deb``, ``.rpm``, ``.tar.gz``), Windows (``.exe``, ``-Setup.exe``,
+  ``.zip``), and macOS (``.dmg``, ``.zip``) assets, smoke test execution,
+  and publish them to GitHub Releases upon publication.

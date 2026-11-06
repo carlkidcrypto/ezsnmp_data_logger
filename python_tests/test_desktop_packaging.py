@@ -1,8 +1,9 @@
-"""Unit tests for standalone desktop application packaging (Windows EXE & macOS DMG).
+"""Unit tests for standalone desktop application packaging (Windows EXE, macOS DMG, Linux DEB & RPM).
 
 Validates:
 - [PKG-07]: Windows standalone single-file executable and Inno Setup installer.
 - [PKG-08]: macOS application bundle and compressed disk image (DMG).
+- [PKG-09]: Linux standalone executable, Debian (.deb), Red Hat (.rpm), and portable tarball.
 - [CICD-05]: WinGet community distribution workflow and Microsoft wingetcreate submission.
 - [CICD-12]: Desktop release packaging workflow and GitHub Releases distribution.
 """
@@ -21,6 +22,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from ezsnmp_data_logger.entry_desktop import CLI_SUBCOMMANDS, main as entry_desktop_main
 from tools.package_desktop_app import (
     build_pyinstaller_cmd,
+    package_linux_artifacts,
     read_version,
     resolve_platform,
 )
@@ -92,6 +94,55 @@ def test_package_desktop_pyinstaller_cmd_assembly() -> None:
     assert "app_icon.ico" in cmd_win_str
     assert "entry_desktop.py" in cmd_win[-1]
 
+    # Linux assembly
+    cmd_linux = build_pyinstaller_cmd("linux", version, dist_dir, build_dir)
+    cmd_linux_str = " ".join(cmd_linux)
+    assert "--onefile" in cmd_linux
+    assert "EzSnmpDataLogger" in cmd_linux
+    assert "app_icon.png" in cmd_linux_str
+    assert "entry_desktop.py" in cmd_linux[-1]
+
+
+def test_package_linux_artifacts_deb_and_tarball(tmp_path: Path) -> None:
+    """Verify that package_linux_artifacts builds Linux binary copies, tarball, and .deb packages."""
+    # Create mock PyInstaller executable
+    mock_bin = tmp_path / "EzSnmpDataLogger"
+    mock_bin.write_text("#!/bin/sh\necho 'EzSnmpDataLogger'\n", encoding="utf-8")
+    mock_bin.chmod(0o755)
+
+    artifacts = package_linux_artifacts(
+        dist_dir=tmp_path,
+        version="2026.11.6",
+        arch="x64",
+        skip_deb=False,
+        skip_rpm=True,
+    )
+
+    names = [a.name for a in artifacts]
+    assert "EzSnmpDataLogger-Linux-x64" in names
+    assert "EzSnmpDataLogger-Linux-x64.tar.gz" in names
+    assert "EzSnmpDataLogger-Linux-x64.deb" in names
+    assert "ezsnmp-data-logger_2026.11.6_amd64.deb" in names
+
+    # Verify tarball contents
+    tar_path = tmp_path / "EzSnmpDataLogger-Linux-x64.tar.gz"
+    import tarfile
+
+    with tarfile.open(tar_path, "r:gz") as tar:
+        tar_names = tar.getnames()
+        assert "EzSnmpDataLogger" in tar_names
+        assert "ezsnmp-data-logger.desktop" in tar_names
+
+    # Verify Debian package structure (ar archive header)
+    deb_path = tmp_path / "EzSnmpDataLogger-Linux-x64.deb"
+    with open(deb_path, "rb") as f:
+        magic = f.read(8)
+        assert magic == b"!<arch>\n"
+        rest = f.read()
+        assert b"debian-binary" in rest
+        assert b"control.tar.gz" in rest
+        assert b"data.tar.gz" in rest
+
 
 def test_inno_setup_script_structure() -> None:
     """Verify that tools/windows_installer.iss contains required Inno Setup keys and aliases."""
@@ -121,8 +172,12 @@ def test_desktop_distribution_workflow_configuration() -> None:
     assert "tj-actions/changed-files" in content
     assert "carlkidcrypto/os-specific-runner" in content
     assert "package-desktop-apps:" in content
+    assert "ubuntu-latest" in content
     assert "macos-latest" in content
     assert "windows-latest" in content
+    assert "dist/*.deb" in content
+    assert "dist/*.rpm" in content
+    assert "dist/*.tar.gz" in content
     assert "gh release upload" in content
 
 

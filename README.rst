@@ -112,6 +112,7 @@ Standalone Desktop Applications (No Python Required)
      winget install carlkidcrypto.EzSnmpDataLogger
 
 - **Windows Portable (.exe / .zip):** Download portable ``EzSnmpDataLogger-Windows-x64.exe`` or ``EzSnmpDataLogger-Windows-x64.zip``.
+- **Linux Packages (.deb & .rpm):** Download ``EzSnmpDataLogger-Linux-x86_64.deb`` (Ubuntu/Debian) or ``EzSnmpDataLogger-Linux-x86_64.rpm`` (Fedora/RHEL/openSUSE) from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_, or extract portable ``EzSnmpDataLogger-Linux-x86_64.tar.gz``.
 
 pip Package Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~

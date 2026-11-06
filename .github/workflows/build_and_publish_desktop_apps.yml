@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout ezsnmp_data_logger
         uses: actions/checkout@v7
@@ -92,6 +92,10 @@ jobs:
       - name: Install system dependencies
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
+          linux: |
+            sudo apt-get update
+            sudo apt-get install -y build-essential swig pkg-config patchelf \
+              libsnmp-dev libssl-dev python3-tk rpm
           macos: |
             brew install swig pkg-config net-snmp openssl@3
           windows: |
@@ -100,6 +104,10 @@ jobs:
       - name: Build C++ extension and package standalone desktop app
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
+          linux: |
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            python setup.py build_ext --inplace
+            python tools/package_desktop_app.py --platform linux
           macos: |
             export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
@@ -114,6 +122,8 @@ jobs:
       - name: Smoke test packaged executable
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
+          linux: |
+            ./dist/EzSnmpDataLogger cli version
           macos: |
             "./dist/EzSnmpDataLogger.app/Contents/MacOS/EzSnmpDataLogger" cli version
           windows: |
@@ -127,6 +137,9 @@ jobs:
             dist/*.exe
             dist/*.dmg
             dist/*.zip
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
 
       - name: Publish desktop assets to GitHub Release
         shell: bash
@@ -139,7 +152,7 @@ jobs:
           fi
           if [ -n "$TARGET_TAG" ]; then
             echo "Publishing desktop release assets to release ${TARGET_TAG}..."
-            gh release upload "${TARGET_TAG}" dist/*.exe dist/*.dmg dist/*.zip --clobber
+            gh release upload "${TARGET_TAG}" dist/*.exe dist/*.dmg dist/*.zip dist/*.deb dist/*.rpm dist/*.tar.gz --clobber
           else
             echo "Not a release run or tag unspecified; skipping release asset upload."
           fi
