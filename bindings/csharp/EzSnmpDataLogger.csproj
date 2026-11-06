@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <PackageId>EzSnmpDataLogger</PackageId>
-    <Version>2026.11.6</Version>
+    <Version>2026.11.5.1</Version>
     <Authors>carlkidcrypto</Authors>
     <Description>Self-contained .NET SWIG bindings for the C++17 ezsnmp_data_logger engine (powered by ezsnmp)</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
