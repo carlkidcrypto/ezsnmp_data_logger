@@ -6,13 +6,13 @@
 
 namespace ezsnmp_data_logger {
 
-std::string version() { return "2026.11.5"; }
+std::string version() { return "2026.11.5.1"; }
 
-std::string ezsnmp_target_version() { return "2026.10.28a0"; }
+std::string ezsnmp_target_version() { return "2026.11.4a0"; }
 
 bool is_valid_calsemver(std::string const& ver) {
    static std::regex const kCalSemVerPattern(
-       R"(^[vV]?20\d{2}\.(?:[1-9]|1[0-2])\.(?:[1-9]|[12]\d|3[01])(?:\.(?:0|[1-9]\d*))?(?:(?:a|b|rc)(?:0|[1-9]\d*)|-(?:alpha|beta|rc)\.(?:0|[1-9]\d*))?$)");
+       R"(^[vV]?20\d{2}\.(?:[1-9]|1[0-2])\.(?:[1-9]|[12]\d|3[01])(?:\.(?:0|[1-9]\d*))?(?:(?:a|b|rc)(?:0|[1-9]\d*)|-(?:alpha|beta|rc)\.(?:0|[1-9]\d*)|-(?:0|[1-9]\d*))?$)");
    return std::regex_match(ver, kCalSemVerPattern);
 }
 

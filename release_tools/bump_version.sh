@@ -97,6 +97,8 @@ to_semver() {
         printf '%s-beta.%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
     elif [[ "$v" =~ ^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$ ]]; then
         printf '%s-rc.%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+    elif [[ "$v" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+        printf '%s-%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
     else
         printf '%s' "$v"
     fi
@@ -179,19 +181,26 @@ for file in "${files[@]}"; do
         OLD_VER="$old_semver_npm" NEW_VER="$new_semver_npm" perl -0pi -e \
             's/"version":\s*"\Q$ENV{OLD_VER}\E"/"version": "$ENV{NEW_VER}"/g' "$file"
     elif [[ "$file" == "bindings/csharp/EzSnmpDataLogger.csproj" ]]; then
-        OLD_VER="$old_semver_npm" NEW_VER="$new_semver_npm" perl -0pi -e \
-            's/<Version>\Q$ENV{OLD_VER}\E<\/Version>/<Version>$ENV{NEW_VER}<\/Version>/g' "$file"
+        if [[ "$new_version" =~ (a|b|rc) ]]; then
+            TARGET_CS_VER="$new_semver_npm"
+        else
+            TARGET_CS_VER="$new_version"
+        fi
+        perl -0pi -e 's/<Version>.*?<\/Version>/<Version>'"$TARGET_CS_VER"'<\/Version>/g' "$file"
     elif [[ "$file" == "CMakeLists.txt" || "$file" == "bindings/csharp/CMakeLists.txt" ]]; then
         OLD_BASE="$old_base" NEW_BASE="$new_base" OLD_VER="$old_version" NEW_VER="$new_version" perl -0pi -e \
             's/VERSION\s+\Q$ENV{OLD_BASE}\E/VERSION $ENV{NEW_BASE}/g; s/set\(EZSNMP_DL_VERSION_STRING\s+"\Q$ENV{OLD_VER}\E"\)/set(EZSNMP_DL_VERSION_STRING "$ENV{NEW_VER}")/g' "$file"
     elif [[ "$file" == "sphinx_docs_build/source/conf.py" ]]; then
         OLD_VERSION="$old_version" NEW_VERSION="$new_version" perl -0pi -e \
             's/release\s*=\s*"v\Q$ENV{OLD_VERSION}\E"/release = "v$ENV{NEW_VERSION}"/g' "$file"
+    elif [[ "$file" == "bindings/javascript/package-lock.json" ]]; then
+        OLD_VER="$old_semver_npm" NEW_VER="$new_semver_npm" perl -0pi -e \
+            's/"version":\s*"\Q$ENV{OLD_VER}\E"/"version": "$ENV{NEW_VER}"/g' "$file"
     else
-        # General file replacement: replace exact version references, prefixed v-versions, and npm semver references
+        # General file replacement: replace exact version references, prefixed v-versions, and old npm semver references
         OLD_VER="$old_version" NEW_VER="$new_version" \
-        OLD_NPM="$old_semver_npm" NEW_NPM="$new_semver_npm" perl -0pi -e \
-            's/\Qv$ENV{OLD_NPM}\E/v$ENV{NEW_NPM}/g; s/\Q$ENV{OLD_NPM}\E/$ENV{NEW_NPM}/g; s/\Qv$ENV{OLD_VER}\E/v$ENV{NEW_VER}/g; s/\Q$ENV{OLD_VER}\E/$ENV{NEW_VER}/g' "$file"
+        OLD_NPM="$old_semver_npm" perl -0pi -e \
+            's/\Qv$ENV{OLD_VER}\E/v$ENV{NEW_VER}/g; s/\Q$ENV{OLD_VER}\E/$ENV{NEW_VER}/g; s/\Qv$ENV{OLD_NPM}\E/v$ENV{NEW_VER}/g; s/\Q$ENV{OLD_NPM}\E/$ENV{NEW_VER}/g' "$file"
     fi
 done
 

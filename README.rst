@@ -49,7 +49,7 @@ EzSnmp Data Logger
 Introduction
 ------------
 
-**EzSnmp Data Logger** (``ezsnmp_data_logger``) is a **self-contained**, portable **C++17** SNMP telemetry collection and storage package built directly on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_ (standardized on the **CalSemVer** alpha stream ``ezsnmp>=2026.10.28a0``).
+**EzSnmp Data Logger** (``ezsnmp_data_logger``) is a **self-contained**, portable **C++17** SNMP telemetry collection and storage package built directly on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_ (standardized on the **CalSemVer** alpha stream ``ezsnmp>=2026.11.4a0``).
 
 Every distributed language package—**Python**, **JavaScript (Node.js N-API)**, **C# (.NET 8+)**, and **Go (cgo)**—is built to be **100% self-contained** so end users never have to install extra native libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG).
 
@@ -57,7 +57,7 @@ Key Highlights
 --------------
 
 1. **Powered by EzSnmp ("net-snmp" Layer — CalSemVer Alpha Standardized):**
-   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.10.28a0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
+   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.11.4a0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
 2. **Self-Contained Packages Across All 4 SWIG Target Languages:**
    Statically embeds the public-domain **SQLite3** C amalgamation directly into every binary and bundles/relocates **Net-SNMP 5.10 + OpenSSL** runtime libraries inside **Python** (`cibuildwheel`), **JavaScript / Node.js N-API** (`bindings/javascript/`), **C# / .NET** (`bindings/csharp/`), and **Go** (`bindings/go/`) packages—zero external system libraries required by users!
 3. **Multi-Sink Telemetry Persistence:**
@@ -108,7 +108,7 @@ macOS (Apple Silicon & Intel)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.5"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.5.1"
 
    # Install native macOS Application Launcher in ~/Applications with Retina icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -119,7 +119,7 @@ Windows (Windows 10 / 11 / Server)
 .. code-block:: powershell
 
    py -m pip install --upgrade pip
-   py -m pip install --pre "ezsnmp-data-logger>=2026.11.5"
+   py -m pip install --pre "ezsnmp-data-logger>=2026.11.5.1"
 
    # Install Windows desktop launcher shortcut with custom icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -130,7 +130,7 @@ Linux (Ubuntu, Debian, Fedora, RHEL, Arch, Alpine)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.5"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.5.1"
 
    # Install desktop launcher (.desktop) in ~/.local/share/applications/:
    ezsnmp-data-logger-gui --install-launcher

@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 EZSNMP_REPO_URL = "https://github.com/carlkidcrypto/ezsnmp.git"
-EZSNMP_CALSEMVER_TAG = "v2026.10.28a0"
+EZSNMP_CALSEMVER_TAG = "v2026.11.4a0"
 
 
 def ensure_ezsnmp_source(target_dir: Path | None = None, tag: str = EZSNMP_CALSEMVER_TAG) -> Path:

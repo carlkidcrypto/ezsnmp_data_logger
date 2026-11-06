@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Build minimal SHA-256-verified Net-SNMP 5.10.pre2 for self-contained Linux packages
-# (matching carlkidcrypto/ezsnmp v2026.10.28a0 standalone packaging).
+# (matching carlkidcrypto/ezsnmp v2026.11.4a0 standalone packaging).
 
 NETSNMP_VERSION="5.10.pre2"
 EXPECTED_SHA256="6bce4ef368db15ad0f400330d5a1433009d63f0a98ca8b2eca0f87abd3469bd6"

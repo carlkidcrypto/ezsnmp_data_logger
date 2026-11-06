@@ -23,18 +23,21 @@ General & Architectural Requirements
   ``ezsnmp`` C++17 ``SessionBase``, ``Result``, and ``GenericErrorBase`` layers
   to perform all live SNMPv1, SNMPv2c, and SNMPv3 ``get``, ``getnext``,
   ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against end
-  devices, and **Shall** normalize and store returned ``Result`` payloads in
-  the ``data_logger`` storage layer.
+  devices.
 
-- **[GEN-03]** 100% of runtime, Device Under Test (DUT), ``ezsnmp`` session,
+- **[GEN-03]** ``ezsnmp_data_logger`` **Shall** normalize and store returned
+  ``ezsnmp::Result`` payloads into typed telemetry records in the
+  ``data_logger`` storage layer.
+
+- **[GEN-04]** 100% of runtime, Device Under Test (DUT), ``ezsnmp`` session,
   storage sink, CLI, and GUI settings **Shall** be represented and persisted
   in **RFC-8259 JSON**.
 
-- **[GEN-04]** Package ``__init__.py`` files **Shall** contain only symbol
+- **[GEN-05]** Package ``__init__.py`` files **Shall** contain only symbol
   imports, ``__version__``, and ``__all__`` exports, with zero executable
   side effects at import time.
 
-- **[GEN-05]** All C++17 core libraries, CLI binaries, Python bindings, and
+- **[GEN-06]** All C++17 core libraries, CLI binaries, Python bindings, and
   Graphical User Interfaces **Shall** operate across **Linux, macOS, and
   Windows**.
 
@@ -46,11 +49,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.5a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.5.1a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.5-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.5.1-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.5``) for Git releases, Sphinx documentation
+  ``v2026.11.5.1``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -70,9 +73,11 @@ CalSemVer Versioning Requirements
 - **[VER-04]** ``ezsnmp_data_logger`` **Shall** expose its active CalSemVer
   version via ``ezsnmp_data_logger::version()``,
   ``ezsnmp_data_logger.__version__``, and ``ezsnmp-data-logger version
-  [--json]``, and **Shall** standardize on ``ezsnmp``'s CalSemVer release line
-  (``ezsnmp>=2026.10.28a0``, git tag ``v2026.10.28a0``) until a stable
-  CalSemVer ``ezsnmp`` release is published.
+  [--json]``.
+
+- **[VER-05]** ``ezsnmp_data_logger`` **Shall** standardize on ``ezsnmp``'s
+  CalSemVer release line (``ezsnmp>=2026.11.4a0``, git tag ``v2026.11.4a0``)
+  until a stable CalSemVer ``ezsnmp`` release is published.
 
 JSON Configuration & Validation Requirements
 ============================================
@@ -93,50 +98,60 @@ JSON Configuration & Validation Requirements
 
 - **[CFG-04]** ``generate_template_config_json`` **Shall** generate valid
   starter JSON documents for ``minimal``, ``demo``, ``enterprise``, and
-  ``snmpv3`` profiles, and ``config_json_schema`` **Shall** output a Draft
-  2020-12 JSON Schema covering all configuration keys.
+  ``snmpv3`` profiles.
+
+- **[CFG-05]** ``config_json_schema`` **Shall** output a Draft 2020-12 JSON
+  Schema covering all configuration keys.
 
 Engine, Queue & Storage Sink Requirements
 =========================================
 
 - **[ENG-01]** ``EzSnmpPoller`` **Shall** map all ``SnmpConfig`` fields to
   ``ezsnmp::SessionBase``, coalesce scalar ``get`` metrics per DUT into
-  multi-OID ``SessionBase::get`` calls, scope ``-Cr<N>`` max-repeaters strictly
-  to ``bulkget`` and ``bulkwalk`` PDUs, and capture ``ezsnmp`` exceptions as
+  multi-OID ``SessionBase::get`` calls, and scope ``-Cr<N>`` max-repeaters
+  strictly to ``bulkget`` and ``bulkwalk`` PDUs.
+
+- **[ENG-02]** ``EzSnmpPoller`` **Shall** capture ``ezsnmp`` exceptions as
   structured error ``Sample`` records without crashing worker threads.
 
-- **[ENG-02]** ``StubSnmpPoller`` **Shall** provide deterministic synthetic
+- **[ENG-03]** ``StubSnmpPoller`` **Shall** provide deterministic synthetic
   SNMP ``poll``, ``request``, and ``set_oid`` responses when ``snmp.mode`` is
   set to ``"stub"`` for offline testing, demos, and CI validation.
 
-- **[ENG-03]** ``DataLogger`` **Shall** decouple multi-DUT polling worker
+- **[ENG-04]** ``DataLogger`` **Shall** decouple multi-DUT polling worker
   threads from sink persistence using a thread-safe ``BoundedQueue<Batch>``
   that enforces bounded memory under back-pressure and drains all queued
   batches prior to shutdown.
 
-- **[ENG-04]** ``Sample`` and persistent storage sinks **Shall** preserve full
+- **[ENG-05]** ``Sample`` and persistent storage sinks **Shall** preserve full
   ``ezsnmp::Result`` metadata (``oid``, ``oid_index``, ``snmp_type``,
   ``raw_value``) alongside normalized typed values (``type_tag``, ``i64``,
-  ``f64``, ``str_val``, ``status``) and **Shall** accept ``ezsnmp``
-  ``Result.to_dict()`` JSON objects directly via ``Sample::from_json``.
+  ``f64``, ``str_val``, ``status``).
 
-- **[ENG-05]** ``SqliteSink`` **Shall** operate in SQLite3 WAL mode with
+- **[ENG-06]** ``Sample::from_json`` **Shall** accept ``ezsnmp``
+  ``Result.to_dict()`` JSON objects directly and deserialize them into valid
+  ``Sample`` structures.
+
+- **[ENG-07]** ``SqliteSink`` **Shall** operate in SQLite3 WAL mode with
   normalized ``series`` and ``samples`` tables, prepared statements, in-memory
   ``series_id`` caching, and configurable batch/time transaction commits.
 
-- **[ENG-06]** ``CsvSink`` and ``JsonlSink`` **Shall** write per-DUT RFC-4180
-  CSV and newline-delimited JSON files with configurable flush thresholds.
+- **[ENG-08]** ``CsvSink`` **Shall** write per-DUT RFC-4180 CSV files with
+  configurable flush thresholds.
 
-- **[ENG-07]** ``PsqlSink`` **Shall** support PostgreSQL and optional
+- **[ENG-09]** ``JsonlSink`` **Shall** write per-DUT newline-delimited JSON
+  files with configurable flush thresholds.
+
+- **[ENG-10]** ``PsqlSink`` **Shall** support PostgreSQL and optional
   TimescaleDB hypertables via ``libpq`` when compiled with
   ``EZSNMP_DL_HAVE_LIBPQ=1``, and **Shall** raise a descriptive ``SinkError``
   when ``libpq`` was not compiled into the binary.
 
-- **[ENG-08]** ``PrometheusSink`` **Shall** expose latest numeric SNMP
+- **[ENG-11]** ``PrometheusSink`` **Shall** expose latest numeric SNMP
   readings and scrape counters over an embedded cross-platform HTTP ``/metrics``
   endpoint supporting ephemeral port ``0`` binding on POSIX and Winsock2.
 
-- **[ENG-09]** ``inspect_configured_sinks`` **Shall** query recent stored
+- **[ENG-12]** ``inspect_configured_sinks`` **Shall** query recent stored
   telemetry rows across SQLite3, JSONL, and CSV sinks with optional DUT and
   metric filters.
 
@@ -167,7 +182,7 @@ Self-Contained Multi-Language Packaging Requirements
   ``python``, ``javascript`` (Node.js N-API), ``csharp``, and ``go`` **Shall**
   be **self-contained** so end users never need to install external native
   libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG) at runtime, while publishing
-  under the project's CalSemVer release identifiers (``[VER-01]``-``[VER-04]``).
+  under the project's CalSemVer release identifiers (``[VER-01]``-``[VER-05]``).
 
 - **[PKG-02]** ``tools/prepare_sqlite3_amalgamation.py`` **Shall** provision a
   SHA-256-verified public-domain SQLite3 C amalgamation
@@ -180,18 +195,19 @@ Self-Contained Multi-Language Packaging Requirements
 - **[PKG-03]** Standalone dependency scripts
   (``tools/prepare_linux_netsnmp.sh``, ``tools/prepare_macos_netsnmp.sh``,
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
-  **Shall** provision ``ezsnmp`` ``v2026.10.28a0`` and build minimal
+  **Shall** provision ``ezsnmp`` ``v2026.11.4a0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
   Blumenthal-AES support.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
-  ``[build-system] requires``, ``ezsnmp>=2026.10.28a0`` in ``dependencies``,
-  and configure ``cibuildwheel`` with ``auditwheel repair`` (Linux
-  ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and ``delvewheel
-  repair`` (Windows ``AMD64``/``x86``/``ARM64``) to produce standalone Python
-  wheels.
+  ``[build-system] requires`` and ``ezsnmp>=2026.11.4a0`` in ``dependencies``.
 
-- **[PKG-05]** ``tools/bundle_native_package.py`` **Shall** inspect compiled
+- **[PKG-05]** ``cibuildwheel`` **Shall** configure ``auditwheel repair``
+  (Linux ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and
+  ``delvewheel repair`` (Windows ``AMD64``/``x86``/``ARM64``) to produce
+  standalone Python wheels.
+
+- **[PKG-06]** ``tools/bundle_native_package.py`` **Shall** inspect compiled
   native extensions/libraries across ``python``, ``javascript`` (``.node``),
   ``csharp`` (``runtimes/<rid>/native/``), and ``go`` (``bindings/go/lib/``),
   bundle non-OS shared libraries into a package-local runtime directory, rewrite
@@ -236,14 +252,23 @@ Cross-Platform GUI Requirements
   time (ms) of every user action.
 
 - **[GUI-04]** Both GUI frontends **Shall** support starting and stopping live
-  CLI polling with real-time numeric telemetry charts, executing ad-hoc
-  ``ezsnmp`` ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and
-  ``set`` operations, inspecting stored sink rows, editing, validating, and
-  saving JSON configurations, and **Shall** allow users to interactively
-  select one or many plotted fields to view at a time with automatic Y-axis
-  rescaling, "Select All", "Clear All", and clickable canvas legend hitboxes.
+  CLI polling with real-time numeric telemetry charts and interactive field
+  selection (including automatic Y-axis rescaling, "Select All", "Clear All",
+  and clickable canvas legend hitboxes).
 
-- **[GUI-05]** All user-facing UI strings (window and header titles, button
+- **[GUI-05]** Both GUI frontends **Shall** provide an interactive Diagnostics
+  tab executing ad-hoc ``ezsnmp`` ``get``, ``getnext``, ``walk``, ``bulkget``,
+  ``bulkwalk``, and ``set`` operations with tabular results display.
+
+- **[GUI-06]** Both GUI frontends **Shall** provide an interactive Data
+  Inspector tab querying and displaying recent stored telemetry rows across
+  configured SQLite3, CSV, and JSONL sinks.
+
+- **[GUI-07]** Both GUI frontends **Shall** provide an interactive Configuration
+  Studio tab for loading, editing, validating, and saving RFC-8259 JSON
+  configuration files.
+
+- **[GUI-08]** All user-facing UI strings (window and header titles, button
   labels, tabs, cards, sections, table headers, form labels, status bars, and
   dialogs) across both Desktop (Tkinter) and Web (Browser) frontends **Shall**
   be externalized into a ``locale.json`` definition file formatted as
@@ -255,16 +280,17 @@ Cross-Platform GUI Requirements
   configuration or CLI ``--locale`` / ``--locale-file`` flags, and provide
   automatic fallback to English when keys or translations are omitted.
 
-- **[GUI-06]** Both GUI frontends and operating system application launchers
-  **Shall** include custom branding icon suites replacing generic Python or
-  browser tab icons: Browser Web Studio supplies modern vector SVG favicons
-  (``favicon.svg``), standard ICO (``favicon.ico``), multi-resolution PNGs
-  (``favicon-32x32.png``, ``favicon-16x16.png``, ``apple-touch-icon.png``),
-  and top bar brand badges; Desktop Tkinter Studio applies custom window
-  titlebar icons (``app_icon.png`` / ``app_icon.ico``) and dynamically
-  configures the macOS Dock application icon using standard Cocoa/AppKit
-  integration via ``ctypes``; and desktop application launchers can be
-  installed on macOS (``.app`` bundle with Retina ``app_icon.icns``), Linux
+- **[GUI-09]** Both GUI frontends **Shall** include custom branding icon assets
+  replacing generic Python or browser tab icons, providing modern vector SVG
+  favicons (``favicon.svg``), standard ICO (``favicon.ico``), multi-resolution
+  PNGs (``favicon-32x32.png``, ``favicon-16x16.png``, ``apple-touch-icon.png``),
+  and top bar brand badges for Browser Web Studio, and custom window titlebar
+  icons (``app_icon.png`` / ``app_icon.ico``) with dynamic macOS Dock
+  application icon integration via Cocoa/AppKit ``ctypes`` for Desktop Tkinter
+  Studio.
+
+- **[GUI-10]** Operating system desktop application launchers **Shall** be
+  installable on macOS (``.app`` bundle with Retina ``app_icon.icns``), Linux
   (``.desktop`` entry with ``app_icon.png``), and Windows via
   ``ezsnmp-data-logger-gui --install-launcher`` and
   ``tools/install_desktop_launcher.py``.
@@ -279,7 +305,7 @@ Testing, Documentation & CI/CD Requirements
   older GoogleTest compatibility.
 
 - **[PYT-01]** Python ``pytest`` suites in ``python_tests/`` **Shall** verify
-  Python SWIG bindings, ``[GEN-04]`` ``__init__.py`` purity, CalSemVer version
+  Python SWIG bindings, ``[GEN-05]`` ``__init__.py`` purity, CalSemVer version
   alignment, self-contained native library bundling, ``CliSubprocessBridge``
   streaming, Browser Studio HTTP endpoints, ``tkinter.ttk`` Desktop Studio
   instantiation, repository JSON configs, and 4-language SWIG code generation
@@ -300,8 +326,10 @@ Testing, Documentation & CI/CD Requirements
   thorough GUI user guide (``gui_guide.rst``) detailing Tabs 1-6, the CLI
   audit trail, real-time charting with series selection, and OS launchers.
 
-- **[FMT-01]** All hand-written C++17 files **Shall** conform to
-  ``.clang-format`` and all hand-written Python files **Shall** conform to
+- **[FMT-01]** All hand-written C++17 files **Shall** conform strictly to
+  ``.clang-format``.
+
+- **[FMT-02]** All hand-written Python files **Shall** conform strictly to
   ``black --line-length 100``.
 
 - **[CICD-01]** GitHub Actions workflows in ``.github/workflows/`` **Shall**
@@ -314,52 +342,56 @@ Testing, Documentation & CI/CD Requirements
   ``build_and_publish_to_test_pypi.yml``) using ``cibuildwheel`` and
   ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows,
   pre-provisioning embedded C++17 dependencies (``third_party/ezsnmp``) with
-  retry resilience, skipping existing distribution artifacts idempotently,
-  and publishing self-contained Node.js packages to npm
+  retry resilience, and skipping existing distribution artifacts idempotently.
+
+- **[CICD-03]** Automated release publishing workflows **Shall** support
+  publishing self-contained Node.js packages to npm
   (``build_and_publish_to_npm.yml``) with OIDC Trusted Publishing, Sigstore
   provenance attestations, package lock caching, multi-core parallel native
   addon compilation, idempotent skip detection, and prerelease tag resolution.
 
-- **[CICD-03]** Automated release publishing workflows **Shall** support
+- **[CICD-04]** Automated release publishing workflows **Shall** support
   building and packaging multi-runtime C# (.NET 8) packages to NuGet and
   GitHub Packages (``build_and_publish_to_nuget.yml``) using strict C++17
   conformance (``CMAKE_CXX_EXTENSIONS=OFF``), OpenSSL include path
   discovery across Linux and macOS, multi-core MSVC (``/MP``) parallel builds,
-  OIDC Trusted Publishing authentication (``NuGet/login@v1``) with duplicate
-  skipping, and generating validated WinGet community manifests with automated
+  and OIDC Trusted Publishing authentication (``NuGet/login@v1``) with duplicate
+  skipping.
+
+- **[CICD-05]** Automated release publishing workflows **Shall** support
+  generating validated WinGet community manifests and automated community
   repository submission (``build_and_publish_to_winget.yml``,
   ``tools/generate_winget_manifest.py``).
 
-- **[CICD-04]** Automated dependency maintenance **Shall** be configured via
+- **[CICD-06]** Automated dependency maintenance **Shall** be configured via
   ``.github/dependabot.yml`` with weekly updates across GitHub Actions,
   Python (root and Sphinx docs), npm (``bindings/javascript``), NuGet
   (``bindings/csharp``), and Go (``bindings/go``), grouping package updates
   and respecting agentic workflow exclusions.
 
-- **[CICD-05]** SonarQube Cloud automatic analysis **Shall** be configured
+- **[CICD-07]** SonarQube Cloud automatic analysis **Shall** be configured
   via root ``.sonarcloud.properties`` targeting an A rating across security,
   reliability, and maintainability, excluding documentation (``docs/**``,
   ``sphinx_docs_build/**``), workflows (``.github/**``), vendored dependencies
   (``third_party/**``), and generated SWIG artifacts from code smells and
   copy-paste duplication metrics.
 
-- **[CICD-06]** Continuous integration workflows **Shall** incorporate smart
+- **[CICD-08]** Continuous integration workflows **Shall** incorporate smart
   file-change detection via ``tj-actions/changed-files`` to skip redundant
   multi-platform matrix runner executions when pull requests only touch
-  unrelated subsystems, and **Shall** consolidate multi-OS conditionals
-  using ``carlkidcrypto/os-specific-runner`` across Ubuntu, macOS, and
-  Windows.
+  unrelated subsystems.
 
-- **[CICD-07]** Python wheel packaging **Shall** utilize parallel multi-core
+- **[CICD-09]** Continuous integration workflows **Shall** consolidate
+  multi-OS conditionals using ``carlkidcrypto/os-specific-runner`` across
+  Ubuntu, macOS, and Windows.
+
+- **[CICD-10]** Python wheel packaging **Shall** utilize parallel multi-core
   compilation (via ``EZSNMP_BUILD_JOBS`` and ``ThreadPoolExecutor``), fast
   dependency isolation via ``build[uv]``, and cross-version deterministic C++
   object caching (via ``EZSNMP_OBJECT_CACHE_DIR``) across matrix runners.
 
-- **[CICD-08]** Test deployment workflows
+- **[CICD-11]** Test deployment workflows
   (``build_and_publish_to_test_pypi.yml``) **Shall** automatically trigger
   on pushes to ``main`` guarded by smart change detection
   (``tj-actions/changed-files``) over source and packaging files, ensuring
   distribution packaging regressions fail prior to production release.
-
-
-

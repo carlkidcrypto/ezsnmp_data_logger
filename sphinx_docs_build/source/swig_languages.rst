@@ -2,7 +2,7 @@
 Self-Contained SWIG Multi-Language Distribution
 ================================================
 
-**EzSnmp Data Logger** distributes its **C++17** backend (powered by ``ezsnmp``'s ``SessionBase`` and ``Result`` layers on the ``v2026.10.28a0`` CalSemVer alpha line) as **self-contained packages** across **4 SWIG 4.x target languages** so end users never need to install external system libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG).
+**EzSnmp Data Logger** distributes its **C++17** backend (powered by ``ezsnmp``'s ``SessionBase`` and ``Result`` layers on the ``v2026.11.4a0`` CalSemVer alpha line) as **self-contained packages** across **4 SWIG 4.x target languages** so end users never need to install external system libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG).
 
 Supported SWIG Target Languages
 ===============================
@@ -32,8 +32,8 @@ How Self-Containment Works
 
 1. **Embedded SQLite3 Amalgamation (``tools/prepare_sqlite3_amalgamation.py``):**
    Downloads and SHA-256-verifies the official public-domain SQLite3 C amalgamation (`3.49.1`) into ``third_party/sqlite3/`` and compiles ``sqlite3.c`` statically into every binary (`EZSNMP_DL_EMBEDDED_SQLITE3=1`), eliminating ``libsqlite3`` shared-library dependencies on Linux, macOS, and Windows.
-2. **Standalone Net-SNMP 5.10 + OpenSSL + EzSnmp ``v2026.10.28a0``:**
-   ``tools/prepare_ezsnmp_source.py`` stages ``ezsnmp`` at CalSemVer alpha tag ``v2026.10.28a0``, while ``tools/prepare_{linux,macos,windows}_netsnmp.*`` builds minimal SHA-256-verified Net-SNMP ``5.10.pre2`` libraries.
+2. **Standalone Net-SNMP 5.10 + OpenSSL + EzSnmp ``v2026.11.4a0``:**
+   ``tools/prepare_ezsnmp_source.py`` stages ``ezsnmp`` at CalSemVer alpha tag ``v2026.11.4a0``, while ``tools/prepare_{linux,macos,windows}_netsnmp.*`` builds minimal SHA-256-verified Net-SNMP ``5.10.pre2`` libraries.
 3. **Dynamic Loader Relocation (``tools/bundle_native_package.py``):**
    Copies all non-OS runtime shared libraries into each package's runtime folder, rewrites RPATH/install-name entries (``$ORIGIN`` via ``patchelf`` on Linux, ``@loader_path`` via ``install_name_tool`` + ``codesign`` on macOS, side-by-side DLLs on Windows), and verifies that zero external non-OS dependencies remain.
 
@@ -52,7 +52,7 @@ Python (CalSemVer Alpha)
 
 .. code-block:: bash
 
-   pip install --pre "ezsnmp-data-logger>=2026.11.5"
+   pip install --pre "ezsnmp-data-logger>=2026.11.5.1"
 
 .. code-block:: python
 

@@ -111,8 +111,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
-          cache: true
-          cache-dependency-path: bindings/csharp/EzSnmpDataLogger.csproj
 
       - name: Build and Pack NuGet Package
         run: |

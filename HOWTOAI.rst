@@ -4,7 +4,7 @@ How to Use AI with ezsnmp_data_logger
 
 *A practical guide for contributing to ezsnmp_data_logger using AI coding assistants*
 
-``ezsnmp_data_logger`` combines a portable **C++17** telemetry engine, `ezsnmp <https://github.com/carlkidcrypto/ezsnmp>`_'s Net-SNMP ``SessionBase`` layer (`v2026.10.28a0` CalSemVer alpha baseline), **self-contained SWIG 4.x packages** across **Python, JavaScript (Node.js N-API), C#, and Go**, **100% JSON configuration**, a structured **CLI**, and **cross-platform GUIs** for **Linux, macOS, and Windows**. Contributors using GitHub Copilot, Cursor, Claude, Antigravity, or other AI tools must uphold the architectural and quality standards below.
+``ezsnmp_data_logger`` combines a portable **C++17** telemetry engine, `ezsnmp <https://github.com/carlkidcrypto/ezsnmp>`_'s Net-SNMP ``SessionBase`` layer (`v2026.11.4a0` CalSemVer alpha baseline), **self-contained SWIG 4.x packages** across **Python, JavaScript (Node.js N-API), C#, and Go**, **100% JSON configuration**, a structured **CLI**, and **cross-platform GUIs** for **Linux, macOS, and Windows**. Contributors using GitHub Copilot, Cursor, Claude, Antigravity, or other AI tools must uphold the architectural and quality standards below.
 
 ----
 
@@ -14,7 +14,7 @@ Core Architectural Invariants
 1. **Software Requirements First (``software_requirements.rst``):**
    ``sphinx_docs_build/source/software_requirements.rst`` is the authoritative specification. Every requirement uses a bracketed ``[PREFIX-nn]`` identifier and RFC-style ``Shall`` statement. Always update ``software_requirements.rst`` **before** changing behavior or architecture.
 2. **Self-Contained Packages & CalSemVer Alpha Baseline:**
-   All 4 distributed language packages (``python``, ``javascript``, ``csharp``, ``go``) must remain **self-contained** (embedding SQLite3 via ``tools/prepare_sqlite3_amalgamation.py`` and bundling Net-SNMP 5.10 / OpenSSL via ``cibuildwheel`` or ``tools/bundle_native_package.py``) and standardized on **CalSemVer** alpha versioning (`2026.11.5` + ``ezsnmp>=2026.10.28a0`` with ``pip install --pre``) until a stable release is published.
+   All 4 distributed language packages (``python``, ``javascript``, ``csharp``, ``go``) must remain **self-contained** (embedding SQLite3 via ``tools/prepare_sqlite3_amalgamation.py`` and bundling Net-SNMP 5.10 / OpenSSL via ``cibuildwheel`` or ``tools/bundle_native_package.py``) and standardized on **CalSemVer** alpha versioning (`2026.11.5.1` + ``ezsnmp>=2026.11.4a0`` with ``pip install --pre``) until a stable release is published.
 3. **EzSnmp Network Layer:**
    All live SNMPv1, SNMPv2c, and SNMPv3 ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations must flow through ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (``EzSnmpPoller``). Never duplicate raw Net-SNMP PDU construction in the logger layer.
 4. **100% JSON Configuration:**
