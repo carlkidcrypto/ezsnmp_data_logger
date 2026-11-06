@@ -30,6 +30,7 @@ Select a version of the documentation to browse:
 
 * `Latest Alpha/Beta Version <./html/index.html>`_
 * `v2026.11.6 <./html_v2026.11.6/index.html>`_
+* `v2026.11.3 <./html_v2026.11.3/index.html>`_
 
 .. VERSION_LIST_END
 
