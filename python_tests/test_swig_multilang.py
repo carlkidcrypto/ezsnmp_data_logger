@@ -40,20 +40,73 @@ def test_swig_generates_wrappers_for_all_4_targets(tmp_path: Path) -> None:
 
 
 def test_winget_manifest_generation(tmp_path: Path) -> None:
-    manifests = generate_manifests(
+    # Test 1: Portable zip manifest generation
+    zip_manifests = generate_manifests(
         package_id="carlkidcrypto.EzSnmpDataLogger",
         package_version="2026.11.6",
-        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6/ezsnmp-win-x64.zip",
+        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6/EzSnmpDataLogger-Windows-x64.zip",
         installer_sha256="aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
-        out_dir=tmp_path,
+        out_dir=tmp_path / "zip_out",
         architecture="x64",
+        installer_type="zip",
     )
-    assert set(manifests.keys()) == {"version", "locale", "installer"}
-    for p in manifests.values():
+    assert set(zip_manifests.keys()) == {"version", "locale", "installer"}
+    canonical_zip_dir = (
+        tmp_path
+        / "zip_out"
+        / "manifests"
+        / "c"
+        / "carlkidcrypto"
+        / "EzSnmpDataLogger"
+        / "2026.11.6"
+    )
+    for p in zip_manifests.values():
         assert p.is_file()
+        assert p.parent == canonical_zip_dir
         content = p.read_text(encoding="utf-8")
         assert "carlkidcrypto.EzSnmpDataLogger" in content
         assert "2026.11.6" in content
+
+    zip_installer_content = zip_manifests["installer"].read_text(encoding="utf-8")
+    assert "InstallerType: zip" in zip_installer_content
+    assert "NestedInstallerType: portable" in zip_installer_content
+    assert "RelativeFilePath: EzSnmpDataLogger.exe" in zip_installer_content
+    assert "PortableCommandAlias: ezsnmp-data-logger" in zip_installer_content
+
+    # Test 2: Inno Setup executable manifest generation (primary Windows distribution)
+    inno_manifests = generate_manifests(
+        package_id="carlkidcrypto.EzSnmpDataLogger",
+        package_version="2026.11.6",
+        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6/EzSnmpDataLogger-Windows-x64-Setup.exe",
+        installer_sha256="11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+        out_dir=tmp_path / "inno_out",
+        architecture="x64",
+        installer_type="inno",
+    )
+    canonical_inno_dir = (
+        tmp_path
+        / "inno_out"
+        / "manifests"
+        / "c"
+        / "carlkidcrypto"
+        / "EzSnmpDataLogger"
+        / "2026.11.6"
+    )
+    for p in inno_manifests.values():
+        assert p.is_file()
+        assert p.parent == canonical_inno_dir
+
+    inno_installer_content = inno_manifests["installer"].read_text(encoding="utf-8")
+    assert "InstallerType: inno" in inno_installer_content
+    assert "Scope: user" in inno_installer_content
+    assert "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" in inno_installer_content
+    assert "AppsAndFeaturesEntries:" in inno_installer_content
+    assert "{E5D4B692-7E5A-483A-9E86-443E838F5C1B}_is1" in inno_installer_content
+
+    locale_content = inno_manifests["locale"].read_text(encoding="utf-8")
+    assert "Moniker: ezsnmp-data-logger" in locale_content
+    assert "License: MIT" in locale_content
+    assert "Publisher: carlkidcrypto" in locale_content
 
 
 def test_dependabot_configuration() -> None:

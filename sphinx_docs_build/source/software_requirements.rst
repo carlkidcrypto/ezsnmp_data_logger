@@ -370,8 +370,9 @@ Testing, Documentation & CI/CD Requirements
   skipping.
 
 - **[CICD-05]** Automated release publishing workflows **Shall** support
-  generating validated WinGet community manifests and automated community
-  repository submission (``build_and_publish_to_winget.yml``,
+  generating validated WinGet community manifests in canonical directory
+  hierarchies and automated pull request submission via Microsoft
+  ``wingetcreate`` (``build_and_publish_to_winget.yml``,
   ``tools/generate_winget_manifest.py``).
 
 - **[CICD-06]** Automated dependency maintenance **Shall** be configured via

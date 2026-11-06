@@ -3,6 +3,7 @@
 Validates:
 - [PKG-07]: Windows standalone single-file executable and Inno Setup installer.
 - [PKG-08]: macOS application bundle and compressed disk image (DMG).
+- [CICD-05]: WinGet community distribution workflow and Microsoft wingetcreate submission.
 - [CICD-12]: Desktop release packaging workflow and GitHub Releases distribution.
 """
 
@@ -123,3 +124,26 @@ def test_desktop_distribution_workflow_configuration() -> None:
     assert "macos-latest" in content
     assert "windows-latest" in content
     assert "gh release upload" in content
+
+
+def test_winget_distribution_workflow_configuration() -> None:
+    """Verify that .github/workflows/build_and_publish_to_winget.yml conforms to [CICD-05]."""
+    wf_path = REPO_ROOT / ".github" / "workflows" / "build_and_publish_to_winget.yml"
+    assert wf_path.is_file(), "Missing build_and_publish_to_winget.yml"
+
+    content = wf_path.read_text(encoding="utf-8")
+    assert "release:" in content
+    assert "types: [published]" in content
+    assert "pull_request:" in content
+    assert "workflow_dispatch:" in content
+    assert "publish-winget:" in content
+    assert "windows-latest" in content
+    assert "generate_winget_manifest.py" in content
+    assert "actions/upload-artifact@v7" in content
+    assert "wingetcreate.exe" in content
+    assert "https://aka.ms/wingetcreate/latest" in content
+    assert "wingetcreate.exe submit" in content
+    assert "wingetcreate.exe update" in content
+    assert "WINGET_CREATE_PAT" in content
+    assert "WINGET_TOKEN" in content
+    assert "WINGET_ACC_TOKEN" in content

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import urllib.request
 from pathlib import Path
@@ -38,12 +39,35 @@ def _read_current_calsemver() -> str:
     return "2026.11.6"
 
 
+def get_canonical_manifest_dir(
+    package_id: str,
+    package_version: str,
+    out_dir: Path,
+) -> Path:
+    """Return canonical WinGet directory: manifests/{first-letter}/{Publisher}/{AppName}/{Version}/"""
+    parts = package_id.split(".", 1)
+    publisher = parts[0]
+    app_name = parts[1] if len(parts) > 1 else package_id
+    first_letter = publisher[0].lower()
+
+    if out_dir.name.lower() == "manifests":
+        return out_dir / first_letter / publisher / app_name / package_version
+    return out_dir / "manifests" / first_letter / publisher / app_name / package_version
+
+
 def compute_sha256(path_or_url: str) -> str:
     """Compute the lowercase SHA256 hex digest of a local file or remote URL."""
     p = Path(path_or_url)
     h = hashlib.sha256()
     if p.is_file():
         with open(p, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest().lower()
+
+    dist_candidate = REPO_ROOT / "dist" / p.name
+    if dist_candidate.is_file():
+        with open(dist_candidate, "rb") as f:
             for chunk in iter(lambda: f.read(65536), b""):
                 h.update(chunk)
         return h.hexdigest().lower()
@@ -77,17 +101,40 @@ def compute_sha256(path_or_url: str) -> str:
 
 
 def generate_manifests(
-    package_id: str,
-    package_version: str,
-    installer_url: str,
-    installer_sha256: str,
-    out_dir: Path,
+    package_id: str = DEFAULT_PACKAGE_ID,
+    package_version: str = "",
+    installer_url: str = "",
+    installer_sha256: str = "",
+    out_dir: Path | None = None,
     architecture: str = "x64",
-    installer_type: str = "zip",
+    installer_type: str = "auto",
 ) -> dict[str, Path]:
     """Generate the 3 canonical WinGet manifest YAML files."""
-    dest = out_dir / package_id.replace(".", "/") / package_version
+    if not package_version:
+        package_version = _read_current_calsemver()
+
+    if out_dir is None:
+        out_dir = REPO_ROOT / "dist-winget"
+
+    dest = get_canonical_manifest_dir(package_id, package_version, out_dir)
     dest.mkdir(parents=True, exist_ok=True)
+
+    if not installer_url:
+        installer_url = (
+            f"https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/"
+            f"v{package_version}/EzSnmpDataLogger-Windows-x64-Setup.exe"
+        )
+
+    resolved_type = (installer_type or "auto").strip().lower()
+    if resolved_type in ("", "auto"):
+        resolved_type = "zip" if installer_url.lower().endswith(".zip") else "inno"
+
+    if not installer_sha256:
+        installer_sha256 = (
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            if not installer_url.startswith("http") and not Path(installer_url).is_file()
+            else compute_sha256(installer_url)
+        )
 
     version_yaml = (
         f"PackageIdentifier: {package_id}\n"
@@ -106,15 +153,17 @@ def generate_manifests(
         "PublisherSupportUrl: https://github.com/carlkidcrypto/ezsnmp_data_logger/issues\n"
         f"Author: {DEFAULT_PUBLISHER}\n"
         f"PackageName: {DEFAULT_PACKAGE_NAME}\n"
-        "PackageUrl: https://github.com/carlkidcrypto/ezsnmp_data_logger\n"
+        "PackageUrl: https://carlkidcrypto.github.io/ezsnmp_data_logger/\n"
         "License: MIT\n"
         "LicenseUrl: https://raw.githubusercontent.com/carlkidcrypto/ezsnmp_data_logger/main/LICENSE\n"
         "Copyright: Copyright (c) 2024-2026 carlkidcrypto\n"
+        "CopyrightUrl: https://raw.githubusercontent.com/carlkidcrypto/ezsnmp_data_logger/main/LICENSE\n"
         "ShortDescription: Self-contained C++17 SNMP Data Logger with SWIG bindings, CLI, and GUI Studio.\n"
         "Description: |-\n"
         "  EzSnmp Data Logger provides high-performance SNMP telemetry ingestion,\n"
         "  local storage sinks (SQLite3, JSONL, CSV, Prometheus, PostgreSQL), and\n"
         "  unified CLI/GUI operation across Windows, Linux, and macOS.\n"
+        "Moniker: ezsnmp-data-logger\n"
         "Tags:\n"
         "  - snmp\n"
         "  - telemetry\n"
@@ -125,21 +174,58 @@ def generate_manifests(
         f"ManifestVersion: {MANIFEST_VERSION}\n"
     )
 
-    installer_yaml = (
-        f"PackageIdentifier: {package_id}\n"
-        f"PackageVersion: {package_version}\n"
-        "Installers:\n"
-        f"  - Architecture: {architecture}\n"
-        f"    InstallerType: {installer_type}\n"
-        f"    InstallerUrl: {installer_url}\n"
-        f"    InstallerSha256: {installer_sha256.upper()}\n"
-        "    NestedInstallerType: portable\n"
-        "    NestedInstallerFiles:\n"
-        "      - RelativeFilePath: ezsnmp-data-logger.exe\n"
-        "        PortableCommandAlias: ezsnmp-data-logger\n"
-        "ManifestType: installer\n"
-        f"ManifestVersion: {MANIFEST_VERSION}\n"
-    )
+    if resolved_type == "inno":
+        installer_yaml = (
+            f"PackageIdentifier: {package_id}\n"
+            f"PackageVersion: {package_version}\n"
+            "InstallerLocale: en-US\n"
+            "Platform:\n"
+            "  - Windows.Desktop\n"
+            "MinimumOSVersion: 10.0.0.0\n"
+            "InstallerType: inno\n"
+            "Scope: user\n"
+            "InstallModes:\n"
+            "  - interactive\n"
+            "  - silent\n"
+            "  - silentWithProgress\n"
+            "InstallerSwitches:\n"
+            "  Silent: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-\n"
+            "  SilentWithProgress: /SILENT /SUPPRESSMSGBOXES /NORESTART /SP-\n"
+            "UpgradeBehavior: install\n"
+            "AppsAndFeaturesEntries:\n"
+            "  - DisplayName: EzSnmp Data Logger\n"
+            "    Publisher: carlkidcrypto\n"
+            f"    DisplayVersion: {package_version}\n"
+            "    ProductCode: '{E5D4B692-7E5A-483A-9E86-443E838F5C1B}_is1'\n"
+            "Installers:\n"
+            f"  - Architecture: {architecture}\n"
+            f"    InstallerUrl: {installer_url}\n"
+            f"    InstallerSha256: {installer_sha256.upper()}\n"
+            "ManifestType: installer\n"
+            f"ManifestVersion: {MANIFEST_VERSION}\n"
+        )
+    else:
+        installer_yaml = (
+            f"PackageIdentifier: {package_id}\n"
+            f"PackageVersion: {package_version}\n"
+            "InstallerLocale: en-US\n"
+            "Platform:\n"
+            "  - Windows.Desktop\n"
+            "MinimumOSVersion: 10.0.0.0\n"
+            "InstallerType: zip\n"
+            "NestedInstallerType: portable\n"
+            "NestedInstallerFiles:\n"
+            "  - RelativeFilePath: EzSnmpDataLogger.exe\n"
+            "    PortableCommandAlias: EzSnmpDataLogger\n"
+            "  - RelativeFilePath: ezsnmp-data-logger.exe\n"
+            "    PortableCommandAlias: ezsnmp-data-logger\n"
+            "Installers:\n"
+            f"  - Architecture: {architecture}\n"
+            f"    InstallerUrl: {installer_url}\n"
+            f"    InstallerSha256: {installer_sha256.upper()}\n"
+            "ManifestType: installer\n"
+            f"ManifestVersion: {MANIFEST_VERSION}\n"
+        )
 
     version_path = dest / f"{package_id}.yaml"
     locale_path = dest / f"{package_id}.locale.en-US.yaml"
@@ -162,26 +248,37 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", default="")
     parser.add_argument(
         "--installer-url",
-        default="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6/ezsnmp_data_logger-windows-x64.zip",
+        default="",
+        help="Download URL of installer executable or portable zip",
     )
     parser.add_argument("--sha256", default="")
     parser.add_argument("--out-dir", default=str(REPO_ROOT / "dist-winget"))
     parser.add_argument("--arch", default="x64")
-    parser.add_argument("--installer-type", default="zip")
+    parser.add_argument(
+        "--installer-type",
+        default="auto",
+        choices=["auto", "inno", "zip"],
+        help="Installer type: inno (default for .exe) or zip (for portable .zip)",
+    )
     args = parser.parse_args(argv)
 
     ver = args.version or _read_current_calsemver()
+    installer_url = args.installer_url or (
+        f"https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/"
+        f"v{ver}/EzSnmpDataLogger-Windows-x64-Setup.exe"
+    )
+
     sha = args.sha256 or (
         "0000000000000000000000000000000000000000000000000000000000000000"
-        if not args.installer_url.startswith("http")
-        else compute_sha256(args.installer_url)
+        if not installer_url.startswith("http") and not Path(installer_url).is_file()
+        else compute_sha256(installer_url)
     )
 
     out = Path(args.out_dir)
     res = generate_manifests(
         package_id=args.package_id,
         package_version=ver,
-        installer_url=args.installer_url,
+        installer_url=installer_url,
         installer_sha256=sha,
         out_dir=out,
         architecture=args.arch,
