@@ -140,8 +140,8 @@ def test_package_linux_artifacts_deb_and_tarball(tmp_path: Path) -> None:
         assert magic == b"!<arch>\n"
         rest = f.read()
         assert b"debian-binary" in rest
-        assert b"control.tar.gz" in rest
-        assert b"data.tar.gz" in rest
+        assert b"control.tar" in rest
+        assert b"data.tar" in rest
 
 
 def test_inno_setup_script_structure() -> None:

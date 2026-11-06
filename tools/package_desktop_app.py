@@ -368,7 +368,14 @@ def build_deb_package(
     dpkg_deb = shutil.which("dpkg-deb")
     if dpkg_deb:
         subprocess.run(
-            [dpkg_deb, "--build", "--root-owner-group", str(staging_dir), str(output_deb_path)],
+            [
+                dpkg_deb,
+                "-Zgzip",
+                "--build",
+                "--root-owner-group",
+                str(staging_dir),
+                str(output_deb_path),
+            ],
             check=True,
         )
         return output_deb_path
