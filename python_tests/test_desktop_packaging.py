@@ -78,8 +78,8 @@ def test_package_desktop_pyinstaller_cmd_assembly() -> None:
     cmd_macos_str = " ".join(cmd_macos)
     assert "--onedir" in cmd_macos
     assert "--windowed" in cmd_macos
-    assert "EzSnmp Data Logger Studio" in cmd_macos
-    assert "com.carlkidcrypto.ezsnmp-data-logger-studio" in cmd_macos
+    assert "EzSnmpDataLogger" in cmd_macos
+    assert "com.carlkidcrypto.ezsnmp-data-logger" in cmd_macos
     assert "app_icon.icns" in cmd_macos_str
     assert "entry_desktop.py" in cmd_macos[-1]
 
@@ -87,7 +87,7 @@ def test_package_desktop_pyinstaller_cmd_assembly() -> None:
     cmd_win = build_pyinstaller_cmd("windows", version, dist_dir, build_dir)
     cmd_win_str = " ".join(cmd_win)
     assert "--onefile" in cmd_win
-    assert "EzSnmpDataLoggerStudio" in cmd_win
+    assert "EzSnmpDataLogger" in cmd_win
     assert "app_icon.ico" in cmd_win_str
     assert "entry_desktop.py" in cmd_win[-1]
 
@@ -99,9 +99,9 @@ def test_inno_setup_script_structure() -> None:
 
     content = iss_file.read_text(encoding="utf-8")
     assert "AppId={{E5D4B692-7E5A-483A-9E86-443E838F5C1B}" in content
-    assert "AppName=EzSnmp Data Logger Studio" in content
-    assert "OutputBaseFilename=EzSnmpDataLoggerStudio-Windows-x64-Setup" in content
-    assert "EzSnmpDataLoggerStudio.exe" in content
+    assert "AppName=EzSnmp Data Logger" in content
+    assert "OutputBaseFilename=EzSnmpDataLogger-Windows-x64-Setup" in content
+    assert "EzSnmpDataLogger.exe" in content
     assert "ezsnmp-data-logger.exe" in content
     assert "desktopicon" in content
     assert "envPath" in content

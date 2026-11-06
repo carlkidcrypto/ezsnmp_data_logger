@@ -23,10 +23,10 @@ Prerequisites
 ---------------------------------------------------
 Download the standalone disk image package directly from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_:
 
-- **Download:** ``EzSnmpDataLoggerStudio-macOS-arm64.dmg``
+- **Download:** ``EzSnmpDataLogger-macOS-arm64.dmg``
 - Double-click the downloaded ``.dmg`` file to mount the disk image.
-- Drag **EzSnmp Data Logger Studio.app** into the **Applications** folder shortcut.
-- Launch **EzSnmp Data Logger Studio** directly from Launchpad, Spotlight, or Finder!
+- Drag **EzSnmpDataLogger.app** into the **Applications** folder shortcut.
+- Launch **EzSnmp Data Logger** directly from Launchpad, Spotlight, or Finder!
 
 2. Install via pip
 ------------------
@@ -81,9 +81,9 @@ Prerequisites
 ------------------------------------------------------------------
 Download precompiled standalone binaries directly from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_:
 
-- **Graphical Setup Installer:** ``EzSnmpDataLoggerStudio-Windows-x64-Setup.exe`` (installs desktop shortcut, Start Menu launcher, and optional PATH registration).
-- **Portable Single-File Executable:** ``EzSnmpDataLoggerStudio-Windows-x64.exe`` (run immediately from any folder or USB drive).
-- **Portable ZIP Archive:** ``ezsnmp_data_logger-windows-x64.zip``.
+- **Graphical Setup Installer:** ``EzSnmpDataLogger-Windows-x64-Setup.exe`` (installs desktop shortcut, Start Menu launcher, and optional PATH registration).
+- **Portable Single-File Executable:** ``EzSnmpDataLogger-Windows-x64.exe`` (run immediately from any folder or USB drive).
+- **Portable ZIP Archive:** ``EzSnmpDataLogger-Windows-x64.zip`` or ``ezsnmp_data_logger-windows-x64.zip``.
 
 2. Install via WinGet (Windows Package Manager)
 -----------------------------------------------

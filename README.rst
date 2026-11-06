@@ -104,14 +104,14 @@ Installation
 
 Standalone Desktop Applications (No Python Required)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- **macOS Disk Image (.dmg):** Download ``EzSnmpDataLoggerStudio-macOS-arm64.dmg`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_, mount, and drag **EzSnmp Data Logger Studio.app** to ``/Applications``.
-- **Windows Setup Installer (.exe):** Download ``EzSnmpDataLoggerStudio-Windows-x64-Setup.exe`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_ or install via WinGet:
+- **macOS Disk Image (.dmg):** Download ``EzSnmpDataLogger-macOS-arm64.dmg`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_, mount, and drag **EzSnmpDataLogger.app** to ``/Applications``.
+- **Windows Setup Installer (.exe):** Download ``EzSnmpDataLogger-Windows-x64-Setup.exe`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_ or install via WinGet:
 
   .. code-block:: powershell
 
      winget install carlkidcrypto.EzSnmpDataLogger
 
-- **Windows Portable (.exe / .zip):** Download portable ``EzSnmpDataLoggerStudio-Windows-x64.exe`` or ``ezsnmp_data_logger-windows-x64.zip``.
+- **Windows Portable (.exe / .zip):** Download portable ``EzSnmpDataLogger-Windows-x64.exe`` or ``EzSnmpDataLogger-Windows-x64.zip``.
 
 pip Package Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~

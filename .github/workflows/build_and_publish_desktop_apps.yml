@@ -115,9 +115,9 @@ jobs:
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           macos: |
-            "./dist/EzSnmp Data Logger Studio.app/Contents/MacOS/EzSnmp Data Logger Studio" cli version
+            "./dist/EzSnmpDataLogger.app/Contents/MacOS/EzSnmpDataLogger" cli version
           windows: |
-            .\dist\EzSnmpDataLoggerStudio.exe cli version
+            .\dist\EzSnmpDataLogger.exe cli version
 
       - name: Upload desktop artifacts to workflow run
         uses: actions/upload-artifact@v7

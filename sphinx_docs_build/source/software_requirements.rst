@@ -217,14 +217,14 @@ Self-Contained Multi-Language Packaging Requirements
   remain.
 
 - **[PKG-07]** ``tools/package_desktop_app.py`` **Shall** package standalone
-  Windows single-file executables (``EzSnmpDataLoggerStudio-Windows-x64.exe``)
+  Windows single-file executables (``EzSnmpDataLogger-Windows-x64.exe``)
   and Inno Setup installation packages
-  (``EzSnmpDataLoggerStudio-Windows-x64-Setup.exe``) bundling embedded Net-SNMP
+  (``EzSnmpDataLogger-Windows-x64-Setup.exe``) bundling embedded Net-SNMP
   libraries and desktop shortcuts.
 
 - **[PKG-08]** ``tools/package_desktop_app.py`` **Shall** package standalone
-  macOS application bundles (``EzSnmp Data Logger Studio.app``) and compressed
-  disk images (``EzSnmpDataLoggerStudio-macOS-<arch>.dmg``) with Retina ICNS
+  macOS application bundles (``EzSnmpDataLogger.app``) and compressed
+  disk images (``EzSnmpDataLogger-macOS-<arch>.dmg``) with Retina ICNS
   icons and a drag-and-drop link to ``/Applications``.
 
 Command-Line Interface (CLI) Requirements

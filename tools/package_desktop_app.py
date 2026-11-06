@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Package EzSnmp Data Logger Studio into standalone desktop applications.
+"""Package EzSnmp Data Logger into standalone desktop applications.
 
 Generates:
-- macOS: Standalone `.app` bundle (`EzSnmp Data Logger Studio.app`),
-  drag-and-drop disk image (`EzSnmpDataLoggerStudio-macOS-<arch>.dmg`),
+- macOS: Standalone `.app` bundle (`EzSnmpDataLogger.app`),
+  drag-and-drop disk image (`EzSnmpDataLogger-macOS-<arch>.dmg`),
   and `.zip` archive.
-- Windows: Standalone single-file executable (`EzSnmpDataLoggerStudio-Windows-x64.exe`),
-  Inno Setup installer (`EzSnmpDataLoggerStudio-Windows-x64-Setup.exe`),
+- Windows: Standalone single-file executable (`EzSnmpDataLogger-Windows-x64.exe`),
+  Inno Setup installer (`EzSnmpDataLogger-Windows-x64-Setup.exe`),
   and portable `.zip` archives.
 """
 
@@ -140,9 +140,9 @@ def build_pyinstaller_cmd(
                 "--onedir",
                 "--windowed",
                 "--name",
-                "EzSnmp Data Logger Studio",
+                "EzSnmpDataLogger",
                 "--osx-bundle-identifier",
-                "com.carlkidcrypto.ezsnmp-data-logger-studio",
+                "com.carlkidcrypto.ezsnmp-data-logger",
             ]
         )
 
@@ -162,7 +162,7 @@ def build_pyinstaller_cmd(
             [
                 "--onefile",
                 "--name",
-                "EzSnmpDataLoggerStudio",
+                "EzSnmpDataLogger",
             ]
         )
 
@@ -175,7 +175,7 @@ def build_pyinstaller_cmd(
             [
                 "--onefile",
                 "--name",
-                "EzSnmpDataLoggerStudio",
+                "EzSnmpDataLogger",
             ]
         )
 
@@ -188,8 +188,8 @@ def package_macos_dmg(
     version: str,
     arch: str,
 ) -> Path:
-    """Wrap EzSnmp Data Logger Studio.app into a compressed DMG with an Applications symlink."""
-    app_path = dist_dir / "EzSnmp Data Logger Studio.app"
+    """Wrap EzSnmpDataLogger.app into a compressed DMG with an Applications symlink."""
+    app_path = dist_dir / "EzSnmpDataLogger.app"
     if not app_path.is_dir():
         raise FileNotFoundError(f"Expected macOS app bundle not found at: {app_path}")
 
@@ -199,6 +199,10 @@ def package_macos_dmg(
         try:
             with open(plist_path, "rb") as f:
                 data = plistlib.load(f)
+            data["CFBundleName"] = "EzSnmpDataLogger"
+            data["CFBundleDisplayName"] = "EzSnmp Data Logger"
+            data["CFBundleExecutable"] = "EzSnmpDataLogger"
+            data["CFBundleIdentifier"] = "com.carlkidcrypto.ezsnmp-data-logger"
             data["CFBundleShortVersionString"] = version
             data["CFBundleVersion"] = version
             data["NSHighResolutionCapable"] = True
@@ -218,7 +222,7 @@ def package_macos_dmg(
         )
 
     # 3. Create zip archive of the .app
-    zip_out = dist_dir / f"EzSnmpDataLoggerStudio-macOS-{arch}.zip"
+    zip_out = dist_dir / f"EzSnmpDataLogger-macOS-{arch}.zip"
     print(f"Creating macOS ZIP archive: {zip_out} ...")
     subprocess.run(
         ["zip", "-r", "-y", str(zip_out), app_path.name],
@@ -241,7 +245,7 @@ def package_macos_dmg(
     if not apps_link.exists():
         os.symlink("/Applications", str(apps_link))
 
-    dmg_out = dist_dir / f"EzSnmpDataLoggerStudio-macOS-{arch}.dmg"
+    dmg_out = dist_dir / f"EzSnmpDataLogger-macOS-{arch}.dmg"
     if dmg_out.is_file():
         dmg_out.unlink()
 
@@ -251,7 +255,7 @@ def package_macos_dmg(
             "hdiutil",
             "create",
             "-volname",
-            "EzSnmp Data Logger Studio",
+            "EzSnmpDataLogger",
             "-srcfolder",
             str(staging_dir),
             "-ov",
@@ -291,23 +295,23 @@ def package_windows_artifacts(
     skip_installer: bool = False,
 ) -> list[Path]:
     """Generate standalone Windows executable copies, ZIP archives, and Inno Setup installer."""
-    exe_src = dist_dir / "EzSnmpDataLoggerStudio.exe"
+    exe_src = dist_dir / "EzSnmpDataLogger.exe"
     if not exe_src.is_file():
         raise FileNotFoundError(f"Expected Windows executable not found at: {exe_src}")
 
-    arch_exe = dist_dir / f"EzSnmpDataLoggerStudio-Windows-{arch}.exe"
+    arch_exe = dist_dir / f"EzSnmpDataLogger-Windows-{arch}.exe"
     shutil.copy2(exe_src, arch_exe)
     results = [arch_exe]
 
     # Create portable ZIPs (both standard naming and WinGet compatibility naming)
     zip_paths = [
         dist_dir / f"ezsnmp_data_logger-windows-{arch.lower()}.zip",
-        dist_dir / f"EzSnmpDataLoggerStudio-Windows-{arch}.zip",
+        dist_dir / f"EzSnmpDataLogger-Windows-{arch}.zip",
     ]
     for zpath in zip_paths:
         print(f"Creating Windows ZIP archive: {zpath} ...")
         with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(exe_src, arcname="EzSnmpDataLoggerStudio.exe")
+            zf.write(exe_src, arcname="EzSnmpDataLogger.exe")
             zf.write(exe_src, arcname="ezsnmp-data-logger.exe")
             ico = REPO_ROOT / "ezsnmp_data_logger" / "gui" / "static" / "app_icon.ico"
             if ico.is_file():
@@ -333,7 +337,7 @@ def package_windows_artifacts(
                 str(iss_file.resolve()),
             ]
             subprocess.run(cmd, check=True)
-            setup_exe = dist_dir / "EzSnmpDataLoggerStudio-Windows-x64-Setup.exe"
+            setup_exe = dist_dir / "EzSnmpDataLogger-Windows-x64-Setup.exe"
             if setup_exe.is_file():
                 results.append(setup_exe)
         else:
@@ -347,7 +351,7 @@ def package_windows_artifacts(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Package EzSnmp Data Logger Studio for desktop distribution."
+        description="Package EzSnmp Data Logger for desktop distribution."
     )
     parser.add_argument(
         "--platform",
@@ -386,7 +390,7 @@ def main(argv: list[str] | None = None) -> int:
     dist_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Packaging EzSnmp Data Logger Studio v{ver} for [{target_os}]...")
+    print(f"Packaging EzSnmp Data Logger v{ver} for [{target_os}]...")
     cmd = build_pyinstaller_cmd(target_os, ver, dist_dir, build_dir)
     print("Running PyInstaller command:")
     print(" ".join(cmd))
