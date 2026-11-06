@@ -112,14 +112,14 @@ TEST(ConfigTest, RejectsInvalidSnmpAndSinkConfigurations) {
 }
 
 TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
-   EXPECT_EQ(version(), "2026.11.5.2");
+   EXPECT_EQ(version(), "2026.11.6");
    EXPECT_EQ(ezsnmp_target_version(), "2026.11.4a0");
    EXPECT_TRUE(is_valid_calsemver(version()));
    EXPECT_TRUE(is_valid_calsemver(ezsnmp_target_version()));
-   EXPECT_TRUE(is_valid_calsemver("v2026.11.5.2"));
+   EXPECT_TRUE(is_valid_calsemver("v2026.11.6"));
    EXPECT_TRUE(is_valid_calsemver("2026.11.1"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.5.2"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.5.2-alpha.0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.6"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.6-alpha.0"));
    EXPECT_FALSE(is_valid_calsemver("2026.01.05"));
    EXPECT_FALSE(is_valid_calsemver("0.1.0"));
    EXPECT_EQ(supported_swig_languages().size(), 4u);

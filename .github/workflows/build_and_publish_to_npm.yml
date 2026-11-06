@@ -26,8 +26,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,24 +45,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
           cache: "npm"
           cache-dependency-path: bindings/javascript/package-lock.json
-
-      - name: Upgrade npm for Trusted Publishing support
-        run: |
-          npm install -g npm@latest
-          echo "Active npm: $(which npm) (version $(npm --version))"
-          if [[ "$(npm --version | cut -d. -f1)" -lt 11 ]]; then
-            echo "Direct install did not update path; upgrading in toolcache..."
-            sudo "$(which npm)" install -g npm@latest
-            hash -r
-          fi
-          echo "Final npm: $(which npm) (version $(npm --version))"
-          if [[ "$(npm --version | cut -d. -f1)" -lt 11 ]]; then
-            echo "ERROR: npm >= 11 required for OIDC Trusted Publishing" >&2
-            exit 1
-          fi
 
       - name: Validate release tag
         if: github.ref_type == 'tag'
@@ -116,8 +100,8 @@ jobs:
       - name: Publish to npm
         working-directory: bindings/javascript
         run: |
-          if [ -n "${NPM_TOKEN:-}" ]; then
-            npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            export NODE_AUTH_TOKEN="${{ secrets.NPM_TOKEN }}"
           fi
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           PACKAGE_VERSION=$(node -p "require('./package.json').version")

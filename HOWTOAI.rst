@@ -14,7 +14,7 @@ Core Architectural Invariants
 1. **Software Requirements First (``software_requirements.rst``):**
    ``sphinx_docs_build/source/software_requirements.rst`` is the authoritative specification. Every requirement uses a bracketed ``[PREFIX-nn]`` identifier and RFC-style ``Shall`` statement. Always update ``software_requirements.rst`` **before** changing behavior or architecture.
 2. **Self-Contained Packages & CalSemVer Alpha Baseline:**
-   All 4 distributed language packages (``python``, ``javascript``, ``csharp``, ``go``) must remain **self-contained** (embedding SQLite3 via ``tools/prepare_sqlite3_amalgamation.py`` and bundling Net-SNMP 5.10 / OpenSSL via ``cibuildwheel`` or ``tools/bundle_native_package.py``) and standardized on **CalSemVer** alpha versioning (`2026.11.5.2` + ``ezsnmp>=2026.11.4a0`` with ``pip install --pre``) until a stable release is published.
+   All 4 distributed language packages (``python``, ``javascript``, ``csharp``, ``go``) must remain **self-contained** (embedding SQLite3 via ``tools/prepare_sqlite3_amalgamation.py`` and bundling Net-SNMP 5.10 / OpenSSL via ``cibuildwheel`` or ``tools/bundle_native_package.py``) and standardized on **CalSemVer** alpha versioning (`2026.11.6` + ``ezsnmp>=2026.11.4a0`` with ``pip install --pre``) until a stable release is published.
 3. **EzSnmp Network Layer:**
    All live SNMPv1, SNMPv2c, and SNMPv3 ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations must flow through ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (``EzSnmpPoller``). Never duplicate raw Net-SNMP PDU construction in the logger layer.
 4. **100% JSON Configuration:**
