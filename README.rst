@@ -100,7 +100,21 @@ Architecture Overview
 Installation
 ------------
 
-``ezsnmp_data_logger`` distributes **100% self-contained** binary wheels for **macOS**, **Windows**, and **Linux** (both ``manylinux`` and ``musllinux``). Users **never need to install external Net-SNMP, OpenSSL, or SQLite3 libraries**.
+``ezsnmp_data_logger`` distributes **100% self-contained** desktop application bundles, installers, and binary wheels for **macOS**, **Windows**, and **Linux** (both ``manylinux`` and ``musllinux``). Users **never need to install external Net-SNMP, OpenSSL, or SQLite3 libraries**.
+
+Standalone Desktop Applications (No Python Required)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- **macOS Disk Image (.dmg):** Download ``EzSnmpDataLoggerStudio-macOS-arm64.dmg`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_, mount, and drag **EzSnmp Data Logger Studio.app** to ``/Applications``.
+- **Windows Setup Installer (.exe):** Download ``EzSnmpDataLoggerStudio-Windows-x64-Setup.exe`` from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_ or install via WinGet:
+
+  .. code-block:: powershell
+
+     winget install carlkidcrypto.EzSnmpDataLogger
+
+- **Windows Portable (.exe / .zip):** Download portable ``EzSnmpDataLoggerStudio-Windows-x64.exe`` or ``ezsnmp_data_logger-windows-x64.zip``.
+
+pip Package Installation
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 macOS (Apple Silicon & Intel)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

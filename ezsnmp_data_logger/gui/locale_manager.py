@@ -8,10 +8,15 @@ for effortless per-key translation and multi-language deployment across desktop 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 DEFAULT_LOCALE_PATH = Path(__file__).resolve().parent / "locale.json"
+if not DEFAULT_LOCALE_PATH.is_file() and getattr(sys, "_MEIPASS", None):
+    _cand = Path(sys._MEIPASS) / "ezsnmp_data_logger" / "gui" / "locale.json"
+    if _cand.is_file():
+        DEFAULT_LOCALE_PATH = _cand
 
 
 class LocaleManager:

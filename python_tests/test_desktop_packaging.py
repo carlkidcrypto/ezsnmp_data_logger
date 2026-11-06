@@ -1,0 +1,125 @@
+"""Unit tests for standalone desktop application packaging (Windows EXE & macOS DMG).
+
+Validates:
+- [PKG-07]: Windows standalone single-file executable and Inno Setup installer.
+- [PKG-08]: macOS application bundle and compressed disk image (DMG).
+- [CICD-12]: Desktop release packaging workflow and GitHub Releases distribution.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from ezsnmp_data_logger.entry_desktop import CLI_SUBCOMMANDS, main as entry_desktop_main
+from tools.package_desktop_app import (
+    build_pyinstaller_cmd,
+    read_version,
+    resolve_platform,
+)
+
+
+def _flush_libc() -> None:
+    try:
+        import ctypes
+
+        ctypes.CDLL(None).fflush(None)
+    except Exception:
+        pass
+
+
+def test_desktop_entry_dispatch_cli_subcommands(capfd: pytest.CaptureFixture[str]) -> None:
+    """Verify that entry_desktop.py forwards CLI subcommands directly to CliRunner."""
+    # Test 'version' subcommand
+    ret_version = entry_desktop_main(["version"])
+    _flush_libc()
+    captured_ver = capfd.readouterr()
+    assert ret_version == 0
+    assert "ezsnmp-data-logger" in captured_ver.out
+    assert "2026.11" in captured_ver.out
+
+    # Test explicit 'cli version'
+    ret_cli_ver = entry_desktop_main(["cli", "version"])
+    _flush_libc()
+    captured_cli_ver = capfd.readouterr()
+    assert ret_cli_ver == 0
+    assert "ezsnmp-data-logger" in captured_cli_ver.out
+
+    # Test 'help' subcommand
+    ret_help = entry_desktop_main(["help"])
+    _flush_libc()
+    captured_help = capfd.readouterr()
+    assert ret_help == 0
+    assert "Usage:" in captured_help.out
+
+
+def test_desktop_entry_dispatches_gui_when_empty() -> None:
+    """Verify that entry_desktop.py defaults to launching the GUI when invoked without args."""
+    with patch("ezsnmp_data_logger.gui.main", return_value=0) as mock_gui:
+        ret = entry_desktop_main([])
+        assert ret == 0
+        mock_gui.assert_called_once_with([])
+
+
+def test_package_desktop_pyinstaller_cmd_assembly() -> None:
+    """Verify PyInstaller command construction for both macOS and Windows."""
+    version = read_version()
+    dist_dir = REPO_ROOT / "dist"
+    build_dir = REPO_ROOT / "build_pyinstaller"
+
+    # macOS assembly
+    cmd_macos = build_pyinstaller_cmd("macos", version, dist_dir, build_dir)
+    cmd_macos_str = " ".join(cmd_macos)
+    assert "--onedir" in cmd_macos
+    assert "--windowed" in cmd_macos
+    assert "EzSnmp Data Logger Studio" in cmd_macos
+    assert "com.carlkidcrypto.ezsnmp-data-logger-studio" in cmd_macos
+    assert "app_icon.icns" in cmd_macos_str
+    assert "entry_desktop.py" in cmd_macos[-1]
+
+    # Windows assembly
+    cmd_win = build_pyinstaller_cmd("windows", version, dist_dir, build_dir)
+    cmd_win_str = " ".join(cmd_win)
+    assert "--onefile" in cmd_win
+    assert "EzSnmpDataLoggerStudio" in cmd_win
+    assert "app_icon.ico" in cmd_win_str
+    assert "entry_desktop.py" in cmd_win[-1]
+
+
+def test_inno_setup_script_structure() -> None:
+    """Verify that tools/windows_installer.iss contains required Inno Setup keys and aliases."""
+    iss_file = REPO_ROOT / "tools" / "windows_installer.iss"
+    assert iss_file.is_file(), "Missing tools/windows_installer.iss"
+
+    content = iss_file.read_text(encoding="utf-8")
+    assert "AppId={{E5D4B692-7E5A-483A-9E86-443E838F5C1B}" in content
+    assert "AppName=EzSnmp Data Logger Studio" in content
+    assert "OutputBaseFilename=EzSnmpDataLoggerStudio-Windows-x64-Setup" in content
+    assert "EzSnmpDataLoggerStudio.exe" in content
+    assert "ezsnmp-data-logger.exe" in content
+    assert "desktopicon" in content
+    assert "envPath" in content
+
+
+def test_desktop_distribution_workflow_configuration() -> None:
+    """Verify that .github/workflows/build_and_publish_desktop_apps.yml is correctly configured."""
+    wf_path = REPO_ROOT / ".github" / "workflows" / "build_and_publish_desktop_apps.yml"
+    assert wf_path.is_file(), "Missing build_and_publish_desktop_apps.yml"
+
+    content = wf_path.read_text(encoding="utf-8")
+    assert "release:" in content
+    assert "types: [published]" in content
+    assert "pull_request:" in content
+    assert "workflow_dispatch:" in content
+    assert "tj-actions/changed-files" in content
+    assert "carlkidcrypto/os-specific-runner" in content
+    assert "package-desktop-apps:" in content
+    assert "macos-latest" in content
+    assert "windows-latest" in content
+    assert "gh release upload" in content

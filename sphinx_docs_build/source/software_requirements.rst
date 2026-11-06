@@ -216,6 +216,17 @@ Self-Contained Multi-Language Packaging Requirements
   Windows), and verify zero external non-OS runtime library dependencies
   remain.
 
+- **[PKG-07]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  Windows single-file executables (``EzSnmpDataLoggerStudio-Windows-x64.exe``)
+  and Inno Setup installation packages
+  (``EzSnmpDataLoggerStudio-Windows-x64-Setup.exe``) bundling embedded Net-SNMP
+  libraries and desktop shortcuts.
+
+- **[PKG-08]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  macOS application bundles (``EzSnmp Data Logger Studio.app``) and compressed
+  disk images (``EzSnmpDataLoggerStudio-macOS-<arch>.dmg``) with Retina ICNS
+  icons and a drag-and-drop link to ``/Applications``.
+
 Command-Line Interface (CLI) Requirements
 =========================================
 
@@ -395,3 +406,8 @@ Testing, Documentation & CI/CD Requirements
   on pushes to ``main`` guarded by smart change detection
   (``tj-actions/changed-files``) over source and packaging files, ensuring
   distribution packaging regressions fail prior to production release.
+
+- **[CICD-12]** Desktop distribution workflows
+  (``build_and_publish_desktop_apps.yml``) **Shall** package standalone Windows
+  (``.exe``, ``-Setup.exe``, ``.zip``) and macOS (``.dmg``, ``.zip``) assets,
+  smoke test execution, and publish them to GitHub Releases upon publication.

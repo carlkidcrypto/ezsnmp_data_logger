@@ -1,0 +1,145 @@
+name: Desktop Distributions (EXE & DMG)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  release:
+    types: [published]
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+      - 'docs/**'
+      - 'sphinx_docs_build/**'
+      - 'bindings/**'
+      - 'cpp_tests/**'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to attach desktop assets to (e.g. v2026.11.6)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  verify-syntax:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify_syntax.yml
+
+  check-source-changes:
+    needs: verify-syntax
+    runs-on: ubuntu-latest
+    outputs:
+      run_job: ${{ steps.changed-files.outputs.any_changed }}
+    steps:
+      - name: Checkout Sourcecode
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes in desktop application files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        with:
+          files: |
+            include/**
+            src/**
+            interface/**
+            ezsnmp_data_logger/**
+            configs/**
+            tools/**
+            pyproject.toml
+            setup.py
+            requirements.txt
+            .github/workflows/build_and_publish_desktop_apps.yml
+
+  package-desktop-apps:
+    name: Package Desktop App (${{ matrix.os }})
+    needs: [verify-syntax, check-source-changes]
+    if: needs.check-source-changes.outputs.run_job == 'true' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - name: Checkout ezsnmp_data_logger
+        uses: actions/checkout@v7
+
+      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.11.4a0)
+        uses: actions/checkout@v7
+        with:
+          repository: carlkidcrypto/ezsnmp
+          ref: v2026.11.4a0
+          path: third_party/ezsnmp
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Provision embedded SQLite3 amalgamation
+        run: python tools/prepare_sqlite3_amalgamation.py
+
+      - name: Install system dependencies
+        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        with:
+          macos: |
+            brew install swig pkg-config net-snmp openssl@3
+          windows: |
+            choco install swig innosetup -y
+
+      - name: Build C++ extension and package standalone desktop app
+        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        with:
+          macos: |
+            export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            python setup.py build_ext --inplace
+            python tools/package_desktop_app.py --platform macos
+          windows: |
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            $env:EZSNMP_DL_DISABLE_EZSNMP_LINK = "1"
+            python setup.py build_ext --inplace
+            python tools/package_desktop_app.py --platform windows
+
+      - name: Smoke test packaged executable
+        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        with:
+          macos: |
+            "./dist/EzSnmp Data Logger Studio.app/Contents/MacOS/EzSnmp Data Logger Studio" cli version
+          windows: |
+            .\dist\EzSnmpDataLoggerStudio.exe cli version
+
+      - name: Upload desktop artifacts to workflow run
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-dist-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+
+      - name: Publish desktop assets to GitHub Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_TAG="${{ github.event.release.tag_name || github.event.inputs.release_tag }}"
+          if [ -z "$TARGET_TAG" ] && [ "${{ github.event_name }}" = "release" ]; then
+            TARGET_TAG="${{ github.ref_name }}"
+          fi
+          if [ -n "$TARGET_TAG" ]; then
+            echo "Publishing desktop release assets to release ${TARGET_TAG}..."
+            gh release upload "${TARGET_TAG}" dist/*.exe dist/*.dmg dist/*.zip --clobber
+          else
+            echo "Not a release run or tag unspecified; skipping release asset upload."
+          fi
