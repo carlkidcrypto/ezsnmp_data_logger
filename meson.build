@@ -1,7 +1,7 @@
 project(
   'ezsnmp_data_logger',
   ['c', 'cpp'],
-  version: '2026.11.5.1',
+  version: '2026.11.5.2',
   license: 'MIT',
   default_options: [
     'cpp_std=c++17',

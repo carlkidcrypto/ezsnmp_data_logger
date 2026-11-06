@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ezsnmp-data-logger"
-version = "2026.11.5.1"
+version = "2026.11.5.2"
 description = "Self-contained C++17 SNMP Data Logger powered by ezsnmp with SWIG bindings (Python, Node.js, C#, Go), CLI, and cross-platform GUI."
 readme = "README.rst"
 license = "MIT"

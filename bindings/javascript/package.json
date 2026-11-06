@@ -1,6 +1,6 @@
 {
   "name": "ezsnmp-data-logger",
-  "version": "2026.11.5-1",
+  "version": "2026.11.5-2",
   "description": "Self-contained Node.js N-API bindings for the C++17 ezsnmp_data_logger engine",
   "author": "carlkidcrypto",
   "license": "MIT",
