@@ -4,7 +4,7 @@ Installation Guide
 
 ``ezsnmp_data_logger`` is distributed as **100% self-contained** binary wheels across **Linux, macOS, and Windows**. Users never need to install or configure external Net-SNMP, OpenSSL, or SQLite3 system libraries—everything required to poll SNMP devices and persist telemetry is bundled directly inside the package.
 
-All releases follow the **CalSemVer** versioning scheme (e.g. ``2026.11.6``) and require Python **3.11** or newer.
+All releases follow the **CalSemVer** versioning scheme (e.g. ``2026.11.6.1``) and require Python **3.11** or newer.
 
 .. contents:: Table of Contents
    :local:
@@ -35,14 +35,14 @@ Install the self-contained package from PyPI (use ``--pre`` while in alpha testi
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6.1"
 
 Verify the installation:
 
 .. code-block:: bash
 
    ezsnmp-data-logger version
-   # Output: ezsnmp-data-logger 2026.11.6 (ezsnmp=yes, sqlite3=yes, psql=no)
+   # Output: ezsnmp-data-logger 2026.11.6.1 (ezsnmp=yes, sqlite3=yes, psql=no)
 
 3. Install the Native macOS Application Launcher
 ------------------------------------------------
@@ -100,7 +100,7 @@ Open PowerShell or Command Prompt and run:
 .. code-block:: powershell
 
    py -m pip install --upgrade pip
-   py -m pip install --pre "ezsnmp-data-logger>=2026.11.6"
+   py -m pip install --pre "ezsnmp-data-logger>=2026.11.6.1"
 
 Verify the installation:
 
@@ -176,7 +176,7 @@ On glibc systems:
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6.1"
 
 On Alpine Linux:
 
@@ -184,7 +184,7 @@ On Alpine Linux:
 
    apk add python3 py3-pip
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.6.1"
 
 Verify the CLI:
 

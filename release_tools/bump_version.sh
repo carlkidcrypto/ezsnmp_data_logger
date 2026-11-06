@@ -124,6 +124,7 @@ pathspecs=(
     ':(exclude)build/**'
     ':(exclude)*.venv/**'
     ':(exclude)docs/**'
+    ':(exclude)sphinx_docs_build/landing/**'
     ':(exclude)third_party/**'
     ':(exclude).github/workflows/*.lock.yml'
     ':(exclude).github/scripts/**'
@@ -197,10 +198,9 @@ for file in "${files[@]}"; do
         OLD_VER="$old_semver_npm" NEW_VER="$new_semver_npm" perl -0pi -e \
             's/"version":\s*"\Q$ENV{OLD_VER}\E"/"version": "$ENV{NEW_VER}"/g' "$file"
     else
-        # General file replacement: replace exact version references, prefixed v-versions, and old npm semver references
-        OLD_VER="$old_version" NEW_VER="$new_version" \
-        OLD_NPM="$old_semver_npm" perl -0pi -e \
-            's/\Qv$ENV{OLD_VER}\E/v$ENV{NEW_VER}/g; s/\Q$ENV{OLD_VER}\E/$ENV{NEW_VER}/g; s/\Qv$ENV{OLD_NPM}\E/v$ENV{NEW_VER}/g; s/\Q$ENV{OLD_NPM}\E/$ENV{NEW_VER}/g' "$file"
+        # General file replacement: replace exact version references (leading 'v' is preserved)
+        OLD_VER="$old_version" NEW_VER="$new_version" perl -0pi -e \
+            's/\Q$ENV{OLD_VER}\E/$ENV{NEW_VER}/g' "$file"
     fi
 done
 

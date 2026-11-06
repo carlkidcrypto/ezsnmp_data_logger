@@ -1,6 +1,6 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "EzSnmp Data Logger"
-PROJECT_NUMBER         = "2026.11.6"
+PROJECT_NUMBER         = "2026.11.6.1"
 PROJECT_BRIEF          = "C++17 SNMP Data Logger powered by ezsnmp with Multi-Language SWIG Bindings, CLI, and Cross-Platform GUI"
 OUTPUT_DIRECTORY       = ./doxygen_docs_build/doxygen
 CREATE_SUBDIRS         = NO
