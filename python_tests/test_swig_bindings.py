@@ -16,7 +16,7 @@ from tools import bundle_native_package
 
 
 def test_init_py_contains_only_imports_and_metadata() -> None:
-    """Verify [GEN-04]: __init__.py has no executable logic or import-time side effects."""
+    """Verify [GEN-05]: __init__.py has no executable logic or import-time side effects."""
     init_path = Path(edl.__file__).resolve()
     tree = ast.parse(init_path.read_text(encoding="utf-8"))
     for node in tree.body:
@@ -55,7 +55,7 @@ def test_calsemver_version_and_capabilities() -> None:
 
 
 def test_all_project_manifests_synchronized_on_calsemver() -> None:
-    """Verify [VER-01]-[VER-04]: every project manifest uses synchronized CalSemVer."""
+    """Verify [VER-01]-[VER-05]: every project manifest uses synchronized CalSemVer."""
     repo_root = Path(__file__).resolve().parent.parent
     pyproject_path = repo_root / "pyproject.toml"
     if not pyproject_path.is_file():
