@@ -48,14 +48,23 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
-          registry-url: https://registry.npmjs.org
           cache: "npm"
           cache-dependency-path: bindings/javascript/package-lock.json
 
       - name: Upgrade npm for Trusted Publishing support
         run: |
-          sudo npm install -g npm@latest
-          npm --version
+          npm install -g npm@latest
+          echo "Active npm: $(which npm) (version $(npm --version))"
+          if [[ "$(npm --version | cut -d. -f1)" -lt 11 ]]; then
+            echo "Direct install did not update path; upgrading in toolcache..."
+            sudo "$(which npm)" install -g npm@latest
+            hash -r
+          fi
+          echo "Final npm: $(which npm) (version $(npm --version))"
+          if [[ "$(npm --version | cut -d. -f1)" -lt 11 ]]; then
+            echo "ERROR: npm >= 11 required for OIDC Trusted Publishing" >&2
+            exit 1
+          fi
 
       - name: Validate release tag
         if: github.ref_type == 'tag'
