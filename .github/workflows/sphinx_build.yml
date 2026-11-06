@@ -77,10 +77,19 @@ jobs:
           ref: v2026.11.4a0
           path: third_party/ezsnmp
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Set up Python 3.14 env for sphinx...
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.13"
+          python-version: "3.14"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-sphinx-${{ hashFiles('sphinx_docs_build/requirements.txt', 'sphinx_docs_build/landing/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-sphinx-
+            ${{ runner.os }}-pip-
 
       - name: Provision embedded SQLite3 amalgamation
         run: python tools/prepare_sqlite3_amalgamation.py
@@ -158,10 +167,19 @@ jobs:
           ref: v2026.11.4a0
           path: third_party/ezsnmp
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Set up Python 3.14 env for sphinx...
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.13"
+          python-version: "3.14"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-sphinx-${{ hashFiles('sphinx_docs_build/requirements.txt', 'sphinx_docs_build/landing/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-sphinx-
+            ${{ runner.os }}-pip-
 
       - name: Provision embedded SQLite3 amalgamation
         run: python tools/prepare_sqlite3_amalgamation.py
@@ -197,66 +215,108 @@ jobs:
       - name: Copy versioned docs into docs/
         run: |
           VERSION="${{ github.event.release.tag_name }}"
+          NORM_VERSION="html_v$(echo "${VERSION}" | sed -e 's/^[vV]//')"
           mkdir -p "${{ github.workspace }}/docs"
-          cp -r "/tmp/html_${VERSION}/" "${{ github.workspace }}/docs/html_${VERSION}/"
+          rm -rf "${{ github.workspace }}/docs/${NORM_VERSION}"
+          cp -r "/tmp/html_${VERSION}" "${{ github.workspace }}/docs/${NORM_VERSION}"
 
       - name: Update landing page version list
         run: |
           python3 - <<'EOF'
-          import pathlib
-          import re
-          import sys
+          import re, pathlib, sys, shutil
           from packaging.version import Version
 
           docs_dir = pathlib.Path("${{ github.workspace }}/docs")
           index_rst = pathlib.Path("${{ github.workspace }}/sphinx_docs_build/landing/source/index.rst")
 
-          def version_sort_key(name):
+          # Normalize any legacy html_V* directory to html_v*
+          for d in list(docs_dir.iterdir()):
+              if d.is_dir() and d.name.startswith("html_V"):
+                  target = docs_dir / ("html_v" + d.name[6:])
+                  if not target.exists():
+                      d.rename(target)
+                  else:
+                      shutil.rmtree(d)
+
+          # Helper to parse version from directory name
+          def parse_version(dir_name):
+              clean = re.sub(r"^html_[vV]", "", dir_name)
               try:
-                  return Version(name.replace("html_v", "").replace("html_V", ""))
+                  return Version(clean)
               except Exception:
                   return Version("0.0.0")
 
-          versions = sorted(
-              [d.name for d in docs_dir.iterdir() if d.is_dir() and d.name.lower().startswith("html_v")],
-              key=version_sort_key,
-              reverse=True,
-          )
+          # Collect all existing versioned directories
+          version_dirs = [
+              d for d in docs_dir.iterdir()
+              if d.is_dir() and d.name.lower().startswith("html_v")
+          ]
 
+          # Identify all published stable versions (not prereleases)
+          stable_base_versions = {
+              parse_version(d.name).base_version
+              for d in version_dirs
+              if not parse_version(d.name).is_prerelease and parse_version(d.name) != Version("0.0.0")
+          }
+
+          # Retire and prune prereleases if their stable release exists
+          active_dirs = []
+          for d in version_dirs:
+              v = parse_version(d.name)
+              if v.is_prerelease and v.base_version in stable_base_versions:
+                  print(f"Retiring prerelease docs {d.name} in favor of stable {v.base_version}")
+                  shutil.rmtree(d)
+              else:
+                  active_dirs.append(d)
+
+          # Sort remaining versions newest first
+          active_dirs.sort(key=lambda d: parse_version(d.name), reverse=True)
+
+          # Build RST list entries (always include Latest Alpha/Beta first)
           rst_items = ["* `Latest Alpha/Beta Version <./html/index.html>`_"]
-          for v in versions:
-              ver = v.replace("html_", "")
-              rst_items.append(f"* `{ver} <./{v}/index.html>`_")
+          for d in active_dirs:
+              ver_str = "v" + re.sub(r"^html_[vV]", "", d.name)
+              rst_items.append(f"* `{ver_str} <./{d.name}/index.html>`_")
           versions_rst = "\n".join(rst_items)
 
-          content = index_rst.read_text()
+          content = index_rst.read_text(encoding="utf-8")
           new_content, sub_count = re.subn(
-              r"\.\. VERSION_LIST_START\n.*?\.\. VERSION_LIST_END",
-              f".. VERSION_LIST_START\n\n{versions_rst}\n\n.. VERSION_LIST_END",
+              r'\.\. VERSION_LIST_START\n.*?\.\. VERSION_LIST_END',
+              f'.. VERSION_LIST_START\n\n{versions_rst}\n\n.. VERSION_LIST_END',
               content,
               flags=re.DOTALL,
           )
+
           if sub_count == 0:
-              sys.exit("ERROR: VERSION_LIST_START/VERSION_LIST_END sentinels not found")
-          index_rst.write_text(new_content)
+              print("ERROR: VERSION_LIST_START/VERSION_LIST_END sentinels not found in index.rst", file=sys.stderr)
+              sys.exit(1)
+
+          index_rst.write_text(new_content, encoding="utf-8")
+          print("Updated landing/source/index.rst with versions:", [d.name for d in active_dirs])
           EOF
 
       - name: Build landing page with updated version list
         run: |
-          cd sphinx_docs_build/landing
+          cd ${{ github.workspace }}/sphinx_docs_build/landing
           mkdir -p source/_static source/_templates
-          make html SPHINXOPTS="-W"
+          make clean && make html SPHINXOPTS="-W"
           touch "${{ github.workspace }}/docs/.nojekyll"
 
       - name: Create Pull Request with versioned docs
         id: create-pr
-        uses: peter-evans/create-pull-request@v8
-        continue-on-error: true
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "docs: add versioned documentation for ${{ github.event.release.tag_name }}"
-          title: "Add versioned docs for ${{ github.event.release.tag_name }}"
-          body: "Adds versioned Sphinx documentation for release `${{ github.event.release.tag_name }}`."
+          title: "📚 Add versioned docs for ${{ github.event.release.tag_name }}"
+          body: |
+            This PR adds the versioned Sphinx documentation for release `${{ github.event.release.tag_name }}`.
+            - Built from release tag: `${{ github.event.release.tag_name }}`
+            - Run ID: ${{ github.run_id }}
           branch: docs/add-versioned-docs-${{ github.event.release.tag_name }}
           base: main
           delete-branch: true
+          labels: documentation, automated-pr
+          add-paths: |
+            docs/
+            sphinx_docs_build/landing/source/index.rst
