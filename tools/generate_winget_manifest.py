@@ -31,12 +31,12 @@ def _read_current_calsemver() -> str:
         for line in text.splitlines():
             if "PROJECT_VERSION_STRING" in line and '"' in line:
                 raw = line.split('"')[1].strip()
-                # If it's a PEP-440 alpha (e.g. 2026.11.6), convert to SemVer-2.0
+                # If it's a PEP-440 alpha (e.g. 2026.11.6.1), convert to SemVer-2.0
                 if "a" in raw and "-" not in raw:
                     prefix, num = raw.split("a", 1)
                     return f"{prefix}-alpha.{num}"
                 return raw
-    return "2026.11.6"
+    return "2026.11.6.1"
 
 
 def get_canonical_manifest_dir(
