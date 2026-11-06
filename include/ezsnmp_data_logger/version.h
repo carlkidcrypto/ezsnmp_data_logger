@@ -7,7 +7,7 @@ namespace ezsnmp_data_logger {
 
 /**
  * @brief Return the CalSemVer version string of ezsnmp_data_logger.
- * @return CalSemVer version string (e.g. "2026.11.5.2").
+ * @return CalSemVer version string (e.g. "2026.11.6").
  */
 std::string version();
 

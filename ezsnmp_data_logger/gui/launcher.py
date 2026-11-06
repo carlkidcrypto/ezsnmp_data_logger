@@ -72,9 +72,9 @@ def _install_macos_app_bundle(target_dir: Path | None = None) -> Path:
     <key>CFBundleIdentifier</key>
     <string>com.carlkidcrypto.ezsnmp-data-logger-studio</string>
     <key>CFBundleVersion</key>
-    <string>2026.11.5.2</string>
+    <string>2026.11.6</string>
     <key>CFBundleShortVersionString</key>
-    <string>2026.11.5.2</string>
+    <string>2026.11.6</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
