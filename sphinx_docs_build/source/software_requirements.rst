@@ -216,6 +216,22 @@ Self-Contained Multi-Language Packaging Requirements
   Windows), and verify zero external non-OS runtime library dependencies
   remain.
 
+- **[PKG-07]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  Windows single-file executables (``EzSnmpDataLogger-Windows-x64.exe``)
+  and Inno Setup installation packages
+  (``EzSnmpDataLogger-Windows-x64-Setup.exe``) bundling embedded Net-SNMP
+  libraries and desktop shortcuts.
+
+- **[PKG-08]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  macOS application bundles (``EzSnmpDataLogger.app``) and compressed
+  disk images (``EzSnmpDataLogger-macOS-<arch>.dmg``) with Retina ICNS
+  icons and a drag-and-drop link to ``/Applications``.
+
+- **[PKG-09]** ``tools/package_desktop_app.py`` **Shall** package standalone
+  Linux executables, Debian packages (``.deb``), Red Hat packages (``.rpm``),
+  and portable compressed archives (``.tar.gz``) bundling desktop entries
+  and application icons.
+
 Command-Line Interface (CLI) Requirements
 =========================================
 
@@ -359,8 +375,9 @@ Testing, Documentation & CI/CD Requirements
   skipping.
 
 - **[CICD-05]** Automated release publishing workflows **Shall** support
-  generating validated WinGet community manifests and automated community
-  repository submission (``build_and_publish_to_winget.yml``,
+  generating validated WinGet community manifests in canonical directory
+  hierarchies and automated pull request submission via Microsoft
+  ``wingetcreate`` (``build_and_publish_to_winget.yml``,
   ``tools/generate_winget_manifest.py``).
 
 - **[CICD-06]** Automated dependency maintenance **Shall** be configured via
@@ -395,3 +412,9 @@ Testing, Documentation & CI/CD Requirements
   on pushes to ``main`` guarded by smart change detection
   (``tj-actions/changed-files``) over source and packaging files, ensuring
   distribution packaging regressions fail prior to production release.
+
+- **[CICD-12]** Desktop distribution workflows
+  (``build_and_publish_desktop_apps.yml``) **Shall** package standalone Linux
+  (``.deb``, ``.rpm``, ``.tar.gz``), Windows (``.exe``, ``-Setup.exe``,
+  ``.zip``), and macOS (``.dmg``, ``.zip``) assets, smoke test execution,
+  and publish them to GitHub Releases upon publication.

@@ -31,6 +31,9 @@ def resolve_cli_command(cli_override: str = "") -> list[str]:
     if cli_override.strip():
         return shlex.split(cli_override, posix=(os.name != "nt"))
 
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "cli"]
+
     repo_root = Path(__file__).resolve().parent.parent.parent
     exe_suffix = ".exe" if os.name == "nt" else ""
     local_build_bin = repo_root / "build" / f"ezsnmp-data-logger{exe_suffix}"

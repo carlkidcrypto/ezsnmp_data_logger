@@ -41,6 +41,7 @@ The GUI is configured in your JSON settings under ``"gui": { "frontend": "auto" 
 
 1. **Native Desktop Studio (**``tk``**):**
    - Built on Python's cross-platform standard-library ``tkinter.ttk`` (Linux X11/Wayland, macOS Aqua, Windows Win32).
+   - Also distributed as standalone precompiled desktop packages requiring zero Python installation: macOS DMG (``EzSnmpDataLogger-macOS-arm64.dmg``) and Windows Setup installer / portable executable (``EzSnmpDataLogger-Windows-x64-Setup.exe``).
    - Zero external GUI or WebKit dependencies required.
    - Features dark and light themes, real-time ``Canvas`` telemetry charts, interactive series checkbuttons, clickable canvas legends, and instant responsive layouts.
 

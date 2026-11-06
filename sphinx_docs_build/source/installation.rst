@@ -17,9 +17,18 @@ Prerequisites
 -------------
 - macOS 11.0 (Big Sur) or newer.
 - Apple Silicon (``arm64``) or Intel (``x86_64``).
-- Python 3.11, 3.12, 3.13, or 3.14.
+- Optional: Python 3.11, 3.12, 3.13, or 3.14 (only required when using pip; standalone DMG does not require Python).
 
-1. Install via pip
+1. Standalone Disk Image (DMG) — No Python Required
+---------------------------------------------------
+Download the standalone disk image package directly from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_:
+
+- **Download:** ``EzSnmpDataLogger-macOS-arm64.dmg``
+- Double-click the downloaded ``.dmg`` file to mount the disk image.
+- Drag **EzSnmpDataLogger.app** into the **Applications** folder shortcut.
+- Launch **EzSnmp Data Logger** directly from Launchpad, Spotlight, or Finder!
+
+2. Install via pip
 ------------------
 Install the self-contained package from PyPI (use ``--pre`` while in alpha testing):
 
@@ -35,7 +44,7 @@ Verify the installation:
    ezsnmp-data-logger version
    # Output: ezsnmp-data-logger 2026.11.6 (ezsnmp=yes, sqlite3=yes, psql=no)
 
-2. Install the Native macOS Application Launcher
+3. Install the Native macOS Application Launcher
 ------------------------------------------------
 To launch the GUI from Finder, Spotlight, or Launchpad with a high-resolution Retina icon (replacing Python's generic rocket icon):
 
@@ -49,7 +58,7 @@ To launch the GUI from Finder, Spotlight, or Launchpad with a high-resolution Re
 
 You can now double-click **EzSnmp Data Logger Studio.app** or launch it from Spotlight!
 
-3. Launch from the Terminal
+4. Launch from the Terminal
 ---------------------------
 
 .. code-block:: bash
@@ -66,9 +75,25 @@ Windows Installation
 Prerequisites
 -------------
 - Windows 10, Windows 11, or Windows Server 2019/2022 (64-bit AMD64 or ARM64).
-- Python 3.11, 3.12, 3.13, or 3.14 (from `python.org <https://www.python.org>`_ or Windows Store).
+- Optional: Python 3.11, 3.12, 3.13, or 3.14 (only required when using pip; standalone EXE/Setup does not require Python).
 
-1. Install via pip
+1. Standalone Installer & Portable Executable — No Python Required
+------------------------------------------------------------------
+Download precompiled standalone binaries directly from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_:
+
+- **Graphical Setup Installer:** ``EzSnmpDataLogger-Windows-x64-Setup.exe`` (installs desktop shortcut, Start Menu launcher, and optional PATH registration).
+- **Portable Single-File Executable:** ``EzSnmpDataLogger-Windows-x64.exe`` (run immediately from any folder or USB drive).
+- **Portable ZIP Archive:** ``EzSnmpDataLogger-Windows-x64.zip`` or ``ezsnmp_data_logger-windows-x64.zip``.
+
+2. Install via WinGet (Windows Package Manager)
+-----------------------------------------------
+Install the official Windows Package Manager package:
+
+.. code-block:: powershell
+
+   winget install carlkidcrypto.EzSnmpDataLogger
+
+3. Install via pip
 ------------------
 Open PowerShell or Command Prompt and run:
 
@@ -83,7 +108,7 @@ Verify the installation:
 
    ezsnmp-data-logger version
 
-2. Install Windows Desktop Shortcut
+4. Install Windows Desktop Shortcut
 -----------------------------------
 Create an executable launcher shortcut on your Desktop with the custom Windows icon:
 
@@ -93,7 +118,7 @@ Create an executable launcher shortcut on your Desktop with the custom Windows i
 
 This creates ``EzSnmp Data Logger Studio.bat`` on your Desktop using the multi-resolution ``app_icon.ico``.
 
-3. Launch on Windows
+5. Launch on Windows
 --------------------
 
 .. code-block:: powershell
@@ -113,7 +138,38 @@ Supported Distributions
 - **musl-based distributions:** Alpine Linux (3.18+).
 - Python 3.11, 3.12, 3.13, or 3.14.
 
-1. Install via pip
+1. Standalone Packages (.deb & .rpm) — No Python Required
+---------------------------------------------------------
+Pre-compiled standalone distributions bundling embedded dependencies,
+command aliases, desktop menu entries, and application icons are
+available from GitHub Releases:
+
+- **Debian / Ubuntu (.deb):**
+
+  .. code-block:: bash
+
+     # Install via dpkg or apt
+     sudo dpkg -i EzSnmpDataLogger-Linux-x86_64.deb
+     # or
+     sudo apt install ./EzSnmpDataLogger-Linux-x86_64.deb
+
+- **Fedora / RHEL / CentOS / openSUSE (.rpm):**
+
+  .. code-block:: bash
+
+     # Install via rpm or dnf
+     sudo rpm -i EzSnmpDataLogger-Linux-x86_64.rpm
+     # or
+     sudo dnf install ./EzSnmpDataLogger-Linux-x86_64.rpm
+
+- **Portable Archive (.tar.gz):**
+
+  .. code-block:: bash
+
+     tar -xzf EzSnmpDataLogger-Linux-x86_64.tar.gz
+     ./EzSnmpDataLogger cli version
+
+2. Install via pip
 ------------------
 On glibc systems:
 

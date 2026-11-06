@@ -16,6 +16,12 @@ from typing import Any
 from .cli_bridge import CliSubprocessBridge
 from .locale_manager import LocaleManager, get_default_locale_manager
 
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+if not STATIC_DIR.is_dir() and getattr(sys, "_MEIPASS", None):
+    _cand = Path(sys._MEIPASS) / "ezsnmp_data_logger" / "gui" / "static"
+    if _cand.is_dir():
+        STATIC_DIR = _cand
+
 PALETTES: dict[str, dict[str, str]] = {
     "dark": {
         "bg": "#0f172a",
@@ -100,7 +106,7 @@ class DesktopLoggerStudio:
 
     def _apply_icon(self) -> None:
         """Apply custom branded icon to window titlebar, taskbar, and macOS Dock."""
-        static_dir = Path(__file__).resolve().parent / "static"
+        static_dir = STATIC_DIR
         png_path = static_dir / "app_icon.png"
         ico_path = static_dir / "app_icon.ico"
         icns_path = static_dir / "app_icon.icns"
@@ -256,7 +262,7 @@ class DesktopLoggerStudio:
         header.pack(fill=tk.X)
 
         # Header brand logo thumbnail
-        icon_thumb = Path(__file__).resolve().parent / "static" / "app_icon_32.png"
+        icon_thumb = STATIC_DIR / "app_icon_32.png"
         if icon_thumb.is_file():
             try:
                 self._header_icon_img = tk.PhotoImage(file=str(icon_thumb))
