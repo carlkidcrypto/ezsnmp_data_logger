@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: System :: Networking :: Monitoring",
 ]
 dependencies = [
-    "ezsnmp>=2026.10.28a0",
+    "ezsnmp>=2026.11.4a0",
 ]
 
 [project.optional-dependencies]

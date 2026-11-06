@@ -10,7 +10,7 @@
 EzSnmp Data Logger Documentation
 ================================
 
-**EzSnmp Data Logger** is a self-contained, high-throughput C++17 SNMP telemetry collection and storage package built on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_. It delegates SNMPv1, SNMPv2c, and SNMPv3 ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations to ``ezsnmp``'s ``SessionBase`` layer (`v2026.10.28a0` CalSemVer alpha baseline), stores returned telemetry across embedded SQLite3 (WAL), CSV, JSONL, PostgreSQL/TimescaleDB, and Prometheus HTTP sinks, and ships self-contained **SWIG 4.x** packages for **Python, JavaScript (Node.js N-API), C#, and Go** alongside a **CLI** and **cross-platform GUI** (Linux, macOS, and Windows).
+**EzSnmp Data Logger** is a self-contained, high-throughput C++17 SNMP telemetry collection and storage package built on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_. It delegates SNMPv1, SNMPv2c, and SNMPv3 ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations to ``ezsnmp``'s ``SessionBase`` layer (`v2026.11.4a0` CalSemVer alpha baseline), stores returned telemetry across embedded SQLite3 (WAL), CSV, JSONL, PostgreSQL/TimescaleDB, and Prometheus HTTP sinks, and ships self-contained **SWIG 4.x** packages for **Python, JavaScript (Node.js N-API), C#, and Go** alongside a **CLI** and **cross-platform GUI** (Linux, macOS, and Windows).
 
 Key Features
 ------------

@@ -75,11 +75,11 @@ jobs:
       - name: Checkout ezsnmp_data_logger
         uses: actions/checkout@v7
 
-      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.10.28a0)
+      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.11.4a0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.10.28a0
+          ref: v2026.11.4a0
           path: third_party/ezsnmp
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -106,16 +106,16 @@ jobs:
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           linux: |
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.10.28a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
             python -m pytest -v
           macos: |
             export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.10.28a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
             python -m pytest -v
           windows: |
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.10.28a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
             $env:EZSNMP_DL_DISABLE_EZSNMP_LINK = "1"
             python setup.py build_ext --inplace
             python -m pytest -v

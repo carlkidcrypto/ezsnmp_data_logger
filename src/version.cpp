@@ -8,7 +8,7 @@ namespace ezsnmp_data_logger {
 
 std::string version() { return "2026.11.5.1"; }
 
-std::string ezsnmp_target_version() { return "2026.10.28a0"; }
+std::string ezsnmp_target_version() { return "2026.11.4a0"; }
 
 bool is_valid_calsemver(std::string const& ver) {
    static std::regex const kCalSemVerPattern(

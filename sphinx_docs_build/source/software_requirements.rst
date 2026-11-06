@@ -71,7 +71,7 @@ CalSemVer Versioning Requirements
   version via ``ezsnmp_data_logger::version()``,
   ``ezsnmp_data_logger.__version__``, and ``ezsnmp-data-logger version
   [--json]``, and **Shall** standardize on ``ezsnmp``'s CalSemVer release line
-  (``ezsnmp>=2026.10.28a0``, git tag ``v2026.10.28a0``) until a stable
+  (``ezsnmp>=2026.11.4a0``, git tag ``v2026.11.4a0``) until a stable
   CalSemVer ``ezsnmp`` release is published.
 
 JSON Configuration & Validation Requirements
@@ -180,12 +180,12 @@ Self-Contained Multi-Language Packaging Requirements
 - **[PKG-03]** Standalone dependency scripts
   (``tools/prepare_linux_netsnmp.sh``, ``tools/prepare_macos_netsnmp.sh``,
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
-  **Shall** provision ``ezsnmp`` ``v2026.10.28a0`` and build minimal
+  **Shall** provision ``ezsnmp`` ``v2026.11.4a0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
   Blumenthal-AES support.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
-  ``[build-system] requires``, ``ezsnmp>=2026.10.28a0`` in ``dependencies``,
+  ``[build-system] requires``, ``ezsnmp>=2026.11.4a0`` in ``dependencies``,
   and configure ``cibuildwheel`` with ``auditwheel repair`` (Linux
   ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and ``delvewheel
   repair`` (Windows ``AMD64``/``x86``/``ARM64``) to produce standalone Python
