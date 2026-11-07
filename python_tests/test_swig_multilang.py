@@ -43,8 +43,8 @@ def test_winget_manifest_generation(tmp_path: Path) -> None:
     # Test 1: Portable zip manifest generation
     zip_manifests = generate_manifests(
         package_id="carlkidcrypto.EzSnmpDataLogger",
-        package_version="2026.11.6.1",
-        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6.1/EzSnmpDataLogger-Windows-x64.zip",
+        package_version="2026.11.7",
+        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.7/EzSnmpDataLogger-Windows-x64.zip",
         installer_sha256="aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
         out_dir=tmp_path / "zip_out",
         architecture="x64",
@@ -58,14 +58,14 @@ def test_winget_manifest_generation(tmp_path: Path) -> None:
         / "c"
         / "carlkidcrypto"
         / "EzSnmpDataLogger"
-        / "2026.11.6.1"
+        / "2026.11.7"
     )
     for p in zip_manifests.values():
         assert p.is_file()
         assert p.parent == canonical_zip_dir
         content = p.read_text(encoding="utf-8")
         assert "carlkidcrypto.EzSnmpDataLogger" in content
-        assert "2026.11.6.1" in content
+        assert "2026.11.7" in content
 
     zip_installer_content = zip_manifests["installer"].read_text(encoding="utf-8")
     assert "InstallerType: zip" in zip_installer_content
@@ -76,8 +76,8 @@ def test_winget_manifest_generation(tmp_path: Path) -> None:
     # Test 2: Inno Setup executable manifest generation (primary Windows distribution)
     inno_manifests = generate_manifests(
         package_id="carlkidcrypto.EzSnmpDataLogger",
-        package_version="2026.11.6.1",
-        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.6.1/EzSnmpDataLogger-Windows-x64-Setup.exe",
+        package_version="2026.11.7",
+        installer_url="https://github.com/carlkidcrypto/ezsnmp_data_logger/releases/download/v2026.11.7/EzSnmpDataLogger-Windows-x64-Setup.exe",
         installer_sha256="11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
         out_dir=tmp_path / "inno_out",
         architecture="x64",
@@ -90,7 +90,7 @@ def test_winget_manifest_generation(tmp_path: Path) -> None:
         / "c"
         / "carlkidcrypto"
         / "EzSnmpDataLogger"
-        / "2026.11.6.1"
+        / "2026.11.7"
     )
     for p in inno_manifests.values():
         assert p.is_file()

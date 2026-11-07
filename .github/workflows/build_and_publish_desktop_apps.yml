@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag to attach desktop assets to (e.g. v2026.11.6.1)"
+        description: "Release tag to attach desktop assets to (e.g. v2026.11.7)"
         required: false
         default: ""
 
