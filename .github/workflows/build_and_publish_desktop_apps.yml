@@ -149,6 +149,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
       - name: Download all desktop artifacts
         uses: actions/download-artifact@v8
         with:
@@ -160,6 +163,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           TARGET_TAG="${{ github.event.release.tag_name || github.event.inputs.release_tag }}"
@@ -172,8 +176,9 @@ jobs:
           fi
 
           echo "Target Release Tag: ${TARGET_TAG}"
-          if ! gh release view "${TARGET_TAG}" >/dev/null 2>&1; then
-            echo "::error::GitHub Release ${TARGET_TAG} not found in repository."
+          echo "Target Repository: ${{ github.repository }}"
+          if ! gh release view "${TARGET_TAG}" --repo "${{ github.repository }}"; then
+            echo "::error::GitHub Release ${TARGET_TAG} not found in repository ${{ github.repository }}."
             exit 1
           fi
 
@@ -202,7 +207,7 @@ jobs:
             echo "Uploading asset: ${asset} to release ${TARGET_TAG} ..."
             uploaded=0
             for attempt in 1 2 3; do
-              if gh release upload "${TARGET_TAG}" "${asset}" --clobber; then
+              if gh release upload "${TARGET_TAG}" "${asset}" --repo "${{ github.repository }}" --clobber; then
                 uploaded=1
                 break
               fi
