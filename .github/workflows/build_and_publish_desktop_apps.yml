@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag to attach desktop assets to (e.g. v2026.11.6.1)"
+        description: "Release tag to attach desktop assets to (e.g. v2026.11.7)"
         required: false
         default: ""
 
@@ -65,7 +65,7 @@ jobs:
     if: needs.check-source-changes.outputs.run_job == 'true' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -141,18 +141,78 @@ jobs:
             dist/*.rpm
             dist/*.tar.gz
 
-      - name: Publish desktop assets to GitHub Release
+  publish-release-assets:
+    name: Publish Desktop Assets to GitHub Release
+    needs: [verify-syntax, package-desktop-apps]
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all desktop artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: desktop-dist-*
+          path: all-desktop-dist
+          merge-multiple: true
+
+      - name: Publish all desktop assets to GitHub Release
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           TARGET_TAG="${{ github.event.release.tag_name || github.event.inputs.release_tag }}"
           if [ -z "$TARGET_TAG" ] && [ "${{ github.event_name }}" = "release" ]; then
             TARGET_TAG="${{ github.ref_name }}"
           fi
-          if [ -n "$TARGET_TAG" ]; then
-            echo "Publishing desktop release assets to release ${TARGET_TAG}..."
-            gh release upload "${TARGET_TAG}" dist/*.exe dist/*.dmg dist/*.zip dist/*.deb dist/*.rpm dist/*.tar.gz --clobber
-          else
-            echo "Not a release run or tag unspecified; skipping release asset upload."
+          if [ -z "$TARGET_TAG" ]; then
+            echo "Target release tag not specified; skipping GitHub Release asset upload."
+            exit 0
           fi
+
+          echo "Target Release Tag: ${TARGET_TAG}"
+          if ! gh release view "${TARGET_TAG}" >/dev/null 2>&1; then
+            echo "::error::GitHub Release ${TARGET_TAG} not found in repository."
+            exit 1
+          fi
+
+          echo "Inspecting release assets in all-desktop-dist/:"
+          ls -la all-desktop-dist/
+
+          shopt -s nullglob
+          ASSETS=(
+            all-desktop-dist/*.exe
+            all-desktop-dist/*.dmg
+            all-desktop-dist/*.deb
+            all-desktop-dist/*.rpm
+            all-desktop-dist/*.zip
+            all-desktop-dist/*.tar.gz
+          )
+
+          if [ ${#ASSETS[@]} -eq 0 ]; then
+            echo "::error::No desktop artifacts found to upload in all-desktop-dist/"
+            exit 1
+          fi
+
+          echo "Found ${#ASSETS[@]} assets to publish:"
+          printf ' - %s\n' "${ASSETS[@]}"
+
+          for asset in "${ASSETS[@]}"; do
+            echo "Uploading asset: ${asset} to release ${TARGET_TAG} ..."
+            uploaded=0
+            for attempt in 1 2 3; do
+              if gh release upload "${TARGET_TAG}" "${asset}" --clobber; then
+                uploaded=1
+                break
+              fi
+              echo "Upload failed for ${asset} (attempt ${attempt}/3). Retrying in 5s..."
+              sleep 5
+            done
+            if [ "$uploaded" -ne 1 ]; then
+              echo "::error::Failed to upload ${asset} after 3 attempts."
+              exit 1
+            fi
+          done
+
+          echo "All desktop release assets published successfully to ${TARGET_TAG}."

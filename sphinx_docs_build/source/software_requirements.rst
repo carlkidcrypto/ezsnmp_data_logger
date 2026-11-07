@@ -49,11 +49,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.6.1a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.7a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.6.1-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.7-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.6.1``) for Git releases, Sphinx documentation
+  ``v2026.11.7``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -416,5 +416,6 @@ Testing, Documentation & CI/CD Requirements
 - **[CICD-12]** Desktop distribution workflows
   (``build_and_publish_desktop_apps.yml``) **Shall** package standalone Linux
   (``.deb``, ``.rpm``, ``.tar.gz``), Windows (``.exe``, ``-Setup.exe``,
-  ``.zip``), and macOS (``.dmg``, ``.zip``) assets, smoke test execution,
-  and publish them to GitHub Releases upon publication.
+  ``.zip``), and macOS (``.dmg``, ``.zip``) assets, decouple artifact
+  packaging across multi-OS matrix runners from release publishing, and
+  publish consolidated release assets to GitHub Releases.
