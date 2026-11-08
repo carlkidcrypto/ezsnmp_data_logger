@@ -50,6 +50,7 @@ jobs:
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
           files: |
+            codecov.yml
             include/**
             src/**
             interface/**
@@ -106,16 +107,38 @@ jobs:
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           linux: |
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
-            python -m pytest -v
+            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
           macos: |
             export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
-            python -m pytest -v
+            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
           windows: |
-            python -m pip install --pre --upgrade pip setuptools wheel pytest "ezsnmp>=2026.11.4a0"
+            python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             $env:EZSNMP_DL_DISABLE_EZSNMP_LINK = "1"
             python setup.py build_ext --inplace
-            python -m pytest -v
+            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml
+          flags: python
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml
+          flags: python
+          report_type: test_results
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

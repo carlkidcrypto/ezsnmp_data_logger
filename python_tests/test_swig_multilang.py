@@ -205,3 +205,27 @@ def test_smart_workflow_triggers_and_runners() -> None:
             "repository: carlkidcrypto/ezsnmp" in wf_content
         ), f"{wf_name} must checkout carlkidcrypto/ezsnmp"
         assert "path: third_party/ezsnmp" in wf_content, f"{wf_name} must target third_party/ezsnmp"
+
+
+def test_codecov_configuration() -> None:
+    codecov_path = REPO_ROOT / "codecov.yml"
+    assert codecov_path.is_file(), "codecov.yml must exist at repo root"
+    content = codecov_path.read_text(encoding="utf-8")
+    assert "coverage:" in content
+    assert "flag_management:" in content
+    assert "component_management:" in content
+    assert "name: python" in content
+    assert "name: cpp" in content
+    assert "component_id: python_code" in content
+    assert "component_id: cpp_code" in content
+
+    workflows_dir = REPO_ROOT / ".github" / "workflows"
+    python_wf = (workflows_dir / "tests_python.yml").read_text(encoding="utf-8")
+    assert "codecov/codecov-action" in python_wf
+    assert "CODECOV_TOKEN" in python_wf
+    assert "flags: python" in python_wf
+
+    cpp_wf = (workflows_dir / "tests_cpp_native.yml").read_text(encoding="utf-8")
+    assert "codecov/codecov-action" in cpp_wf
+    assert "CODECOV_TOKEN" in cpp_wf
+    assert "flags: cpp" in cpp_wf
