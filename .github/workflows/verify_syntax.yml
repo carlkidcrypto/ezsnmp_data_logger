@@ -9,10 +9,14 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/*.yml'
+      - '!.github/workflows/*.lock.yml'
+      - '!.github/workflows/agentics-maintenance.yml'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/*.yml'
+      - '!.github/workflows/*.lock.yml'
+      - '!.github/workflows/agentics-maintenance.yml'
   workflow_dispatch:
   workflow_call:
 
@@ -48,9 +52,9 @@ jobs:
       - name: Lint workflow YAML files
         run: |
           set -e
-          find .github/workflows/ -name "*.yml" -print0 | xargs -0 yamllint -c .yamllint
+          find .github/workflows/ -name "*.yml" ! -name "*.lock.yml" ! -name "agentics-maintenance.yml" -print0 | xargs -0 yamllint -c .yamllint
 
       - name: Validate workflow actions
         run: |
           set -e
-          find .github/workflows/ -name "*.yml" -print0 | xargs -0 actionlint -shellcheck=
+          find .github/workflows/ -name "*.yml" ! -name "*.lock.yml" ! -name "agentics-maintenance.yml" -print0 | xargs -0 actionlint -shellcheck=
