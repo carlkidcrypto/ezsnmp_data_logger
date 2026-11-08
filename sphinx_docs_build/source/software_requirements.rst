@@ -419,3 +419,9 @@ Testing, Documentation & CI/CD Requirements
   ``.zip``), and macOS (``.dmg``, ``.zip``) assets, decouple artifact
   packaging across multi-OS matrix runners from release publishing, and
   publish consolidated release assets to GitHub Releases.
+
+- **[CICD-13]** Automated test workflows (``tests_python.yml`` and
+  ``tests_cpp_native.yml``) **Shall** generate coverage reports and upload
+  them to Codecov (``codecov/codecov-action``) using repository secret
+  ``CODECOV_TOKEN``, tagged with dedicated flags (``python`` and ``cpp``)
+  and tracked via separate components (``python_code`` and ``cpp_code``).

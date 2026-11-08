@@ -1,0 +1,95 @@
+# Codecov configuration for ezsnmp_data_logger
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+
+# Coverage configuration
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+
+# Ignore paths - exclude test files, build files, and docs from coverage reports
+ignore:
+  - "python_tests/**"
+  - "cpp_tests/**"
+  - "tests/**"
+  - "test_*.py"
+  - "test_*.cpp"
+  - "**/test_*.py"
+  - "**/test_*.cpp"
+  - "**/*_test.py"
+  - "**/*_test.cpp"
+  - "setup.py"
+  - "setup.cfg"
+  - "tools/**"
+  - "release_tools/**"
+  - "configs/**"
+  - ".github/**"
+  - "docs/**"
+  - "doxygen_docs_build/**"
+  - "sphinx_docs_build/**"
+  - "third_party/**"
+  - "src/ezsnmp_data_logger_wrap.cxx"
+  - "ezsnmp_data_logger/ezsnmp_data_logger.py"
+  - "ezsnmp_data_logger/ezsnmp_data_logger_swig.py"
+  - "generated_swig/**"
+  - "bindings/**/generated/**"
+
+# Flag management: unique flags per language suite
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: python
+      paths:
+        - ezsnmp_data_logger/*.py
+        - ezsnmp_data_logger/**/*.py
+    - name: cpp
+      paths:
+        - src/*.cpp
+        - src/**/*.cpp
+        - include/*.h
+        - include/**/*.h
+        - include/*.hpp
+        - include/**/*.hpp
+        - include/ezsnmp_data_logger/*.h
+        - include/ezsnmp_data_logger/**/*.h
+
+# Comment configuration for pull requests
+comment:
+  layout: "header, diff, flags, components, files, footer"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Component configuration to track Python and C++ separately
+component_management:
+  individual_components:
+    - component_id: python_code
+      name: "Python Code"
+      paths:
+        - ezsnmp_data_logger/*.py
+        - ezsnmp_data_logger/**/*.py
+    - component_id: cpp_code
+      name: "C++ Code"
+      paths:
+        - src/*.cpp
+        - src/**/*.cpp
+        - include/*.h
+        - include/**/*.h
+        - include/*.hpp
+        - include/**/*.hpp
+        - include/ezsnmp_data_logger/*.h
+        - include/ezsnmp_data_logger/**/*.h

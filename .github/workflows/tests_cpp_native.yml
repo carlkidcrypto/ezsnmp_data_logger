@@ -52,6 +52,7 @@ jobs:
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
           files: |
+            codecov.yml
             include/**
             src/**
             cpp_tests/**
@@ -89,7 +90,7 @@ jobs:
           linux: |
             sudo apt-get update
             sudo apt-get install -y build-essential meson ninja-build pkg-config \
-              libsnmp-dev libssl-dev libpq-dev libgtest-dev
+              libsnmp-dev libssl-dev libpq-dev libgtest-dev lcov gcovr
           macos: |
             brew install meson ninja pkg-config net-snmp openssl@3 googletest
 
@@ -97,11 +98,24 @@ jobs:
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           linux: |
-            meson setup build
+            python3 -m pip install --upgrade pip gcovr
+            meson setup build -Db_coverage=true
             meson compile -C build
             meson test -C build -v
+            ninja -C build coverage-xml || gcovr -r . --xml -o coverage.xml || true
           macos: |
             export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             meson setup build
             meson compile -C build
             meson test -C build -v
+
+      - name: Upload C++ coverage to Codecov
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/meson-logs/coverage.xml,./coverage.xml
+          flags: cpp
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
