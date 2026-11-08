@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -226,13 +227,23 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     assert stop2["stopped"] is True
 
     # Test Windows process group and signals simulation
+    stop_event = threading.Event()
+
+    def fake_stdout_gen():
+        stop_event.wait(5.0)
+        return
+        yield
+
     fake_proc = MagicMock()
     fake_proc.pid = 1234
     fake_proc.poll.return_value = None
     fake_proc.wait.return_value = 0
     fake_proc.returncode = 0
-    fake_proc.stdout = iter([])
+    fake_proc.stdout = fake_stdout_gen()
     fake_proc.stderr = iter([])
+    fake_proc.send_signal.side_effect = lambda sig: stop_event.set()
+    fake_proc.terminate.side_effect = lambda: stop_event.set()
+    fake_proc.kill.side_effect = lambda: stop_event.set()
     monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: fake_proc)
 
     bridge_win = CliSubprocessBridge(cfg)
@@ -246,12 +257,16 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     fake_proc.send_signal.assert_called_with(99)
 
     # Windows send_signal OSError fallback to terminate()
+    stop_event.clear()
+    fake_proc.stdout = fake_stdout_gen()
     fake_proc.send_signal.side_effect = OSError("Failed to send CTRL_BREAK")
     bridge_win.start_run()
     bridge_win.stop_run()
     fake_proc.terminate.assert_called()
 
     # Windows without CTRL_BREAK_EVENT fallback to terminate()
+    stop_event.clear()
+    fake_proc.stdout = fake_stdout_gen()
     monkeypatch.setattr("signal.CTRL_BREAK_EVENT", None, raising=False)
     bridge_win.start_run()
     bridge_win.stop_run()

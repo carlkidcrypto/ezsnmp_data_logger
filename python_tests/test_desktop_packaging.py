@@ -32,7 +32,15 @@ def _flush_libc() -> None:
     try:
         import ctypes
 
-        ctypes.CDLL(None).fflush(None)
+        if sys.platform == "win32":
+            ctypes.cdll.msvcrt.fflush(None)
+        else:
+            ctypes.CDLL(None).fflush(None)
+    except Exception:
+        pass
+    try:
+        sys.stdout.flush()
+        sys.stderr.flush()
     except Exception:
         pass
 
