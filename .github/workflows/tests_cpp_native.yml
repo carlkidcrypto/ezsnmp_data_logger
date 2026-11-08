@@ -101,8 +101,11 @@ jobs:
             python3 -m pip install --upgrade pip gcovr
             meson setup build -Db_coverage=true
             meson compile -C build
+            set +e
             meson test -C build -v
+            TEST_EXIT_CODE=$?
             ninja -C build coverage-xml || gcovr -r . --xml -o coverage.xml || true
+            exit $TEST_EXIT_CODE
           macos: |
             export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             meson setup build
@@ -110,12 +113,24 @@ jobs:
             meson test -C build -v
 
       - name: Upload C++ coverage to Codecov
-        if: runner.os == 'Linux'
-        uses: codecov/codecov-action@v5
+        if: always() && runner.os == 'Linux'
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/meson-logs/coverage.xml,./coverage.xml
           flags: cpp
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload C++ test results to Codecov
+        if: always()
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/meson-logs/testlog.junit.xml
+          flags: cpp
+          report_type: test_results
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

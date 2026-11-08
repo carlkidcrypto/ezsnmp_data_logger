@@ -147,6 +147,9 @@ def test_sonarcloud_configuration() -> None:
     sonar_path = REPO_ROOT / ".sonarcloud.properties"
     assert sonar_path.is_file(), ".sonarcloud.properties must exist"
     content = sonar_path.read_text(encoding="utf-8")
+    assert "sonar.sources" in content
+    assert "sonar.tests" in content
+    assert "sonar.python.version" in content
     assert "sonar.exclusions" in content
     assert "sonar.cpd.exclusions" in content
     assert "docs/**" in content

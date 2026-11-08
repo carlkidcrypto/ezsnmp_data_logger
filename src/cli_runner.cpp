@@ -155,6 +155,8 @@ int dispatch_cli(std::vector<std::string> const& args, std::ostream& out, std::o
       if (a == "-h" || a == "--help") {
          print_help(out);
          return 0;
+      } else if (a == "-v" || a == "--version") {
+         subcmd = "version";
       } else if (a == "-c" || a == "--config") {
          config_path = need_val(i, a);
       } else if (a == "--config-string") {

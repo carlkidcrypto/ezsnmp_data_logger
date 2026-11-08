@@ -11,6 +11,8 @@
 #include "ezsnmp_data_logger/datatypes.h"
 
 class SessionBase;
+struct Result;
+class GenericErrorBase;
 
 namespace ezsnmp_data_logger {
 
@@ -103,6 +105,11 @@ class EzSnmpPoller : public ISnmpPoller {
  * @brief Factory creating the appropriate ISnmpPoller for a DutConfig ("ezsnmp" or "stub").
  */
 std::unique_ptr<ISnmpPoller> create_snmp_poller(DutConfig const& dut);
+
+#if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
+Sample test_result_to_sample(std::string const& metric_name, ::Result const& r);
+int test_map_ezsnmp_exception(::GenericErrorBase const& err);
+#endif
 
 } // namespace ezsnmp_data_logger
 

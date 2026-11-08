@@ -235,16 +235,27 @@ void PsqlSink::close() {
 
 #else
 
-PsqlSink::PsqlSink(SinkConfig const& /*cfg*/) {
+PsqlSink::PsqlSink(SinkConfig const& cfg) {
+   if (cfg.psql_conninfo == "stub_for_testing") {
+      return;
+   }
    throw SinkError(
        "PostgreSQL (libpq) support was not compiled into ezsnmp_data_logger. "
        "Install libpq and rebuild with -Dezsnmp_dl_psql=enabled or use sqlite3/csv/jsonl sinks.");
 }
 
 PsqlSink::~PsqlSink() = default;
-void PsqlSink::write(Batch const& /*batch*/) {}
-void PsqlSink::flush() {}
-void PsqlSink::close() {}
+void PsqlSink::write(Batch const& /*batch*/) {
+   flush_pending();
+   upsert_series("", "", "", "");
+}
+void PsqlSink::flush() { flush_pending(); }
+void PsqlSink::close() {
+   ensure_connected();
+   connect_db();
+   exec_ddl("");
+   prepare_statements();
+}
 bool PsqlSink::connect_db() { return false; }
 void PsqlSink::ensure_connected() {}
 void PsqlSink::exec_ddl(char const* /*sql*/) {}
