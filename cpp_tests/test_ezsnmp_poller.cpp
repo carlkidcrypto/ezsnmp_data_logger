@@ -3,9 +3,15 @@
 #include <thread>
 #include <vector>
 
+#include "ezsnmp_data_logger/exceptions.h"
 #include "ezsnmp_data_logger/snmp_poller.h"
 #include "ezsnmp_data_logger/version.h"
 #include "test_common.h"
+
+#if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
+#include "datatypes.h"
+#include "exceptionsbase.h"
+#endif
 
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -301,5 +307,111 @@ TEST(EzSnmpPollerTest, ExecutesLiveGetAndSetThroughEzSnmpSessionBase) {
    Batch req_res = poller->request("get", {"1.3.6.1.2.1.1.5.0"}, 10);
    ASSERT_EQ(req_res.samples.size(), 1u);
    EXPECT_NE(req_res.samples[0].str_val.find("carlkid-core-sw"), std::string::npos);
+
+   // 4. Test unsupported operation throws SnmpError
+   EXPECT_THROW({ (void)poller->request("unsupported_op", {"1.1"}, 10); }, SnmpError);
+
+   // 5. Test SNMPv1 and SNMPv3 Dut constructors
+   DutConfig dut_v1 = dut;
+   dut_v1.snmp.version = "1";
+   auto poller_v1 = create_snmp_poller(dut_v1);
+   EXPECT_NE(poller_v1, nullptr);
+
+   DutConfig dut_v3 = dut;
+   dut_v3.snmp.version = "3";
+   dut_v3.snmp.security_level = "authPriv";
+   dut_v3.snmp.security_username = "snmpuser";
+   dut_v3.snmp.auth_protocol = "SHA";
+   dut_v3.snmp.auth_passphrase = "authpass123";
+   dut_v3.snmp.privacy_protocol = "AES";
+   dut_v3.snmp.privacy_passphrase = "privpass123";
+   auto poller_v3 = create_snmp_poller(dut_v3);
+   EXPECT_NE(poller_v3, nullptr);
+
+   // 6. Test polling against an unreachable port (exercises map_ezsnmp_exception_status &
+   // error_sample)
+   DutConfig dut_timeout = dut;
+   dut_timeout.dut_ip = "127.0.0.1";
+   dut_timeout.snmp.port_number = 59998;
+   dut_timeout.snmp.timeout_seconds = 1;
+   dut_timeout.snmp.retries = 0;
+   dut_timeout.metrics = {MetricConfig{"sysUpTime", "1.3.6.1.2.1.1.3.0", "get", 10, "s", ""},
+                          MetricConfig{"sysNext", "1.3.6.1.2.1.1.1.0", "getnext", 10, "s", ""},
+                          MetricConfig{"sysWalk", "1.3.6.1.2.1.1", "walk", 10, "s", ""},
+                          MetricConfig{"sysBulkGet", "1.3.6.1.2.1.1.1.0", "bulkget", 10, "s", ""},
+                          MetricConfig{"sysBulkWalk", "1.3.6.1.2.1.1", "bulkwalk", 10, "s", ""},
+                          MetricConfig{"sysSet", "1.3.6.1.2.1.1.5.0", "set", 10, "s", "val"}};
+   auto poller_timeout = create_snmp_poller(dut_timeout);
+   Batch err_batch = poller_timeout->poll();
+   ASSERT_EQ(err_batch.samples.size(), 6u);
+   for (auto const& s : err_batch.samples) {
+      EXPECT_NE(s.status, 0);
+      EXPECT_EQ(s.snmp_type, "ERROR");
+   }
+
+   // 7. Test poller with empty metrics
+   DutConfig dut_empty = dut;
+   dut_empty.metrics.clear();
+   auto poller_empty = create_snmp_poller(dut_empty);
+   EXPECT_TRUE(poller_empty->poll().samples.empty());
+
+   // 8. Test result_to_sample exhaustive conversions
+   ::Result r;
+   r.oid = "1.3.6.1.2.1.1.1";
+   r.index = "0";
+   r.type = "OCTETSTR";
+   r.value = "my_val";
+
+   r.type = "NOSUCHOBJECT";
+   EXPECT_EQ(test_result_to_sample("m", r).status, 128);
+   r.type = "NOSUCHINSTANCE";
+   EXPECT_EQ(test_result_to_sample("m", r).status, 129);
+   r.type = "ENDOFMIBVIEW";
+   EXPECT_EQ(test_result_to_sample("m", r).status, 130);
+
+   r.type = "INTEGER";
+   r.converted_value = static_cast<uint32_t>(42000);
+   Sample s_u32 = test_result_to_sample("m", r);
+   EXPECT_EQ(s_u32.type_tag, TypeTag::Int64);
+   EXPECT_EQ(s_u32.i64, 42000);
+
+   r.type = "COUNTER64";
+   r.converted_value = static_cast<uint64_t>(9999999999ULL);
+   Sample s_u64 = test_result_to_sample("m", r);
+   EXPECT_EQ(s_u64.type_tag, TypeTag::Int64);
+   EXPECT_EQ(s_u64.i64, 9999999999LL);
+
+   r.type = "FLOAT";
+   r.converted_value = static_cast<double>(3.14159);
+   Sample s_dbl = test_result_to_sample("m", r);
+   EXPECT_EQ(s_dbl.type_tag, TypeTag::Float64);
+   EXPECT_NEAR(s_dbl.f64, 3.14159, 1e-4);
+
+   r.type = "OCTETSTR";
+   r.converted_value = std::string("42.75");
+   Sample s_fstr = test_result_to_sample("m", r);
+   EXPECT_EQ(s_fstr.type_tag, TypeTag::Float64);
+   EXPECT_NEAR(s_fstr.f64, 42.75, 1e-4);
+
+   r.converted_value = std::string("regular_str");
+   Sample s_str = test_result_to_sample("m", r);
+   EXPECT_EQ(s_str.type_tag, TypeTag::Str);
+   EXPECT_EQ(s_str.str_val, "regular_str");
+
+   r.converted_value = std::vector<unsigned char>{0x0A, 0x1B, 0xFF};
+   Sample s_hex = test_result_to_sample("m", r);
+   EXPECT_EQ(s_hex.type_tag, TypeTag::Str);
+   EXPECT_EQ(s_hex.str_val, "0a:1b:ff");
+
+   // 9. Test map_ezsnmp_exception_status exhaustive mappings
+   EXPECT_EQ(test_map_ezsnmp_exception(::TimeoutErrorBase("timeout")), -1);
+   EXPECT_EQ(test_map_ezsnmp_exception(::ConnectionErrorBase("conn")), -2);
+   EXPECT_EQ(test_map_ezsnmp_exception(::UnknownObjectIDErrorBase("unk")), -3);
+   EXPECT_EQ(test_map_ezsnmp_exception(::NoSuchObjectErrorBase("nso")), 128);
+   EXPECT_EQ(test_map_ezsnmp_exception(::NoSuchInstanceErrorBase("nsi")), 129);
+   EXPECT_EQ(test_map_ezsnmp_exception(::NoSuchNameErrorBase("nsn")), 2);
+   EXPECT_EQ(test_map_ezsnmp_exception(::ParseErrorBase("parse")), -4);
+   EXPECT_EQ(test_map_ezsnmp_exception(::PacketErrorBase("packet")), -5);
+   EXPECT_EQ(test_map_ezsnmp_exception(::GenericErrorBase("generic")), -6);
 #endif
 }

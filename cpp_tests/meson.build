@@ -13,6 +13,7 @@ test_files = {
   'queue_and_sinks': 'test_queue_and_sinks.cpp',
   'ezsnmp_poller': 'test_ezsnmp_poller.cpp',
   'data_logger_and_cli': 'test_data_logger_and_cli.cpp',
+  'full_coverage': 'test_full_coverage.cpp',
 }
 
 foreach name, src : test_files

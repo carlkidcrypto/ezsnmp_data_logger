@@ -434,4 +434,14 @@ std::unique_ptr<ISnmpPoller> create_snmp_poller(DutConfig const& dut) {
    return std::make_unique<EzSnmpPoller>(dut);
 }
 
+#if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
+Sample test_result_to_sample(std::string const& metric_name, ::Result const& r) {
+   return result_to_sample(metric_name, r);
+}
+
+int test_map_ezsnmp_exception(::GenericErrorBase const& err) {
+   return map_ezsnmp_exception_status(err);
+}
+#endif
+
 } // namespace ezsnmp_data_logger

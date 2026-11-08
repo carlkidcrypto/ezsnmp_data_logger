@@ -62,7 +62,9 @@ CsvSink::FileState& CsvSink::get_or_open(std::string const& dut_name) {
    FileState& fs = files_[dut_name];
    std::filesystem::path file_path =
        std::filesystem::path(csv_dir_) / (sanitize_filename(dut_name) + ".csv");
-   bool exists = std::filesystem::exists(file_path) && std::filesystem::file_size(file_path) > 0;
+   bool exists = std::filesystem::exists(file_path) &&
+                 std::filesystem::is_regular_file(file_path) &&
+                 std::filesystem::file_size(file_path) > 0;
    fs.file.open(file_path, std::ios::app | std::ios::out);
    if (!fs.file.is_open()) {
       files_.erase(dut_name);
