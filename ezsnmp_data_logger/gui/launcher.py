@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-if not STATIC_DIR.is_dir() and getattr(sys, "_MEIPASS", None):
+if not STATIC_DIR.is_dir() and getattr(sys, "_MEIPASS", None):  # pragma: no cover
     _cand = Path(sys._MEIPASS) / "ezsnmp_data_logger" / "gui" / "static"
     if _cand.is_dir():
         STATIC_DIR = _cand

@@ -425,3 +425,7 @@ Testing, Documentation & CI/CD Requirements
   them to Codecov (``codecov/codecov-action``) using repository secret
   ``CODECOV_TOKEN``, tagged with dedicated flags (``python`` and ``cpp``)
   and tracked via separate components (``python_code`` and ``cpp_code``).
+
+- **[CICD-14]** Python test suite and CLI/GUI modules **Shall** maintain
+  100% statement and branch coverage across all hand-authored code, omitting
+  machine-generated SWIG bindings in ``pyproject.toml`` coverage settings.
