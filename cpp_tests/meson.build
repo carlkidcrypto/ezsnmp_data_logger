@@ -12,8 +12,9 @@ test_files = {
   'config_and_datatypes': 'test_config_and_datatypes.cpp',
   'queue_and_sinks': 'test_queue_and_sinks.cpp',
   'ezsnmp_poller': 'test_ezsnmp_poller.cpp',
+  'sink_inspector': 'test_sink_inspector.cpp',
   'data_logger_and_cli': 'test_data_logger_and_cli.cpp',
-  'full_coverage': 'test_full_coverage.cpp',
+  'main_binary': 'test_main_binary.cpp',
 }
 
 foreach name, src : test_files
