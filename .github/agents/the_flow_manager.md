@@ -46,7 +46,7 @@ Current agentic workflow source files:
 - `auto_release_notes.md`
 - `coverage_autofix_python.md`
 - `coverage_autofix_cpp.md`
-- `docs_continuous_improvement_every_3_days.md`
+- `docs_continuous_improvement.md`
 - `sync_open_prs_with_main.md`
 - `triage_incoming_bug_reports.md`
 - `python_version_watcher.md`
