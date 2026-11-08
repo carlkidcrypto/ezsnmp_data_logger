@@ -1,0 +1,712 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Development Guide" href="development.html"><link rel="prev" title="Module Index" href="modules.html">
+        <link rel="canonical" href="https://carlkidcrypto.github.io/ezsnmp_data_logger/html/software_requirements.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Software Requirements - EzSnmp Data Logger Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">EzSnmp Data Logger Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">EzSnmp Data Logger Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User &amp; Architecture Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">System Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">JSON Configuration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_guide.html">CLI Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui_guide.html">Cross-Platform GUI User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="swig_languages.html">Self-Contained SWIG Multi-Language Distribution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API &amp; Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++17 API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="swig_interface_files.html">SWIG Interface File(s)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_api.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Module Index</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Engineering &amp; Governance:</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Software Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation_guide.html">Documentation Guide</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/software_requirements.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="software-requirements">
+<h1>Software Requirements<a class="headerlink" href="#software-requirements" title="Link to this heading">¶</a></h1>
+<p>This document defines the formal software requirements for
+<code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code>. All requirements follow a <code class="docutils literal notranslate"><span class="pre">[CATEGORY-NN]</span></code> identifier
+convention and use normative <strong>Shall</strong> statements to ensure traceability across
+C++17 implementation, SWIG bindings, CLI commands, cross-platform GUIs,
+automated tests, and CI/CD pipelines.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#general-architectural-requirements" id="id1">General &amp; Architectural Requirements</a></p></li>
+<li><p><a class="reference internal" href="#calsemver-versioning-requirements" id="id2">CalSemVer Versioning Requirements</a></p></li>
+<li><p><a class="reference internal" href="#json-configuration-validation-requirements" id="id3">JSON Configuration &amp; Validation Requirements</a></p></li>
+<li><p><a class="reference internal" href="#engine-queue-storage-sink-requirements" id="id4">Engine, Queue &amp; Storage Sink Requirements</a></p></li>
+<li><p><a class="reference internal" href="#multi-language-swig-4-x-distribution-requirements" id="id5">Multi-Language SWIG 4.x Distribution Requirements</a></p></li>
+<li><p><a class="reference internal" href="#self-contained-multi-language-packaging-requirements" id="id6">Self-Contained Multi-Language Packaging Requirements</a></p></li>
+<li><p><a class="reference internal" href="#command-line-interface-cli-requirements" id="id7">Command-Line Interface (CLI) Requirements</a></p></li>
+<li><p><a class="reference internal" href="#cross-platform-gui-requirements" id="id8">Cross-Platform GUI Requirements</a></p></li>
+<li><p><a class="reference internal" href="#testing-documentation-ci-cd-requirements" id="id9">Testing, Documentation &amp; CI/CD Requirements</a></p></li>
+</ul>
+</nav>
+<section id="general-architectural-requirements">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">General &amp; Architectural Requirements</a><a class="headerlink" href="#general-architectural-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[GEN-01]</strong> The core telemetry engine, JSON configuration parser and
+validator, storage sinks, and CLI dispatcher <strong>Shall</strong> be implemented in
+portable <strong>ISO C++17</strong>.</p></li>
+<li><p><strong>[GEN-02]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> <strong>Shall</strong> depend directly on the
+<code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> C++17 <code class="docutils literal notranslate"><span class="pre">SessionBase</span></code>, <code class="docutils literal notranslate"><span class="pre">Result</span></code>, and <code class="docutils literal notranslate"><span class="pre">GenericErrorBase</span></code> layers
+to perform all live SNMPv1, SNMPv2c, and SNMPv3 <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">getnext</span></code>,
+<code class="docutils literal notranslate"><span class="pre">walk</span></code>, <code class="docutils literal notranslate"><span class="pre">bulkget</span></code>, <code class="docutils literal notranslate"><span class="pre">bulkwalk</span></code>, and <code class="docutils literal notranslate"><span class="pre">set</span></code> operations against end
+devices.</p></li>
+<li><p><strong>[GEN-03]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> <strong>Shall</strong> normalize and store returned
+<code class="docutils literal notranslate"><span class="pre">ezsnmp::Result</span></code> payloads into typed telemetry records in the
+<code class="docutils literal notranslate"><span class="pre">data_logger</span></code> storage layer.</p></li>
+<li><p><strong>[GEN-04]</strong> 100% of runtime, Device Under Test (DUT), <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> session,
+storage sink, CLI, and GUI settings <strong>Shall</strong> be represented and persisted
+in <strong>RFC-8259 JSON</strong>.</p></li>
+<li><p><strong>[GEN-05]</strong> Package <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> files <strong>Shall</strong> contain only symbol
+imports, <code class="docutils literal notranslate"><span class="pre">__version__</span></code>, and <code class="docutils literal notranslate"><span class="pre">__all__</span></code> exports, with zero executable
+side effects at import time.</p></li>
+<li><p><strong>[GEN-06]</strong> All C++17 core libraries, CLI binaries, Python bindings, and
+Graphical User Interfaces <strong>Shall</strong> operate across <strong>Linux, macOS, and
+Windows</strong>.</p></li>
+</ul>
+</section>
+<section id="calsemver-versioning-requirements">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">CalSemVer Versioning Requirements</a><a class="headerlink" href="#calsemver-versioning-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[VER-01]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> <strong>Shall</strong> use <strong>CalSemVer</strong> (Calendar
+Semantic Versioning) for all releases of this project: <code class="docutils literal notranslate"><span class="pre">YYYY.M.D</span></code> (4-digit
+year, non-zero-padded month <code class="docutils literal notranslate"><span class="pre">1-12</span></code>, non-zero-padded day <code class="docutils literal notranslate"><span class="pre">1-31</span></code>, with an
+optional <code class="docutils literal notranslate"><span class="pre">.PATCH</span></code> hotfix segment <code class="docutils literal notranslate"><span class="pre">YYYY.M.D.P</span></code>) for stable releases,
+PEP-440 pre-release suffixes (<code class="docutils literal notranslate"><span class="pre">aN</span></code>, <code class="docutils literal notranslate"><span class="pre">bN</span></code>, <code class="docutils literal notranslate"><span class="pre">rcN</span></code>, e.g.,
+<code class="docutils literal notranslate"><span class="pre">2026.11.7a0</span></code>) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+pre-release suffixes (<code class="docutils literal notranslate"><span class="pre">-alpha.N</span></code>, <code class="docutils literal notranslate"><span class="pre">-beta.N</span></code>, <code class="docutils literal notranslate"><span class="pre">-rc.N</span></code>, e.g.,
+<code class="docutils literal notranslate"><span class="pre">2026.11.7-alpha.0</span></code>) where target ecosystems (npm <code class="docutils literal notranslate"><span class="pre">package.json</span></code>, .NET
+<code class="docutils literal notranslate"><span class="pre">.csproj</span></code>) mandate hyphenated pre-releases, and <code class="docutils literal notranslate"><span class="pre">v</span></code>-prefixed tags (e.g.,
+<code class="docutils literal notranslate"><span class="pre">v2026.11.7</span></code>) for Git releases, Sphinx documentation
+archives, and Go modules.</p></li>
+<li><p><strong>[VER-02]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger::is_valid_calsemver</span></code> <strong>Shall</strong> validate
+CalSemVer identifiers programmatically across C++17 and all 4 SWIG target
+languages, rejecting zero-padded calendar segments (such as <code class="docutils literal notranslate"><span class="pre">2026.01.05</span></code>)
+or legacy non-calendar versions.</p></li>
+<li><p><strong>[VER-03]</strong> All version declarations across C++17 (<code class="docutils literal notranslate"><span class="pre">src/version.cpp</span></code>,
+<code class="docutils literal notranslate"><span class="pre">meson.build</span></code>, <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>), Python (<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger/__init__.py</span></code>), documentation (<code class="docutils literal notranslate"><span class="pre">.doxygen</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sphinx_docs_build/source/conf.py</span></code>), and multi-language package manifests
+(<code class="docutils literal notranslate"><span class="pre">bindings/javascript/package.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bindings/csharp/EzSnmpDataLogger.csproj</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bindings/csharp/CMakeLists.txt</span></code>) <strong>Shall</strong> remain synchronized on the
+active project CalSemVer identifier and be verified by automated tests.</p></li>
+<li><p><strong>[VER-04]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> <strong>Shall</strong> expose its active CalSemVer
+version via <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger::version()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger.__version__</span></code>, and <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span> <span class="pre">version</span>
+<span class="pre">[--json]</span></code>.</p></li>
+<li><p><strong>[VER-05]</strong> <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> <strong>Shall</strong> standardize on <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code>’s
+CalSemVer release line (<code class="docutils literal notranslate"><span class="pre">ezsnmp&gt;=2026.11.4a0</span></code>, git tag <code class="docutils literal notranslate"><span class="pre">v2026.11.4a0</span></code>)
+until a stable CalSemVer <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> release is published.</p></li>
+</ul>
+</section>
+<section id="json-configuration-validation-requirements">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">JSON Configuration &amp; Validation Requirements</a><a class="headerlink" href="#json-configuration-validation-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[CFG-01]</strong> The C++17 library <strong>Shall</strong> include a self-contained,
+order-preserving RFC-8259 JSON parser and serializer with line-and-column
+syntax diagnostics and zero external header-only JSON library dependencies.</p></li>
+<li><p><strong>[CFG-02]</strong> <code class="docutils literal notranslate"><span class="pre">validate_config</span></code> and <code class="docutils literal notranslate"><span class="pre">validate_config_file</span></code> <strong>Shall</strong>
+validate <code class="docutils literal notranslate"><span class="pre">logger</span></code>, <code class="docutils literal notranslate"><span class="pre">duts</span></code>, <code class="docutils literal notranslate"><span class="pre">sinks</span></code>, and <code class="docutils literal notranslate"><span class="pre">gui</span></code> sections and return a
+structured <code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code> containing <code class="docutils literal notranslate"><span class="pre">valid</span></code>, <code class="docutils literal notranslate"><span class="pre">errors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">warnings</span></code>, <code class="docutils literal notranslate"><span class="pre">enabled_duts</span></code>, <code class="docutils literal notranslate"><span class="pre">total_metrics</span></code>, and <code class="docutils literal notranslate"><span class="pre">enabled_sinks</span></code>.</p></li>
+<li><p><strong>[CFG-03]</strong> Configuration validation <strong>Shall</strong> reject protocol-invalid
+combinations, including <code class="docutils literal notranslate"><span class="pre">bulkget</span></code> or <code class="docutils literal notranslate"><span class="pre">bulkwalk</span></code> with SNMPv1, and SNMPv3
+<code class="docutils literal notranslate"><span class="pre">authNoPriv</span></code> / <code class="docutils literal notranslate"><span class="pre">authPriv</span></code> configurations missing USM credentials or
+passphrases shorter than 8 characters.</p></li>
+<li><p><strong>[CFG-04]</strong> <code class="docutils literal notranslate"><span class="pre">generate_template_config_json</span></code> <strong>Shall</strong> generate valid
+starter JSON documents for <code class="docutils literal notranslate"><span class="pre">minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">demo</span></code>, <code class="docutils literal notranslate"><span class="pre">enterprise</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">snmpv3</span></code> profiles.</p></li>
+<li><p><strong>[CFG-05]</strong> <code class="docutils literal notranslate"><span class="pre">config_json_schema</span></code> <strong>Shall</strong> output a Draft 2020-12 JSON
+Schema covering all configuration keys.</p></li>
+</ul>
+</section>
+<section id="engine-queue-storage-sink-requirements">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Engine, Queue &amp; Storage Sink Requirements</a><a class="headerlink" href="#engine-queue-storage-sink-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[ENG-01]</strong> <code class="docutils literal notranslate"><span class="pre">EzSnmpPoller</span></code> <strong>Shall</strong> map all <code class="docutils literal notranslate"><span class="pre">SnmpConfig</span></code> fields to
+<code class="docutils literal notranslate"><span class="pre">ezsnmp::SessionBase</span></code>, coalesce scalar <code class="docutils literal notranslate"><span class="pre">get</span></code> metrics per DUT into
+multi-OID <code class="docutils literal notranslate"><span class="pre">SessionBase::get</span></code> calls, and scope <code class="docutils literal notranslate"><span class="pre">-Cr&lt;N&gt;</span></code> max-repeaters
+strictly to <code class="docutils literal notranslate"><span class="pre">bulkget</span></code> and <code class="docutils literal notranslate"><span class="pre">bulkwalk</span></code> PDUs.</p></li>
+<li><p><strong>[ENG-02]</strong> <code class="docutils literal notranslate"><span class="pre">EzSnmpPoller</span></code> <strong>Shall</strong> capture <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> exceptions as
+structured error <code class="docutils literal notranslate"><span class="pre">Sample</span></code> records without crashing worker threads.</p></li>
+<li><p><strong>[ENG-03]</strong> <code class="docutils literal notranslate"><span class="pre">StubSnmpPoller</span></code> <strong>Shall</strong> provide deterministic synthetic
+SNMP <code class="docutils literal notranslate"><span class="pre">poll</span></code>, <code class="docutils literal notranslate"><span class="pre">request</span></code>, and <code class="docutils literal notranslate"><span class="pre">set_oid</span></code> responses when <code class="docutils literal notranslate"><span class="pre">snmp.mode</span></code> is
+set to <code class="docutils literal notranslate"><span class="pre">&quot;stub&quot;</span></code> for offline testing, demos, and CI validation.</p></li>
+<li><p><strong>[ENG-04]</strong> <code class="docutils literal notranslate"><span class="pre">DataLogger</span></code> <strong>Shall</strong> decouple multi-DUT polling worker
+threads from sink persistence using a thread-safe <code class="docutils literal notranslate"><span class="pre">BoundedQueue&lt;Batch&gt;</span></code>
+that enforces bounded memory under back-pressure and drains all queued
+batches prior to shutdown.</p></li>
+<li><p><strong>[ENG-05]</strong> <code class="docutils literal notranslate"><span class="pre">Sample</span></code> and persistent storage sinks <strong>Shall</strong> preserve full
+<code class="docutils literal notranslate"><span class="pre">ezsnmp::Result</span></code> metadata (<code class="docutils literal notranslate"><span class="pre">oid</span></code>, <code class="docutils literal notranslate"><span class="pre">oid_index</span></code>, <code class="docutils literal notranslate"><span class="pre">snmp_type</span></code>,
+<code class="docutils literal notranslate"><span class="pre">raw_value</span></code>) alongside normalized typed values (<code class="docutils literal notranslate"><span class="pre">type_tag</span></code>, <code class="docutils literal notranslate"><span class="pre">i64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">str_val</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>).</p></li>
+<li><p><strong>[ENG-06]</strong> <code class="docutils literal notranslate"><span class="pre">Sample::from_json</span></code> <strong>Shall</strong> accept <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code>
+<code class="docutils literal notranslate"><span class="pre">Result.to_dict()</span></code> JSON objects directly and deserialize them into valid
+<code class="docutils literal notranslate"><span class="pre">Sample</span></code> structures.</p></li>
+<li><p><strong>[ENG-07]</strong> <code class="docutils literal notranslate"><span class="pre">SqliteSink</span></code> <strong>Shall</strong> operate in SQLite3 WAL mode with
+normalized <code class="docutils literal notranslate"><span class="pre">series</span></code> and <code class="docutils literal notranslate"><span class="pre">samples</span></code> tables, prepared statements, in-memory
+<code class="docutils literal notranslate"><span class="pre">series_id</span></code> caching, and configurable batch/time transaction commits.</p></li>
+<li><p><strong>[ENG-08]</strong> <code class="docutils literal notranslate"><span class="pre">CsvSink</span></code> <strong>Shall</strong> write per-DUT RFC-4180 CSV files with
+configurable flush thresholds.</p></li>
+<li><p><strong>[ENG-09]</strong> <code class="docutils literal notranslate"><span class="pre">JsonlSink</span></code> <strong>Shall</strong> write per-DUT newline-delimited JSON
+files with configurable flush thresholds.</p></li>
+<li><p><strong>[ENG-10]</strong> <code class="docutils literal notranslate"><span class="pre">PsqlSink</span></code> <strong>Shall</strong> support PostgreSQL and optional
+TimescaleDB hypertables via <code class="docutils literal notranslate"><span class="pre">libpq</span></code> when compiled with
+<code class="docutils literal notranslate"><span class="pre">EZSNMP_DL_HAVE_LIBPQ=1</span></code>, and <strong>Shall</strong> raise a descriptive <code class="docutils literal notranslate"><span class="pre">SinkError</span></code>
+when <code class="docutils literal notranslate"><span class="pre">libpq</span></code> was not compiled into the binary.</p></li>
+<li><p><strong>[ENG-11]</strong> <code class="docutils literal notranslate"><span class="pre">PrometheusSink</span></code> <strong>Shall</strong> expose latest numeric SNMP
+readings and scrape counters over an embedded cross-platform HTTP <code class="docutils literal notranslate"><span class="pre">/metrics</span></code>
+endpoint supporting ephemeral port <code class="docutils literal notranslate"><span class="pre">0</span></code> binding on POSIX and Winsock2.</p></li>
+<li><p><strong>[ENG-12]</strong> <code class="docutils literal notranslate"><span class="pre">inspect_configured_sinks</span></code> <strong>Shall</strong> query recent stored
+telemetry rows across SQLite3, JSONL, and CSV sinks with optional DUT and
+metric filters.</p></li>
+</ul>
+</section>
+<section id="multi-language-swig-4-x-distribution-requirements">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Multi-Language SWIG 4.x Distribution Requirements</a><a class="headerlink" href="#multi-language-swig-4-x-distribution-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[SWIG-01]</strong> Modular SWIG 4.x interface files in <code class="docutils literal notranslate"><span class="pre">interface/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger.i</span></code>, <code class="docutils literal notranslate"><span class="pre">exceptions.i</span></code>, <code class="docutils literal notranslate"><span class="pre">datatypes.i</span></code>, <code class="docutils literal notranslate"><span class="pre">config.i</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data_logger.i</span></code>) <strong>Shall</strong> expose <code class="docutils literal notranslate"><span class="pre">DataLogger</span></code> (via copyable PIMPL),
+<code class="docutils literal notranslate"><span class="pre">CliRunner</span></code>, configuration structs, telemetry datatypes, and C++ exceptions
+cleanly to target languages.</p></li>
+<li><p><strong>[SWIG-02]</strong> <code class="docutils literal notranslate"><span class="pre">interface/ezsnmp_data_logger.i</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tools/generate_swig_bindings.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">bindings/</span></code> <strong>Shall</strong> generate and
+package clean SWIG 4.x bindings exclusively for the 4 supported target
+languages: <code class="docutils literal notranslate"><span class="pre">python</span></code>, <code class="docutils literal notranslate"><span class="pre">javascript</span></code> (Node.js N-API), <code class="docutils literal notranslate"><span class="pre">csharp</span></code> (.NET
+P/Invoke), and <code class="docutils literal notranslate"><span class="pre">go</span></code> (cgo).</p></li>
+<li><p><strong>[SWIG-03]</strong> In Python bindings, blocking C++ operations (<code class="docutils literal notranslate"><span class="pre">run</span></code>,
+<code class="docutils literal notranslate"><span class="pre">run_once</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">probe</span></code>, <code class="docutils literal notranslate"><span class="pre">request_json</span></code>, <code class="docutils literal notranslate"><span class="pre">set_json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CliRunner::run</span></code>, <code class="docutils literal notranslate"><span class="pre">CliRunner::execute</span></code>) <strong>Shall</strong> release Python’s GIL
+via <code class="docutils literal notranslate"><span class="pre">%thread</span></code>.</p></li>
+</ul>
+</section>
+<section id="self-contained-multi-language-packaging-requirements">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Self-Contained Multi-Language Packaging Requirements</a><a class="headerlink" href="#self-contained-multi-language-packaging-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[PKG-01]</strong> Every language package built from <code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger</span></code> across
+<code class="docutils literal notranslate"><span class="pre">python</span></code>, <code class="docutils literal notranslate"><span class="pre">javascript</span></code> (Node.js N-API), <code class="docutils literal notranslate"><span class="pre">csharp</span></code>, and <code class="docutils literal notranslate"><span class="pre">go</span></code> <strong>Shall</strong>
+be <strong>self-contained</strong> so end users never need to install external native
+libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG) at runtime, while publishing
+under the project’s CalSemVer release identifiers (<code class="docutils literal notranslate"><span class="pre">[VER-01]</span></code>-<code class="docutils literal notranslate"><span class="pre">[VER-05]</span></code>).</p></li>
+<li><p><strong>[PKG-02]</strong> <code class="docutils literal notranslate"><span class="pre">tools/prepare_sqlite3_amalgamation.py</span></code> <strong>Shall</strong> provision a
+SHA-256-verified public-domain SQLite3 C amalgamation
+(<code class="docutils literal notranslate"><span class="pre">third_party/sqlite3/sqlite3.c</span></code> and <code class="docutils literal notranslate"><span class="pre">sqlite3.h</span></code>) that <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">meson.build</span></code>, <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">bindings/{javascript,csharp,go}</span></code> compile directly into the native binary,
+eliminating runtime <code class="docutils literal notranslate"><span class="pre">libsqlite3</span></code> shared-library dependencies across Linux,
+macOS, and Windows.</p></li>
+<li><p><strong>[PKG-03]</strong> Standalone dependency scripts
+(<code class="docutils literal notranslate"><span class="pre">tools/prepare_linux_netsnmp.sh</span></code>, <code class="docutils literal notranslate"><span class="pre">tools/prepare_macos_netsnmp.sh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tools/prepare_windows_netsnmp.ps1</span></code>, and <code class="docutils literal notranslate"><span class="pre">tools/prepare_ezsnmp_source.py</span></code>)
+<strong>Shall</strong> provision <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> <code class="docutils literal notranslate"><span class="pre">v2026.11.4a0</span></code> and build minimal
+SHA-256-verified Net-SNMP <code class="docutils literal notranslate"><span class="pre">5.10.pre2</span></code> libraries with OpenSSL and
+Blumenthal-AES support.</p></li>
+<li><p><strong>[PKG-04]</strong> <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> <strong>Shall</strong> declare <code class="docutils literal notranslate"><span class="pre">swig&gt;=4.3.0</span></code> in
+<code class="docutils literal notranslate"><span class="pre">[build-system]</span> <span class="pre">requires</span></code> and <code class="docutils literal notranslate"><span class="pre">ezsnmp&gt;=2026.11.4a0</span></code> in <code class="docutils literal notranslate"><span class="pre">dependencies</span></code>.</p></li>
+<li><p><strong>[PKG-05]</strong> <code class="docutils literal notranslate"><span class="pre">cibuildwheel</span></code> <strong>Shall</strong> configure <code class="docutils literal notranslate"><span class="pre">auditwheel</span> <span class="pre">repair</span></code>
+(Linux <code class="docutils literal notranslate"><span class="pre">manylinux</span></code>/<code class="docutils literal notranslate"><span class="pre">musllinux</span></code>), <code class="docutils literal notranslate"><span class="pre">delocate-wheel</span></code> (macOS), and
+<code class="docutils literal notranslate"><span class="pre">delvewheel</span> <span class="pre">repair</span></code> (Windows <code class="docutils literal notranslate"><span class="pre">AMD64</span></code>/<code class="docutils literal notranslate"><span class="pre">x86</span></code>/<code class="docutils literal notranslate"><span class="pre">ARM64</span></code>) to produce
+standalone Python wheels.</p></li>
+<li><p><strong>[PKG-06]</strong> <code class="docutils literal notranslate"><span class="pre">tools/bundle_native_package.py</span></code> <strong>Shall</strong> inspect compiled
+native extensions/libraries across <code class="docutils literal notranslate"><span class="pre">python</span></code>, <code class="docutils literal notranslate"><span class="pre">javascript</span></code> (<code class="docutils literal notranslate"><span class="pre">.node</span></code>),
+<code class="docutils literal notranslate"><span class="pre">csharp</span></code> (<code class="docutils literal notranslate"><span class="pre">runtimes/&lt;rid&gt;/native/</span></code>), and <code class="docutils literal notranslate"><span class="pre">go</span></code> (<code class="docutils literal notranslate"><span class="pre">bindings/go/lib/</span></code>),
+bundle non-OS shared libraries into a package-local runtime directory, rewrite
+dynamic loader search paths (<code class="docutils literal notranslate"><span class="pre">$ORIGIN</span></code> via <code class="docutils literal notranslate"><span class="pre">patchelf</span></code> on Linux,
+<code class="docutils literal notranslate"><span class="pre">&#64;loader_path</span></code> via <code class="docutils literal notranslate"><span class="pre">install_name_tool</span></code> on macOS, and side-by-side DLLs on
+Windows), and verify zero external non-OS runtime library dependencies
+remain.</p></li>
+<li><p><strong>[PKG-07]</strong> <code class="docutils literal notranslate"><span class="pre">tools/package_desktop_app.py</span></code> <strong>Shall</strong> package standalone
+Windows single-file executables (<code class="docutils literal notranslate"><span class="pre">EzSnmpDataLogger-Windows-x64.exe</span></code>)
+and Inno Setup installation packages
+(<code class="docutils literal notranslate"><span class="pre">EzSnmpDataLogger-Windows-x64-Setup.exe</span></code>) bundling embedded Net-SNMP
+libraries and desktop shortcuts.</p></li>
+<li><p><strong>[PKG-08]</strong> <code class="docutils literal notranslate"><span class="pre">tools/package_desktop_app.py</span></code> <strong>Shall</strong> package standalone
+macOS application bundles (<code class="docutils literal notranslate"><span class="pre">EzSnmpDataLogger.app</span></code>) and compressed
+disk images (<code class="docutils literal notranslate"><span class="pre">EzSnmpDataLogger-macOS-&lt;arch&gt;.dmg</span></code>) with Retina ICNS
+icons and a drag-and-drop link to <code class="docutils literal notranslate"><span class="pre">/Applications</span></code>.</p></li>
+<li><p><strong>[PKG-09]</strong> <code class="docutils literal notranslate"><span class="pre">tools/package_desktop_app.py</span></code> <strong>Shall</strong> package standalone
+Linux executables, Debian packages (<code class="docutils literal notranslate"><span class="pre">.deb</span></code>), Red Hat packages (<code class="docutils literal notranslate"><span class="pre">.rpm</span></code>),
+and portable compressed archives (<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>) bundling desktop entries
+and application icons.</p></li>
+</ul>
+</section>
+<section id="command-line-interface-cli-requirements">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Command-Line Interface (CLI) Requirements</a><a class="headerlink" href="#command-line-interface-cli-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[CLI-01]</strong> The <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span></code> CLI <strong>Shall</strong> provide <code class="docutils literal notranslate"><span class="pre">run</span></code>,
+<code class="docutils literal notranslate"><span class="pre">validate</span></code>, <code class="docutils literal notranslate"><span class="pre">probe</span></code>, <code class="docutils literal notranslate"><span class="pre">request</span></code>, <code class="docutils literal notranslate"><span class="pre">set</span></code>, <code class="docutils literal notranslate"><span class="pre">inspect</span></code>, <code class="docutils literal notranslate"><span class="pre">init-config</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gui</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, <code class="docutils literal notranslate"><span class="pre">version</span></code>, and <code class="docutils literal notranslate"><span class="pre">help</span></code> subcommands, while remaining
+backward-compatible with legacy <code class="docutils literal notranslate"><span class="pre">ezsnmp_loggerd</span> <span class="pre">--config</span> <span class="pre">&lt;file&gt;</span></code>
+invocations.</p></li>
+<li><p><strong>[CLI-02]</strong> Every operational CLI subcommand <strong>Shall</strong> support <code class="docutils literal notranslate"><span class="pre">--json</span></code> to
+emit machine-readable JSON documents (and newline-delimited <code class="docutils literal notranslate"><span class="pre">started</span></code>,
+<code class="docutils literal notranslate"><span class="pre">batch</span></code>, <code class="docutils literal notranslate"><span class="pre">stats</span></code>, and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> JSON events during <code class="docutils literal notranslate"><span class="pre">run</span> <span class="pre">--json</span></code>).</p></li>
+<li><p><strong>[CLI-03]</strong> <code class="docutils literal notranslate"><span class="pre">CliRunner::execute</span></code> <strong>Shall</strong> allow any SWIG target language
+to invoke CLI commands in-process and capture <code class="docutils literal notranslate"><span class="pre">exit_code</span></code>, <code class="docutils literal notranslate"><span class="pre">stdout_text</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">stderr_text</span></code> in a <code class="docutils literal notranslate"><span class="pre">CliResult</span></code> structure.</p></li>
+</ul>
+</section>
+<section id="cross-platform-gui-requirements">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Cross-Platform GUI Requirements</a><a class="headerlink" href="#cross-platform-gui-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[GUI-01]</strong> All Graphical User Interfaces <strong>Shall</strong> act strictly as
+frontends driving the <code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger</span></code> CLI behind the scenes via
+subprocess execution and JSON payloads (<code class="docutils literal notranslate"><span class="pre">CliSubprocessBridge</span></code>), without
+duplicating SNMP or storage engine logic.</p></li>
+<li><p><strong>[GUI-02]</strong> Every GUI library and runtime component <strong>Shall</strong> work across
+<strong>Linux, macOS, and Windows</strong> using Python standard-library <code class="docutils literal notranslate"><span class="pre">tkinter.ttk</span></code>
+(Native Desktop Studio) and <code class="docutils literal notranslate"><span class="pre">http.server.ThreadingHTTPServer</span></code> + HTML5/SVG
+(Browser Web Studio), selectable via <code class="docutils literal notranslate"><span class="pre">gui.frontend</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;tk&quot;</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">&quot;web&quot;</span></code>) in the JSON configuration.</p></li>
+<li><p><strong>[GUI-03]</strong> Both GUI frontends <strong>Shall</strong> display a live Behind-the-Scenes CLI
+Command Audit Trail recording the exact CLI command, exit code, and execution
+time (ms) of every user action.</p></li>
+<li><p><strong>[GUI-04]</strong> Both GUI frontends <strong>Shall</strong> support starting and stopping live
+CLI polling with real-time numeric telemetry charts and interactive field
+selection (including automatic Y-axis rescaling, “Select All”, “Clear All”,
+and clickable canvas legend hitboxes).</p></li>
+<li><p><strong>[GUI-05]</strong> Both GUI frontends <strong>Shall</strong> provide an interactive Diagnostics
+tab executing ad-hoc <code class="docutils literal notranslate"><span class="pre">ezsnmp</span></code> <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">getnext</span></code>, <code class="docutils literal notranslate"><span class="pre">walk</span></code>, <code class="docutils literal notranslate"><span class="pre">bulkget</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bulkwalk</span></code>, and <code class="docutils literal notranslate"><span class="pre">set</span></code> operations with tabular results display.</p></li>
+<li><p><strong>[GUI-06]</strong> Both GUI frontends <strong>Shall</strong> provide an interactive Data
+Inspector tab querying and displaying recent stored telemetry rows across
+configured SQLite3, CSV, and JSONL sinks.</p></li>
+<li><p><strong>[GUI-07]</strong> Both GUI frontends <strong>Shall</strong> provide an interactive Configuration
+Studio tab for loading, editing, validating, and saving RFC-8259 JSON
+configuration files.</p></li>
+<li><p><strong>[GUI-08]</strong> All user-facing UI strings (window and header titles, button
+labels, tabs, cards, sections, table headers, form labels, status bars, and
+dialogs) across both Desktop (Tkinter) and Web (Browser) frontends <strong>Shall</strong>
+be externalized into a <code class="docutils literal notranslate"><span class="pre">locale.json</span></code> definition file formatted as
+<code class="docutils literal notranslate"><span class="pre">{&quot;LOCALE_KEY_NAME&quot;:</span> <span class="pre">{&quot;en&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">...}}</span></code> with per-language definitions
+as needed (defaulting to English <code class="docutils literal notranslate"><span class="pre">&quot;en&quot;</span></code> in
+<code class="docutils literal notranslate"><span class="pre">ezsnmp_data_logger/gui/locale.json</span></code>), managed by <code class="docutils literal notranslate"><span class="pre">LocaleManager</span></code>,
+exposed via the <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/locale</span></code> and <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/locale</span></code> endpoints,
+configurable via <code class="docutils literal notranslate"><span class="pre">gui.locale</span></code> and <code class="docutils literal notranslate"><span class="pre">gui.locale_file</span></code> in the unified JSON
+configuration or CLI <code class="docutils literal notranslate"><span class="pre">--locale</span></code> / <code class="docutils literal notranslate"><span class="pre">--locale-file</span></code> flags, and provide
+automatic fallback to English when keys or translations are omitted.</p></li>
+<li><p><strong>[GUI-09]</strong> Both GUI frontends <strong>Shall</strong> include custom branding icon assets
+replacing generic Python or browser tab icons, providing modern vector SVG
+favicons (<code class="docutils literal notranslate"><span class="pre">favicon.svg</span></code>), standard ICO (<code class="docutils literal notranslate"><span class="pre">favicon.ico</span></code>), multi-resolution
+PNGs (<code class="docutils literal notranslate"><span class="pre">favicon-32x32.png</span></code>, <code class="docutils literal notranslate"><span class="pre">favicon-16x16.png</span></code>, <code class="docutils literal notranslate"><span class="pre">apple-touch-icon.png</span></code>),
+and top bar brand badges for Browser Web Studio, and custom window titlebar
+icons (<code class="docutils literal notranslate"><span class="pre">app_icon.png</span></code> / <code class="docutils literal notranslate"><span class="pre">app_icon.ico</span></code>) with dynamic macOS Dock
+application icon integration via Cocoa/AppKit <code class="docutils literal notranslate"><span class="pre">ctypes</span></code> for Desktop Tkinter
+Studio.</p></li>
+<li><p><strong>[GUI-10]</strong> Operating system desktop application launchers <strong>Shall</strong> be
+installable on macOS (<code class="docutils literal notranslate"><span class="pre">.app</span></code> bundle with Retina <code class="docutils literal notranslate"><span class="pre">app_icon.icns</span></code>), Linux
+(<code class="docutils literal notranslate"><span class="pre">.desktop</span></code> entry with <code class="docutils literal notranslate"><span class="pre">app_icon.png</span></code>), and Windows via
+<code class="docutils literal notranslate"><span class="pre">ezsnmp-data-logger-gui</span> <span class="pre">--install-launcher</span></code> and
+<code class="docutils literal notranslate"><span class="pre">tools/install_desktop_launcher.py</span></code>.</p></li>
+</ul>
+</section>
+<section id="testing-documentation-ci-cd-requirements">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Testing, Documentation &amp; CI/CD Requirements</a><a class="headerlink" href="#testing-documentation-ci-cd-requirements" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>[C++T-01]</strong> C++17 GoogleTest suites in <code class="docutils literal notranslate"><span class="pre">cpp_tests/</span></code> <strong>Shall</strong> test JSON
+parsing, configuration validation, bounded queues, all local/HTTP sinks,
+<code class="docutils literal notranslate"><span class="pre">DataLogger</span></code>, <code class="docutils literal notranslate"><span class="pre">CliRunner</span></code>, <code class="docutils literal notranslate"><span class="pre">StubSnmpPoller</span></code>, and live <code class="docutils literal notranslate"><span class="pre">EzSnmpPoller</span></code>
+UDP <code class="docutils literal notranslate"><span class="pre">get</span></code>/<code class="docutils literal notranslate"><span class="pre">set</span></code> round-trips, using <code class="docutils literal notranslate"><span class="pre">EZSNMP_SKIP_TEST_AND_RETURN</span></code> for
+older GoogleTest compatibility.</p></li>
+<li><p><strong>[PYT-01]</strong> Python <code class="docutils literal notranslate"><span class="pre">pytest</span></code> suites in <code class="docutils literal notranslate"><span class="pre">python_tests/</span></code> <strong>Shall</strong> verify
+Python SWIG bindings, <code class="docutils literal notranslate"><span class="pre">[GEN-05]</span></code> <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> purity, CalSemVer version
+alignment, self-contained native library bundling, <code class="docutils literal notranslate"><span class="pre">CliSubprocessBridge</span></code>
+streaming, Browser Studio HTTP endpoints, <code class="docutils literal notranslate"><span class="pre">tkinter.ttk</span></code> Desktop Studio
+instantiation, repository JSON configs, and 4-language SWIG code generation
+(<code class="docutils literal notranslate"><span class="pre">python</span></code>, <code class="docutils literal notranslate"><span class="pre">javascript</span></code>, <code class="docutils literal notranslate"><span class="pre">csharp</span></code>, <code class="docutils literal notranslate"><span class="pre">go</span></code>).</p></li>
+<li><p><strong>[DOC-01]</strong> Documentation in <code class="docutils literal notranslate"><span class="pre">sphinx_docs_build/</span></code> <strong>Shall</strong> use Sphinx +
+<code class="docutils literal notranslate"><span class="pre">furo</span></code> + <code class="docutils literal notranslate"><span class="pre">sphinx.ext.autodoc</span></code> + <code class="docutils literal notranslate"><span class="pre">sphinx.ext.githubpages</span></code> + Doxygen XML
++ <code class="docutils literal notranslate"><span class="pre">breathe</span></code> alongside <code class="docutils literal notranslate"><span class="pre">sphinx_docs_build/landing/</span></code> with
+<code class="docutils literal notranslate"><span class="pre">VERSION_LIST_START</span></code> / <code class="docutils literal notranslate"><span class="pre">VERSION_LIST_END</span></code> markers matching sibling
+<code class="docutils literal notranslate"><span class="pre">carlkidcrypto</span></code> repositories, maintaining a <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code> sentinel file in
+<code class="docutils literal notranslate"><span class="pre">docs/</span></code> to disable Jekyll processing on GitHub Pages, building cleanly
+with <code class="docutils literal notranslate"><span class="pre">SPHINXOPTS=&quot;-W&quot;</span></code>.</p></li>
+<li><p><strong>[DOC-02]</strong> Documentation <strong>Shall</strong> provide a dedicated multi-OS
+installation guide (<code class="docutils literal notranslate"><span class="pre">installation.rst</span></code>) for macOS, Windows, Linux, and
+Alpine Linux, an exhaustive CLI command reference (<code class="docutils literal notranslate"><span class="pre">cli_guide.rst</span></code>) covering
+all 9 subcommands, flags, ASN.1 type codes, and JSON contracts, and a
+thorough GUI user guide (<code class="docutils literal notranslate"><span class="pre">gui_guide.rst</span></code>) detailing Tabs 1-6, the CLI
+audit trail, real-time charting with series selection, and OS launchers.</p></li>
+<li><p><strong>[FMT-01]</strong> All hand-written C++17 files <strong>Shall</strong> conform strictly to
+<code class="docutils literal notranslate"><span class="pre">.clang-format</span></code>.</p></li>
+<li><p><strong>[FMT-02]</strong> All hand-written Python files <strong>Shall</strong> conform strictly to
+<code class="docutils literal notranslate"><span class="pre">black</span> <span class="pre">--line-length</span> <span class="pre">100</span></code>.</p></li>
+<li><p><strong>[CICD-01]</strong> GitHub Actions workflows in <code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code> <strong>Shall</strong>
+keep matrix job counts strictly under 256, scope <code class="docutils literal notranslate"><span class="pre">concurrency.group</span></code> by
+<code class="docutils literal notranslate"><span class="pre">${{</span> <span class="pre">github.workflow</span> <span class="pre">}}</span></code>, and pass <code class="docutils literal notranslate"><span class="pre">yamllint</span></code> and <code class="docutils literal notranslate"><span class="pre">actionlint</span></code>.</p></li>
+<li><p><strong>[CICD-02]</strong> Automated release publishing workflows <strong>Shall</strong> support
+distributing multi-platform binary wheels and source distributions to PyPI
+and TestPyPI (<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_pypi.yml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_test_pypi.yml</span></code>) using <code class="docutils literal notranslate"><span class="pre">cibuildwheel</span></code> and
+<code class="docutils literal notranslate"><span class="pre">carlkidcrypto/os-specific-runner</span></code> across Linux, macOS, and Windows,
+pre-provisioning embedded C++17 dependencies (<code class="docutils literal notranslate"><span class="pre">third_party/ezsnmp</span></code>) with
+retry resilience, and skipping existing distribution artifacts idempotently.</p></li>
+<li><p><strong>[CICD-03]</strong> Automated release publishing workflows <strong>Shall</strong> support
+publishing self-contained Node.js packages to npm
+(<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_npm.yml</span></code>) with OIDC Trusted Publishing, Sigstore
+provenance attestations, package lock caching, multi-core parallel native
+addon compilation, idempotent skip detection, and prerelease tag resolution.</p></li>
+<li><p><strong>[CICD-04]</strong> Automated release publishing workflows <strong>Shall</strong> support
+building and packaging multi-runtime C# (.NET 8) packages to NuGet and
+GitHub Packages (<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_nuget.yml</span></code>) using strict C++17
+conformance (<code class="docutils literal notranslate"><span class="pre">CMAKE_CXX_EXTENSIONS=OFF</span></code>), OpenSSL include path
+discovery across Linux and macOS, multi-core MSVC (<code class="docutils literal notranslate"><span class="pre">/MP</span></code>) parallel builds,
+and OIDC Trusted Publishing authentication (<code class="docutils literal notranslate"><span class="pre">NuGet/login&#64;v1</span></code>) with duplicate
+skipping.</p></li>
+<li><p><strong>[CICD-05]</strong> Automated release publishing workflows <strong>Shall</strong> support
+generating validated WinGet community manifests in canonical directory
+hierarchies and automated pull request submission via Microsoft
+<code class="docutils literal notranslate"><span class="pre">wingetcreate</span></code> (<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_winget.yml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tools/generate_winget_manifest.py</span></code>).</p></li>
+<li><p><strong>[CICD-06]</strong> Automated dependency maintenance <strong>Shall</strong> be configured via
+<code class="docutils literal notranslate"><span class="pre">.github/dependabot.yml</span></code> with weekly updates across GitHub Actions,
+Python (root and Sphinx docs), npm (<code class="docutils literal notranslate"><span class="pre">bindings/javascript</span></code>), NuGet
+(<code class="docutils literal notranslate"><span class="pre">bindings/csharp</span></code>), and Go (<code class="docutils literal notranslate"><span class="pre">bindings/go</span></code>), grouping package updates
+and respecting agentic workflow exclusions.</p></li>
+<li><p><strong>[CICD-07]</strong> SonarQube Cloud automatic analysis <strong>Shall</strong> be configured
+via root <code class="docutils literal notranslate"><span class="pre">.sonarcloud.properties</span></code> targeting an A rating across security,
+reliability, and maintainability, excluding documentation (<code class="docutils literal notranslate"><span class="pre">docs/**</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sphinx_docs_build/**</span></code>), workflows (<code class="docutils literal notranslate"><span class="pre">.github/**</span></code>), vendored dependencies
+(<code class="docutils literal notranslate"><span class="pre">third_party/**</span></code>), and generated SWIG artifacts from code smells and
+copy-paste duplication metrics.</p></li>
+<li><p><strong>[CICD-08]</strong> Continuous integration workflows <strong>Shall</strong> incorporate smart
+file-change detection via <code class="docutils literal notranslate"><span class="pre">tj-actions/changed-files</span></code> to skip redundant
+multi-platform matrix runner executions when pull requests only touch
+unrelated subsystems.</p></li>
+<li><p><strong>[CICD-09]</strong> Continuous integration workflows <strong>Shall</strong> consolidate
+multi-OS conditionals using <code class="docutils literal notranslate"><span class="pre">carlkidcrypto/os-specific-runner</span></code> across
+Ubuntu, macOS, and Windows.</p></li>
+<li><p><strong>[CICD-10]</strong> Python wheel packaging <strong>Shall</strong> utilize parallel multi-core
+compilation (via <code class="docutils literal notranslate"><span class="pre">EZSNMP_BUILD_JOBS</span></code> and <code class="docutils literal notranslate"><span class="pre">ThreadPoolExecutor</span></code>), fast
+dependency isolation via <code class="docutils literal notranslate"><span class="pre">build[uv]</span></code>, and cross-version deterministic C++
+object caching (via <code class="docutils literal notranslate"><span class="pre">EZSNMP_OBJECT_CACHE_DIR</span></code>) across matrix runners.</p></li>
+<li><p><strong>[CICD-11]</strong> Test deployment workflows
+(<code class="docutils literal notranslate"><span class="pre">build_and_publish_to_test_pypi.yml</span></code>) <strong>Shall</strong> automatically trigger
+on pushes to <code class="docutils literal notranslate"><span class="pre">main</span></code> guarded by smart change detection
+(<code class="docutils literal notranslate"><span class="pre">tj-actions/changed-files</span></code>) over source and packaging files, ensuring
+distribution packaging regressions fail prior to production release.</p></li>
+<li><p><strong>[CICD-12]</strong> Desktop distribution workflows
+(<code class="docutils literal notranslate"><span class="pre">build_and_publish_desktop_apps.yml</span></code>) <strong>Shall</strong> package standalone Linux
+(<code class="docutils literal notranslate"><span class="pre">.deb</span></code>, <code class="docutils literal notranslate"><span class="pre">.rpm</span></code>, <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code>), Windows (<code class="docutils literal notranslate"><span class="pre">.exe</span></code>, <code class="docutils literal notranslate"><span class="pre">-Setup.exe</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.zip</span></code>), and macOS (<code class="docutils literal notranslate"><span class="pre">.dmg</span></code>, <code class="docutils literal notranslate"><span class="pre">.zip</span></code>) assets, decouple artifact
+packaging across multi-OS matrix runners from release publishing, and
+publish consolidated release assets to GitHub Releases.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="development.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Development Guide</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="modules.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Module Index</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024-2026, carlkidcrypto
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Software Requirements</a><ul>
+<li><a class="reference internal" href="#general-architectural-requirements">General &amp; Architectural Requirements</a></li>
+<li><a class="reference internal" href="#calsemver-versioning-requirements">CalSemVer Versioning Requirements</a></li>
+<li><a class="reference internal" href="#json-configuration-validation-requirements">JSON Configuration &amp; Validation Requirements</a></li>
+<li><a class="reference internal" href="#engine-queue-storage-sink-requirements">Engine, Queue &amp; Storage Sink Requirements</a></li>
+<li><a class="reference internal" href="#multi-language-swig-4-x-distribution-requirements">Multi-Language SWIG 4.x Distribution Requirements</a></li>
+<li><a class="reference internal" href="#self-contained-multi-language-packaging-requirements">Self-Contained Multi-Language Packaging Requirements</a></li>
+<li><a class="reference internal" href="#command-line-interface-cli-requirements">Command-Line Interface (CLI) Requirements</a></li>
+<li><a class="reference internal" href="#cross-platform-gui-requirements">Cross-Platform GUI Requirements</a></li>
+<li><a class="reference internal" href="#testing-documentation-ci-cd-requirements">Testing, Documentation &amp; CI/CD Requirements</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=8bc29bb2"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
