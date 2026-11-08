@@ -122,6 +122,7 @@ jobs:
             python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
 
       - name: Upload coverage to Codecov
+        if: always()
         uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
