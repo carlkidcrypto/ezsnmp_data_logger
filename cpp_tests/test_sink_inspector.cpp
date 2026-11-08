@@ -35,8 +35,8 @@ TEST(SinkInspectorTest, HandlesNonexistentDirectoriesAndMalformedRecords) {
       std::ofstream out(csv_file);
       out << "ts_unix_ns,dut_name,dut_ip,metric_name,oid,oid_index,snmp_type,raw_value,type_tag,"
              "i64,f64,str_val,status\n";
-      out << "1700000000100,r1,10.0.0.1,sysName,1.1,0,OCTETSTR,my-router,2,,,my-router,0\n";
-      out << "1700000000200,r2,10.0.0.2,cpuLoad,1.2,1,5.5,5.5,1,,0\n"; // short 10-col format
+      out << "1700000000100,r1,127.0.0.1,sysName,1.1,0,OCTETSTR,my-router,2,,,my-router,0\n";
+      out << "1700000000200,r2,127.0.0.2,cpuLoad,1.2,1,5.5,5.5,1,,0\n"; // short 10-col format
       out << "invalid_row\n";
       out << "\n"; // empty line
    }
@@ -62,7 +62,7 @@ TEST(SinkInspectorTest, HandlesNonexistentDirectoriesAndMalformedRecords) {
    std::filesystem::path jsonl_file = tmp.path() / "jsonl" / "sw1.jsonl";
    {
       std::ofstream out(jsonl_file);
-      out << "{\"ts_unix_ns\":1700000000300,\"dut_name\":\"sw1\",\"dut_ip\":\"10.1.1.1\",\"metric_"
+      out << "{\"ts_unix_ns\":1700000000300,\"dut_name\":\"sw1\",\"dut_ip\":\"127.0.0.1\",\"metric_"
              "name\":\"temp\",\"oid\":\"1.2\",\"type_tag\":1,\"i64\":55,\"status\":0}\n";
       out << "corrupted_json_line\n";
       out << "[1, 2, 3]\n";
@@ -93,7 +93,7 @@ TEST(SinkInspectorTest, HandlesNonexistentDirectoriesAndMalformedRecords) {
       Batch b;
       b.ts_unix_ns = 1700000000400LL;
       b.dut_name = "sw1";
-      b.dut_ip = "10.1.1.1";
+      b.dut_ip = "127.0.0.1";
       b.samples.push_back(Sample::make_int("fanRpm", "1.3.6.1.4.1", 3200));
       b.samples.push_back(Sample::make_float("voltage", "1.3.6.1.4.2", 12.5));
       sq.write(b);

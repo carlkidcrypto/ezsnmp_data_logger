@@ -40,7 +40,7 @@ TEST(DatatypesTest, SampleSupportsTypedConstructorsAndEzSnmpResultJson) {
    Batch b;
    b.ts_unix_ns = 1700000000000000000LL;
    b.dut_name = "dut-1";
-   b.dut_ip = "10.0.0.1";
+   b.dut_ip = "127.0.0.1";
    b.samples = {si, sf, ss, from_ez};
 
    Batch roundtrip = Batch::from_json(b.to_json(2));
@@ -243,8 +243,8 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_duts = R"({
       "duts": [
          {"name": "", "dut_ip": ""},
-         {"name": "sw1", "dut_ip": "10.0.0.1", "poll_interval_ms": 5},
-         {"name": "sw1", "dut_ip": "10.0.0.2"}
+         {"name": "sw1", "dut_ip": "127.0.0.1", "poll_interval_ms": 5},
+         {"name": "sw1", "dut_ip": "127.0.0.2"}
       ]
    })";
    ValidationReport r_d = validate_config(bad_duts);
@@ -255,7 +255,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_snmp = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": "not_an_object"
       }]
    })";
@@ -265,7 +265,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_snmp_vals = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": {
             "mode": "bogus_mode",
             "version": "99",
@@ -281,7 +281,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const norm_snmp = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": {"mode": "netsnmp", "version": "2", "community": "pub"},
          "metrics": [{"name": "m1", "oid": "1.1"}]
       }],
@@ -294,7 +294,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_v3_sec = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": {"mode": "ezsnmp", "version": "3", "security_level": "super_secure"}
       }]
    })";
@@ -304,15 +304,15 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_v3_protocols = R"({
       "duts": [{
          "name": "d_v3_proto",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": {
             "version": "3",
             "security_username": "snmpuser",
             "security_level": "authPriv",
             "auth_protocol": "INVALID_AUTH",
-            "auth_passphrase": "password123",
+            "auth_passphrase": "mock_auth_secret",
             "privacy_protocol": "INVALID_PRIV",
-            "privacy_passphrase": "password123"
+            "privacy_passphrase": "mock_priv_secret"
          }
       }]
    })";
@@ -322,7 +322,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_v2c_comm = R"({
       "duts": [{
          "name": "d_comm",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "snmp": {"version": "2c", "community": ""}
       }]
    })";
@@ -332,7 +332,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_metrics = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "metrics": "not_array"
       }]
    })";
@@ -341,7 +341,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_metric_items = R"({
       "duts": [{
          "name": "d1",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "metrics": [
             "not_object",
             {"name": "", "oid": ""},
@@ -405,7 +405,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
    std::string const bad_metric_ops = R"({
       "duts": [{
          "name": "d_ops",
-         "dut_ip": "10.0.0.1",
+         "dut_ip": "127.0.0.1",
          "metrics": [
             {"name": "m_set", "oid": "1.1", "operation": "set", "set_type": ""},
             {"name": "m_rep", "oid": "1.2", "max_repeaters": 0}

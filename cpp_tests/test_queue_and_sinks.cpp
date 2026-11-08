@@ -49,7 +49,7 @@ TEST(SinksAndInspectorTest, WritesAndInspectsSqliteJsonlAndCsvSinks) {
    Batch b1;
    b1.ts_unix_ns = 1700000000000000100LL;
    b1.dut_name = "lab-router-1";
-   b1.dut_ip = "192.168.10.1";
+   b1.dut_ip = "127.0.0.1";
    Sample s1 = Sample::make_int("sysUpTime", "1.3.6.1.2.1.1.3.0", 456789);
    s1.oid_index = "0";
    s1.snmp_type = "TIMETICKS";
@@ -126,7 +126,7 @@ TEST(PrometheusSinkTest, ServesExpositionFormatOverHttp) {
    Batch b;
    b.ts_unix_ns = 1700000000000000500LL;
    b.dut_name = "edge-sw";
-   b.dut_ip = "10.1.1.1";
+   b.dut_ip = "127.0.0.1";
    b.samples.push_back(Sample::make_float("opticalRxDbm", "1.3.6.1.4.1.1.1.0", -2.75));
    prom.write(b);
 
@@ -213,7 +213,7 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
       Batch b;
       b.ts_unix_ns = 1700000000000LL;
       b.dut_name = "router/with:special\\chars";
-      b.dut_ip = "192.168.1.1";
+      b.dut_ip = "127.0.0.1";
       b.samples.push_back(Sample::make_string("msg", "1.1", "quotes \"and\" commas,"));
       cs.write(b);
       cs.flush();
@@ -244,7 +244,7 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
       Batch b;
       b.ts_unix_ns = 1700000000001LL;
       b.dut_name = "switch/test:1";
-      b.dut_ip = "192.168.1.2";
+      b.dut_ip = "127.0.0.1";
       b.samples.push_back(Sample::make_int("val", "1.2", 999));
       js.write(b);
       // Repeated write exercises cache hit
@@ -326,6 +326,12 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
       ps_stub.flush();
       ps_stub.close();
    }
+#else
+   SinkConfig empty_psql_cfg;
+   empty_psql_cfg.type = "psql";
+   empty_psql_cfg.psql_conninfo = "";
+   EXPECT_THROW({ PsqlSink ps_empty(empty_psql_cfg); }, SinkError);
+   EXPECT_THROW({ PsqlSink ps(psql_cfg); }, SinkError);
 #endif
 
    // PrometheusSink endpoints and label escaping
@@ -342,7 +348,7 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
       Batch b;
       b.ts_unix_ns = 1700000000003LL;
       b.dut_name = "switch\"special\\name\nline";
-      b.dut_ip = "10.0.0.1";
+      b.dut_ip = "127.0.0.1";
       b.samples.push_back(Sample::make_int("ifInOctets", "1.3.6.1.2.1.2.2.1.10.1", 12345678));
       b.samples.push_back(Sample::make_string("descr", "1.3.6.1.2.1.1.1.0", "gigabit"));
       prom.write(b);
@@ -419,7 +425,11 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
 
    fc_cfg.type = "psql";
    fc_cfg.psql_conninfo = "stub_for_testing";
+#if defined(EZSNMP_DL_HAVE_LIBPQ) && EZSNMP_DL_HAVE_LIBPQ
+   EXPECT_THROW({ (void)create_sink(fc_cfg); }, SinkError);
+#else
    EXPECT_NE(create_sink(fc_cfg), nullptr);
+#endif
 
    fc_cfg.type = "prometheus";
    fc_cfg.prometheus_port = 0;

@@ -67,7 +67,7 @@ TEST(DataLoggerEngineTest, RunsScheduledCyclesAndPushesExternalJsonBatches) {
    // Push external JSON batch directly (e.g. from SWIG target language producer)
    std::string const ext_batch = R"({
       "dut_name": "external-go-producer",
-      "dut_ip": "10.9.9.9",
+      "dut_ip": "127.0.0.1",
       "samples": [{
          "metric_name": "ifInOctets",
          "oid": "1.3.6.1.2.1.2.2.1.10.1",
@@ -219,7 +219,7 @@ TEST(DataLoggerEngineTest, ExhaustiveRuntimeAndAccessors) {
 TEST(DataLoggerEngineTest, StubPollerExhaustive) {
    DutConfig dut;
    dut.name = "core-switch";
-   dut.dut_ip = "192.168.1.100";
+   dut.dut_ip = "127.0.0.1";
    dut.snmp.mode = "stub";
    dut.metrics = {MetricConfig{"sysDescr", "1.1", "get", 10, "s", ""},
                   MetricConfig{"sysLocation", "1.2", "get", 10, "s", ""},
@@ -438,7 +438,7 @@ TEST(CliRunnerTest, ExhaustiveCliRunnerOptionsAndExecution) {
    std::string warn_cfg = (tmp.path() / "warn_cfg.json").string();
    {
       std::ofstream out(warn_cfg);
-      out << "{\"duts\": [{\"name\":\"d_w\", \"dut_ip\":\"10.0.0.1\", "
+      out << "{\"duts\": [{\"name\":\"d_w\", \"dut_ip\":\"127.0.0.1\", "
              "\"metrics\":[{\"name\":\"m\",\"oid\":\"1.1\"}]}]}";
    }
    EXPECT_EQ(CliRunner::run({"validate", "--config", warn_cfg}), 0);

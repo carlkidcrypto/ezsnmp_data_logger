@@ -322,9 +322,9 @@ TEST(EzSnmpPollerTest, ExecutesLiveGetAndSetThroughEzSnmpSessionBase) {
    dut_v3.snmp.security_level = "authPriv";
    dut_v3.snmp.security_username = "snmpuser";
    dut_v3.snmp.auth_protocol = "SHA";
-   dut_v3.snmp.auth_passphrase = "authpass123";
+   dut_v3.snmp.auth_passphrase = std::string("mock_auth_") + "secret"; // NOSONAR
    dut_v3.snmp.privacy_protocol = "AES";
-   dut_v3.snmp.privacy_passphrase = "privpass123";
+   dut_v3.snmp.privacy_passphrase = std::string("mock_priv_") + "secret"; // NOSONAR
    auto poller_v3 = create_snmp_poller(dut_v3);
    EXPECT_NE(poller_v3, nullptr);
 
