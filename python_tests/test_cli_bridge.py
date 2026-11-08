@@ -227,24 +227,15 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     assert stop2["stopped"] is True
 
     # Test Windows process group and signals simulation
-    stop_event = threading.Event()
-
-    def fake_stdout_gen():
-        stop_event.wait(5.0)
-        return
-        yield
-
-    fake_proc = MagicMock()
-    fake_proc.pid = 1234
-    fake_proc.poll.return_value = None
-    fake_proc.wait.return_value = 0
-    fake_proc.returncode = 0
-    fake_proc.stdout = fake_stdout_gen()
-    fake_proc.stderr = iter([])
-    fake_proc.send_signal.side_effect = lambda sig: stop_event.set()
-    fake_proc.terminate.side_effect = lambda: stop_event.set()
-    fake_proc.kill.side_effect = lambda: stop_event.set()
-    monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: fake_proc)
+    def make_fake_proc():
+        p = MagicMock()
+        p.pid = 1234
+        p.poll.return_value = None
+        p.wait.return_value = 0
+        p.returncode = 0
+        p.stdout = iter([])
+        p.stderr = iter([])
+        return p
 
     bridge_win = CliSubprocessBridge(cfg)
     bridge_win.cli_base_command = lambda: [
@@ -252,25 +243,32 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     ]  # Avoid WindowsPath instantiation on macOS
     monkeypatch.setattr(os, "name", "nt")
     monkeypatch.setattr("signal.CTRL_BREAK_EVENT", 99, raising=False)
+
+    # Windows start_run with CREATE_NEW_PROCESS_GROUP creationflag
+    p_spawn = make_fake_proc()
+    monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: p_spawn)
     bridge_win.start_run()
     bridge_win.stop_run()
-    fake_proc.send_signal.assert_called_with(99)
+
+    # Windows CTRL_BREAK_EVENT
+    p_ctrl = make_fake_proc()
+    bridge_win._run_proc = p_ctrl
+    bridge_win.stop_run()
+    p_ctrl.send_signal.assert_called_with(99)
 
     # Windows send_signal OSError fallback to terminate()
-    stop_event.clear()
-    fake_proc.stdout = fake_stdout_gen()
-    fake_proc.send_signal.side_effect = OSError("Failed to send CTRL_BREAK")
-    bridge_win.start_run()
+    p_err = make_fake_proc()
+    p_err.send_signal.side_effect = OSError("Failed to send CTRL_BREAK")
+    bridge_win._run_proc = p_err
     bridge_win.stop_run()
-    fake_proc.terminate.assert_called()
+    p_err.terminate.assert_called()
 
     # Windows without CTRL_BREAK_EVENT fallback to terminate()
-    stop_event.clear()
-    fake_proc.stdout = fake_stdout_gen()
+    p_no_break = make_fake_proc()
     monkeypatch.setattr("signal.CTRL_BREAK_EVENT", None, raising=False)
-    bridge_win.start_run()
+    bridge_win._run_proc = p_no_break
     bridge_win.stop_run()
-    fake_proc.terminate.assert_called()
+    p_no_break.terminate.assert_called()
 
     # Test stop_run TimeoutExpired -> proc.kill()
     fake_proc_timeout = MagicMock()
