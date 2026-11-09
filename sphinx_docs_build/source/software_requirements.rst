@@ -378,7 +378,8 @@ Testing, Documentation & CI/CD Requirements
   generating validated WinGet community manifests in canonical directory
   hierarchies and automated pull request submission via Microsoft
   ``wingetcreate`` (``build_and_publish_to_winget.yml``,
-  ``tools/generate_winget_manifest.py``).
+  ``tools/generate_winget_manifest.py``; marked as FUTURE / WIP pending
+  credentials setup).
 
 - **[CICD-06]** Automated dependency maintenance **Shall** be configured via
   ``.github/dependabot.yml`` with weekly updates across GitHub Actions,

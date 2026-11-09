@@ -1,4 +1,4 @@
-name: WinGet Distributions
+name: WinGet Distributions (FUTURE / WIP)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -29,7 +29,7 @@ jobs:
     uses: ./.github/workflows/verify_syntax.yml
 
   publish-winget:
-    name: Publish release to WinGet (wingetcreate)
+    name: Publish release to WinGet (wingetcreate) [FUTURE / WIP]
     runs-on: windows-latest
     needs: verify-syntax
     permissions:
@@ -112,6 +112,7 @@ jobs:
         run: |
           $token = "${{ secrets.WINGET_CREATE_PAT || secrets.WINGET_TOKEN || secrets.WINGET_ACC_TOKEN }}"
           if (-not $token) {
+            Write-Host "::notice::WinGet distribution pipeline is currently marked as FUTURE / WIP pending repository credentials setup."
             Write-Host "::notice::WINGET_CREATE_PAT / WINGET_TOKEN / WINGET_ACC_TOKEN secret is not configured."
             Write-Host "WinGet manifests were generated and saved to run artifacts."
             Write-Host "To enable automated PR submission to microsoft/winget-pkgs, add a GitHub PAT with 'public_repo' scope to repository secrets."

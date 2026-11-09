@@ -232,3 +232,23 @@ def test_codecov_configuration() -> None:
     assert "codecov/codecov-action" in cpp_wf
     assert "CODECOV_TOKEN" in cpp_wf
     assert "flags: cpp" in cpp_wf
+
+
+def test_issue_templates() -> None:
+    template_dir = REPO_ROOT / ".github" / "ISSUE_TEMPLATE"
+    assert template_dir.is_dir(), ".github/ISSUE_TEMPLATE directory must exist"
+    bug_report = template_dir / "bug_report.md"
+    assert bug_report.is_file(), "bug_report.md must exist in .github/ISSUE_TEMPLATE"
+    bug_content = bug_report.read_text(encoding="utf-8")
+    assert "name: Bug report" in bug_content
+    assert "[BUG]" in bug_content
+    assert "EzSnmpDataLogger" in bug_content
+    assert "AI-Assisted Issue Resolution" in bug_content
+
+    feature_request = template_dir / "feature_request.md"
+    assert feature_request.is_file(), "feature_request.md must exist in .github/ISSUE_TEMPLATE"
+    feature_content = feature_request.read_text(encoding="utf-8")
+    assert "name: Feature request" in feature_content
+    assert "[FEATURE]" in feature_content
+    assert "EzSnmpDataLogger" in feature_content
+    assert "AI-Assisted Feature Planning" in feature_content
