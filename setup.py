@@ -50,11 +50,12 @@ def _run_cmd_output(cmd: list[str]) -> str:
 
 def _parse_netsnmp_version(version_str: str) -> tuple[int, ...] | None:
     """Parse major and minor version numbers from a Net-SNMP version string."""
-    m = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", version_str.strip())
-    if not m:
-        return None
-    parts = [int(p) for p in m.groups() if p is not None]
-    return tuple(parts)
+    digits_or_dot = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in version_str)
+    for segment in digits_or_dot.split():
+        parts = [int(p) for p in segment.split(".") if p.isdigit()]
+        if len(parts) >= 2:
+            return tuple(parts[:3])
+    return None
 
 
 def _is_netsnmp_5_10_or_newer(version_str: str) -> bool:
@@ -697,6 +698,43 @@ class SwigBuildExt(build_ext):
                 build_temp=build_temp,
                 target_lang="c++",
             )
+            if sys.platform == "win32":
+                target_dirs = [os.path.dirname(ext_path)]
+                inplace_pkg_dir = os.path.join(ROOT_DIR, "ezsnmp_data_logger")
+                if os.path.isdir(inplace_pkg_dir) and inplace_pkg_dir not in target_dirs:
+                    target_dirs.append(inplace_pkg_dir)
+
+                dll_sources = []
+                win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
+                if not win_bin:
+                    for cand_arch in ("x64", "AMD64", "x86", "ARM64"):
+                        cand = Path(f"C:/ezsnmp-netsnmp-dist/{cand_arch}/bin/release")
+                        if cand.is_dir():
+                            win_bin = str(cand)
+                            break
+                if win_bin and os.path.isdir(win_bin):
+                    dll_sources.append(win_bin)
+
+                ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
+                if not ssl_bin:
+                    for cand_ssl in (
+                        Path(r"C:\Program Files\OpenSSL\bin"),
+                        Path(r"C:\Program Files\OpenSSL-Win64\bin"),
+                        Path(r"C:\OpenSSL-Win64\bin"),
+                    ):
+                        if cand_ssl.is_dir():
+                            ssl_bin = str(cand_ssl)
+                            break
+                if ssl_bin and os.path.isdir(ssl_bin):
+                    dll_sources.append(ssl_bin)
+
+                for sdir in dll_sources:
+                    for dll_file in Path(sdir).glob("*.dll"):
+                        for tdir in target_dirs:
+                            try:
+                                shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
+                            except (OSError, shutil.SameFileError):
+                                pass
 
 
 class BuildPy(_build_py):

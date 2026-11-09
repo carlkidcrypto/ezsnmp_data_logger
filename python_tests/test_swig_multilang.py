@@ -275,13 +275,13 @@ def test_netsnmp_5_10_build_requirements() -> None:
         sys.argv = orig_argv
 
     # Direct test of the version check logic
-    import re
-
     def _parse_netsnmp_version(version_str: str) -> tuple[int, ...] | None:
-        m = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", version_str.strip())
-        if not m:
-            return None
-        return tuple(int(p) for p in m.groups() if p is not None)
+        digits_or_dot = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in version_str)
+        for segment in digits_or_dot.split():
+            parts = [int(p) for p in segment.split(".") if p.isdigit()]
+            if len(parts) >= 2:
+                return tuple(parts[:3])
+        return None
 
     def _is_netsnmp_5_10_or_newer(version_str: str) -> bool:
         parsed = _parse_netsnmp_version(version_str)

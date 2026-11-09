@@ -141,8 +141,19 @@ jobs:
           windows: |
             python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             $env:PATH = "C:\ezsnmp-netsnmp-dist\x64\bin\release;" + $env:PATH
+            if (Test-Path "C:\ezsnmp-netsnmp-dist\x64\bin\release\netsnmp.dll") {
+              Copy-Item "C:\ezsnmp-netsnmp-dist\x64\bin\release\*.dll" ezsnmp_data_logger/ -Force
+            }
+            if ($env:EZSNMP_OPENSSL_BIN_DIR -and (Test-Path $env:EZSNMP_OPENSSL_BIN_DIR)) {
+              Copy-Item "$env:EZSNMP_OPENSSL_BIN_DIR\*.dll" ezsnmp_data_logger/ -Force
+            } elseif (Test-Path "C:\Program Files\OpenSSL\bin") {
+              Copy-Item "C:\Program Files\OpenSSL\bin\*.dll" ezsnmp_data_logger/ -Force
+            } elseif (Test-Path "C:\Program Files\OpenSSL-Win64\bin") {
+              Copy-Item "C:\Program Files\OpenSSL-Win64\bin\*.dll" ezsnmp_data_logger/ -Force
+            }
             python setup.py build_ext --inplace
             python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload coverage to Codecov
         if: always()
