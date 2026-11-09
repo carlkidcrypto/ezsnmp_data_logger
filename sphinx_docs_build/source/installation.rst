@@ -85,9 +85,12 @@ Download precompiled standalone binaries directly from `GitHub Releases <https:/
 - **Portable Single-File Executable:** ``EzSnmpDataLogger-Windows-x64.exe`` (run immediately from any folder or USB drive).
 - **Portable ZIP Archive:** ``EzSnmpDataLogger-Windows-x64.zip`` or ``ezsnmp_data_logger-windows-x64.zip``.
 
-2. Install via WinGet (Windows Package Manager)
------------------------------------------------
-Install the official Windows Package Manager package:
+2. Install via WinGet (Windows Package Manager) — FUTURE / WIP
+--------------------------------------------------------------
+.. note::
+   WinGet community repository publishing is currently in progress (**FUTURE / WIP**) pending credential setup. In the interim, download the installer directly from `GitHub Releases <https://github.com/carlkidcrypto/ezsnmp_data_logger/releases>`_.
+
+Once active, the package can be installed via:
 
 .. code-block:: powershell
 
