@@ -450,12 +450,11 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    EXPECT_NE(create_sink(fc_cfg), nullptr);
 
    fc_cfg.type = "psql";
-   fc_cfg.psql_conninfo = "stub_for_testing";
-#if defined(EZSNMP_DL_HAVE_LIBPQ) && EZSNMP_DL_HAVE_LIBPQ
+   fc_cfg.psql_conninfo = "host=localhost dbname=ezsnmp_test_not_running";
    EXPECT_THROW({ (void)create_sink(fc_cfg); }, SinkError);
-#else
+
+   fc_cfg.psql_conninfo = "stub_for_testing";
    EXPECT_NE(create_sink(fc_cfg), nullptr);
-#endif
 
    fc_cfg.type = "prometheus";
    fc_cfg.prometheus_port = 0;
