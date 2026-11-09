@@ -197,7 +197,11 @@ Self-Contained Multi-Language Packaging Requirements
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
   **Shall** provision ``ezsnmp`` ``v2026.11.4a0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
-  Blumenthal-AES support.
+  Blumenthal-AES support. Native build systems (``setup.py``, ``meson.build``,
+  ``CMakeLists.txt``) and CI matrices (``tests_cpp_native.yml``,
+  ``tests_python.yml``, ``build_and_publish_desktop_apps.yml``) **Shall** enforce
+  and compile against Net-SNMP >= 5.10 matching ``ezsnmp`` requirements,
+  rejecting incompatible (< 5.10) system installations.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
   ``[build-system] requires`` and ``ezsnmp>=2026.11.4a0`` in ``dependencies``.

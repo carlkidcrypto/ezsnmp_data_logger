@@ -33,7 +33,11 @@ def _flush_libc() -> None:
         import ctypes
 
         if sys.platform == "win32":
-            ctypes.cdll.msvcrt.fflush(None)
+            for lib in ("ucrtbase", "msvcrt"):
+                try:
+                    ctypes.CDLL(lib).fflush(None)
+                except Exception:
+                    pass
         else:
             ctypes.CDLL(None).fflush(None)
     except Exception:

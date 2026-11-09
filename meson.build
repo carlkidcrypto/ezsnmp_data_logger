@@ -32,7 +32,20 @@ if ezsnmp_root == ''
   endif
 endif
 
-netsnmp_dep = dependency('netsnmp', required: ezsnmp_opt)
+netsnmp_dep = dependency('netsnmp', version: '>=5.10', required: false)
+if not netsnmp_dep.found()
+  netsnmp_dep = dependency('netsnmp', required: ezsnmp_opt)
+  if netsnmp_dep.found() and netsnmp_dep.version() != 'unknown'
+    if netsnmp_dep.version().version_compare('<5.10')
+      if ezsnmp_opt.enabled()
+        error('ezsnmp requires Net-SNMP >= 5.10, but found Net-SNMP ' + netsnmp_dep.version())
+      else
+        warning('Disabling ezsnmp: Net-SNMP >= 5.10 required, but found Net-SNMP ' + netsnmp_dep.version())
+        netsnmp_dep = declare_dependency()
+      endif
+    endif
+  endif
+endif
 openssl_dep = declare_dependency()
 if host_machine.system() == 'darwin' and netsnmp_dep.found()
   openssl_dep = dependency('openssl', required: ezsnmp_opt)

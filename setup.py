@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import shlex
 import shutil
 import subprocess
@@ -45,6 +46,24 @@ def _run_cmd_output(cmd: list[str]) -> str:
         return res.stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return ""
+
+
+def _parse_netsnmp_version(version_str: str) -> tuple[int, ...] | None:
+    """Parse major and minor version numbers from a Net-SNMP version string."""
+    digits_or_dot = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in version_str)
+    for segment in digits_or_dot.split():
+        parts = [int(p) for p in segment.split(".") if p.isdigit()]
+        if len(parts) >= 2:
+            return tuple(parts[:3])
+    return None
+
+
+def _is_netsnmp_5_10_or_newer(version_str: str) -> bool:
+    """Check if Net-SNMP version is at least 5.10 (as required by ezsnmp)."""
+    parsed = _parse_netsnmp_version(version_str)
+    if parsed is None or len(parsed) < 2:
+        return False
+    return parsed[:2] >= (5, 10)
 
 
 def _parse_flags(flag_str: str) -> tuple[list[str], list[str], list[str], list[str]]:
@@ -223,7 +242,7 @@ def _configure_extension() -> Extension:
                     have_sqlite3 = 1
                     libraries.append("sqlite3")
 
-    # 2. ezsnmp + Net-SNMP detection (supports standalone cibuildwheel env vars + Homebrew + pkg-config)
+    # 2. ezsnmp + Net-SNMP detection (supports standalone cibuildwheel env vars + Net-SNMP 5.10 auto-discovery)
     have_ezsnmp = 0
     ezsnmp_dir = _locate_ezsnmp_source_dir()
     netsnmp_cflags = ""
@@ -233,29 +252,66 @@ def _configure_extension() -> Extension:
     win_lib = os.environ.get("EZSNMP_NETSNMP_LIB_DIR", "").strip()
     explicit_cfg = os.environ.get("EZSNMP_NETSNMP_CONFIG", "").strip()
 
-    if explicit_cfg and Path(explicit_cfg).is_file():
-        netsnmp_cflags = _run_cmd_output([explicit_cfg, "--cflags"])
-        netsnmp_libs = _run_cmd_output([explicit_cfg, "--libs"])
-    elif sys.platform == "win32" and win_inc and win_lib:
+    if sys.platform == "win32" and (not win_inc or not win_lib):
+        # Auto-discover standalone Net-SNMP 5.10 distribution (e.g. prepared by prepare-windows-netsnmp)
+        for cand_arch in ("x64", "AMD64", "x86", "ARM64"):
+            cand_root = Path(f"C:/ezsnmp-netsnmp-dist/{cand_arch}")
+            cand_h = cand_root / "include" / "net-snmp" / "net-snmp-config.h"
+            cand_l = cand_root / "lib" / "release" / "netsnmp.lib"
+            if cand_h.is_file() and cand_l.is_file():
+                hdr_text = cand_h.read_text(encoding="utf-8", errors="ignore")
+                vmatch = re.search(r'#define\s+PACKAGE_VERSION\s+"([^"]+)"', hdr_text)
+                if vmatch and _is_netsnmp_5_10_or_newer(vmatch.group(1)):
+                    win_inc = str(cand_root / "include")
+                    win_lib = str(cand_root / "lib" / "release")
+                    break
+
+    if sys.platform == "win32" and win_inc and win_lib:
         netsnmp_libs = "netsnmp"
-    elif Path("/usr/local/bin/net-snmp-config").is_file():
-        netsnmp_cflags = _run_cmd_output(["/usr/local/bin/net-snmp-config", "--cflags"])
-        netsnmp_libs = _run_cmd_output(["/usr/local/bin/net-snmp-config", "--libs"])
-    elif sys.platform == "darwin":
-        for hp in homebrew_prefixes:
-            ns_cfg = hp / "net-snmp" / "bin" / "net-snmp-config"
-            if ns_cfg.is_file():
-                netsnmp_cflags = _run_cmd_output([str(ns_cfg), "--cflags"])
-                netsnmp_libs = _run_cmd_output([str(ns_cfg), "--libs"])
+    elif explicit_cfg and Path(explicit_cfg).is_file():
+        cfg_ver = _run_cmd_output([explicit_cfg, "--version"])
+        if _is_netsnmp_5_10_or_newer(cfg_ver):
+            netsnmp_cflags = _run_cmd_output([explicit_cfg, "--cflags"])
+            netsnmp_libs = _run_cmd_output([explicit_cfg, "--libs"])
+        else:
+            print(
+                f"[WARNING] Configured Net-SNMP ({explicit_cfg}) version '{cfg_ver}' is < 5.10; "
+                "ezsnmp requires Net-SNMP >= 5.10. Skipping."
+            )
+    else:
+        # Check standard Net-SNMP 5.10 locations first (/usr/local/bin/net-snmp-config)
+        cfg_candidates = []
+        if Path("/usr/local/bin/net-snmp-config").is_file():
+            cfg_candidates.append("/usr/local/bin/net-snmp-config")
+        if sys.platform == "darwin":
+            for hp in homebrew_prefixes:
+                ns_cfg = hp / "net-snmp" / "bin" / "net-snmp-config"
+                if ns_cfg.is_file():
+                    cfg_candidates.append(str(ns_cfg))
+
+        for cfg_cand in cfg_candidates:
+            cand_ver = _run_cmd_output([cfg_cand, "--version"])
+            if _is_netsnmp_5_10_or_newer(cand_ver):
+                netsnmp_cflags = _run_cmd_output([cfg_cand, "--cflags"])
+                netsnmp_libs = _run_cmd_output([cfg_cand, "--libs"])
                 break
+            else:
+                print(
+                    f"[INFO] Net-SNMP at {cfg_cand} version '{cand_ver}' is < 5.10; "
+                    "skipping in favor of Net-SNMP >= 5.10."
+                )
 
-    if not netsnmp_libs:
-        netsnmp_cflags = _run_cmd_output(["pkg-config", "--cflags", "netsnmp"])
-        netsnmp_libs = _run_cmd_output(["pkg-config", "--libs", "netsnmp"])
+        if not netsnmp_libs:
+            pkg_ver = _run_cmd_output(["pkg-config", "--modversion", "netsnmp"])
+            if pkg_ver and _is_netsnmp_5_10_or_newer(pkg_ver):
+                netsnmp_cflags = _run_cmd_output(["pkg-config", "--cflags", "netsnmp"])
+                netsnmp_libs = _run_cmd_output(["pkg-config", "--libs", "netsnmp"])
 
-    if not netsnmp_libs and sys.platform not in ("darwin", "win32"):
-        netsnmp_cflags = _run_cmd_output(["net-snmp-config", "--cflags"])
-        netsnmp_libs = _run_cmd_output(["net-snmp-config", "--libs"])
+        if not netsnmp_libs and sys.platform not in ("darwin", "win32"):
+            sys_ver = _run_cmd_output(["net-snmp-config", "--version"])
+            if sys_ver and _is_netsnmp_5_10_or_newer(sys_ver):
+                netsnmp_cflags = _run_cmd_output(["net-snmp-config", "--cflags"])
+                netsnmp_libs = _run_cmd_output(["net-snmp-config", "--libs"])
 
     if ezsnmp_dir is not None and netsnmp_libs:
         have_ezsnmp = 1
@@ -269,6 +325,15 @@ def _configure_extension() -> Extension:
             libraries.extend(["netsnmp", "advapi32", "iphlpapi", "crypt32", "user32"])
             ssl_inc = os.environ.get("EZSNMP_OPENSSL_INCLUDE_DIR", "").strip()
             ssl_lib = os.environ.get("EZSNMP_OPENSSL_LIB_DIR", "").strip()
+            if not ssl_inc or not ssl_lib:
+                for vcpkg_cand in (
+                    Path("C:/vcpkg/installed/x64-windows"),
+                    Path("C:/vcpkg/installed/arm64-windows"),
+                ):
+                    if (vcpkg_cand / "include" / "openssl" / "ssl.h").is_file():
+                        ssl_inc = ssl_inc or str(vcpkg_cand / "include")
+                        ssl_lib = ssl_lib or str(vcpkg_cand / "lib")
+                        break
             if ssl_inc:
                 include_dirs.extend([p for p in ssl_inc.split(os.pathsep) if p])
             if ssl_lib:
@@ -633,6 +698,43 @@ class SwigBuildExt(build_ext):
                 build_temp=build_temp,
                 target_lang="c++",
             )
+            if sys.platform == "win32":
+                target_dirs = [os.path.dirname(ext_path)]
+                inplace_pkg_dir = os.path.join(ROOT_DIR, "ezsnmp_data_logger")
+                if os.path.isdir(inplace_pkg_dir) and inplace_pkg_dir not in target_dirs:
+                    target_dirs.append(inplace_pkg_dir)
+
+                dll_sources = []
+                win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
+                if not win_bin:
+                    for cand_arch in ("x64", "AMD64", "x86", "ARM64"):
+                        cand = Path(f"C:/ezsnmp-netsnmp-dist/{cand_arch}/bin/release")
+                        if cand.is_dir():
+                            win_bin = str(cand)
+                            break
+                if win_bin and os.path.isdir(win_bin):
+                    dll_sources.append(win_bin)
+
+                ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
+                if not ssl_bin:
+                    for cand_ssl in (
+                        Path(r"C:\Program Files\OpenSSL\bin"),
+                        Path(r"C:\Program Files\OpenSSL-Win64\bin"),
+                        Path(r"C:\OpenSSL-Win64\bin"),
+                    ):
+                        if cand_ssl.is_dir():
+                            ssl_bin = str(cand_ssl)
+                            break
+                if ssl_bin and os.path.isdir(ssl_bin):
+                    dll_sources.append(ssl_bin)
+
+                for sdir in dll_sources:
+                    for dll_file in Path(sdir).glob("*.dll"):
+                        for tdir in target_dirs:
+                            try:
+                                shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
+                            except (OSError, shutil.SameFileError):
+                                pass
 
 
 class BuildPy(_build_py):

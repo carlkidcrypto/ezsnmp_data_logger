@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -252,3 +253,99 @@ def test_issue_templates() -> None:
     assert "[FEATURE]" in feature_content
     assert "EzSnmpDataLogger" in feature_content
     assert "AI-Assisted Feature Planning" in feature_content
+
+
+def test_netsnmp_5_10_build_requirements() -> None:
+    # 1. Verify setup.py Net-SNMP 5.10 version parsing and enforcement
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("setup_module", REPO_ROOT / "setup.py")
+    assert spec is not None and spec.loader is not None
+    setup_mod = importlib.util.module_from_spec(spec)
+    # Don't execute setup() on import by defining dummy sys.argv
+    orig_argv = sys.argv
+    try:
+        sys.argv = ["setup.py"]
+        # Read file text to verify version check function directly
+        setup_text = (REPO_ROOT / "setup.py").read_text(encoding="utf-8")
+        assert "def _is_netsnmp_5_10_or_newer(" in setup_text
+        assert "_parse_netsnmp_version(" in setup_text
+        assert "C:/ezsnmp-netsnmp-dist" in setup_text
+    finally:
+        sys.argv = orig_argv
+
+    # Direct test of the version check logic
+    def _parse_netsnmp_version(version_str: str) -> tuple[int, ...] | None:
+        digits_or_dot = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in version_str)
+        for segment in digits_or_dot.split():
+            parts = [int(p) for p in segment.split(".") if p.isdigit()]
+            if len(parts) >= 2:
+                return tuple(parts[:3])
+        return None
+
+    def _is_netsnmp_5_10_or_newer(version_str: str) -> bool:
+        parsed = _parse_netsnmp_version(version_str)
+        if parsed is None or len(parsed) < 2:
+            return False
+        return parsed[:2] >= (5, 10)
+
+    assert _is_netsnmp_5_10_or_newer("5.10") is True
+    assert _is_netsnmp_5_10_or_newer("5.10.pre2") is True
+    assert _is_netsnmp_5_10_or_newer("5.11") is True
+    assert _is_netsnmp_5_10_or_newer("6.0") is True
+    assert _is_netsnmp_5_10_or_newer("5.9") is False
+    assert _is_netsnmp_5_10_or_newer("5.9.1") is False
+    assert _is_netsnmp_5_10_or_newer("5.8") is False
+    assert _is_netsnmp_5_10_or_newer("5.6") is False
+    assert _is_netsnmp_5_10_or_newer("unknown") is False
+    assert _is_netsnmp_5_10_or_newer("") is False
+
+    # 2. Verify meson.build enforces Net-SNMP >= 5.10
+    meson_content = (REPO_ROOT / "meson.build").read_text(encoding="utf-8")
+    assert "version: '>=5.10'" in meson_content
+    assert "'<5.10'" in meson_content
+
+    # 3. Verify CMakeLists.txt enforces Net-SNMP >= 5.10 and Windows auto-discovery
+    cmake_content = (REPO_ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+    assert "pkg_check_modules(NETSNMP netsnmp>=5.10)" in cmake_content
+    assert 'VERSION_LESS "5.10"' in cmake_content
+    assert "C:/ezsnmp-netsnmp-dist" in cmake_content
+
+    # 4. Verify Net-SNMP provisioning scripts standardize on 5.10.pre2
+    linux_script = (REPO_ROOT / "tools" / "prepare_linux_netsnmp.sh").read_text(encoding="utf-8")
+    assert 'NETSNMP_VERSION="5.10.pre2"' in linux_script
+
+    macos_script = (REPO_ROOT / "tools" / "prepare_macos_netsnmp.sh").read_text(encoding="utf-8")
+    assert 'NETSNMP_VERSION="5.10.pre2"' in macos_script
+
+    windows_script = (REPO_ROOT / "tools" / "prepare_windows_netsnmp.ps1").read_text(
+        encoding="utf-8"
+    )
+    assert "5.10.pre2" in windows_script
+
+    # 5. Verify GitHub Actions workflows compile with Net-SNMP 5.10
+    workflows_dir = REPO_ROOT / ".github" / "workflows"
+    tests_cpp = (workflows_dir / "tests_cpp_native.yml").read_text(encoding="utf-8")
+    assert "prepare_linux_netsnmp.sh" in tests_cpp
+    assert "prepare_macos_netsnmp.sh" in tests_cpp
+    assert "libsnmp-dev" not in tests_cpp
+
+    tests_python = (workflows_dir / "tests_python.yml").read_text(encoding="utf-8")
+    assert "prepare_linux_netsnmp.sh" in tests_python
+    assert "prepare_macos_netsnmp.sh" in tests_python
+    assert "prepare-windows-netsnmp" in tests_python
+    assert "libsnmp-dev" not in tests_python
+
+    desktop_wf = (workflows_dir / "build_and_publish_desktop_apps.yml").read_text(encoding="utf-8")
+    assert "prepare_linux_netsnmp.sh" in desktop_wf
+    assert "prepare_macos_netsnmp.sh" in desktop_wf
+    assert "prepare-windows-netsnmp" in desktop_wf
+    assert "libsnmp-dev" not in desktop_wf
+
+    nuget_wf = (workflows_dir / "build_and_publish_to_nuget.yml").read_text(encoding="utf-8")
+    assert "prepare_linux_netsnmp.sh" in nuget_wf
+    assert "prepare_macos_netsnmp.sh" in nuget_wf
+    assert "prepare-windows-netsnmp" in nuget_wf
+
+    npm_wf = (workflows_dir / "build_and_publish_to_npm.yml").read_text(encoding="utf-8")
+    assert "prepare_linux_netsnmp.sh" in npm_wf

@@ -54,6 +54,9 @@ jobs:
             ezsnmp_data_logger/**
             configs/**
             tools/**
+            tools/prepare_linux_netsnmp.sh
+            tools/prepare_macos_netsnmp.sh
+            .github/actions/prepare-windows-netsnmp/**
             pyproject.toml
             setup.py
             requirements.txt
@@ -81,6 +84,13 @@ jobs:
           ref: v2026.11.4a0
           path: third_party/ezsnmp
 
+      - name: Cache compiled Net-SNMP for Windows
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: C:\ezsnmp-netsnmp-dist
+          key: ${{ runner.os }}-netsnmp-5.10.pre2-x64-${{ hashFiles('.github/actions/prepare-windows-netsnmp/action.yml') }}
+
       - name: Set up Python 3.13
         uses: actions/setup-python@v7
         with:
@@ -95,29 +105,53 @@ jobs:
           linux: |
             sudo apt-get update
             sudo apt-get install -y build-essential swig pkg-config patchelf \
-              libsnmp-dev libssl-dev python3-tk rpm
+              libssl-dev python3-tk rpm curl perl
+            sudo bash ./tools/prepare_linux_netsnmp.sh
           macos: |
-            brew install swig pkg-config net-snmp openssl@3
+            brew install swig pkg-config openssl@3
+            sudo bash ./tools/prepare_macos_netsnmp.sh
           windows: |
             choco install swig innosetup -y
+
+      - name: Prepare Net-SNMP for Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/prepare-windows-netsnmp
+        with:
+          arch: x64
 
       - name: Build C++ extension and package standalone desktop app
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           linux: |
+            export PATH="/usr/local/bin:${PATH}"
+            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
             python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform linux
           macos: |
-            export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export PATH="/usr/local/bin:${PATH}"
+            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
             python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform macos
           windows: |
             python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
-            $env:EZSNMP_DL_DISABLE_EZSNMP_LINK = "1"
+            $env:PATH = "C:\ezsnmp-netsnmp-dist\x64\bin\release;" + $env:PATH
+            if (Test-Path "C:\ezsnmp-netsnmp-dist\x64\bin\release\netsnmp.dll") {
+              Copy-Item "C:\ezsnmp-netsnmp-dist\x64\bin\release\*.dll" ezsnmp_data_logger/ -Force
+            }
+            if ($env:EZSNMP_OPENSSL_BIN_DIR -and (Test-Path $env:EZSNMP_OPENSSL_BIN_DIR)) {
+              Copy-Item "$env:EZSNMP_OPENSSL_BIN_DIR\*.dll" ezsnmp_data_logger/ -Force
+            } elseif (Test-Path "C:\Program Files\OpenSSL\bin") {
+              Copy-Item "C:\Program Files\OpenSSL\bin\*.dll" ezsnmp_data_logger/ -Force
+            } elseif (Test-Path "C:\Program Files\OpenSSL-Win64\bin") {
+              Copy-Item "C:\Program Files\OpenSSL-Win64\bin\*.dll" ezsnmp_data_logger/ -Force
+            }
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform windows
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Smoke test packaged executable
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
