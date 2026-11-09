@@ -26,16 +26,7 @@ def can_use_tkinter_display() -> bool:
     except Exception:
         return False
 
-    if sys.platform == "win32":
-        try:
-            root = tkinter.Tk()
-            root.withdraw()
-            root.destroy()
-            return True
-        except Exception:
-            return False
-
-    if sys.platform == "darwin":
+    if sys.platform in ("win32", "darwin"):
         return True
     return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
