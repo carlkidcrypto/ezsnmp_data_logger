@@ -223,12 +223,7 @@ void PsqlSink::write(Batch const& batch) {
    }
 }
 
-void PsqlSink::flush() noexcept {
-   try {
-      flush_pending();
-   } catch (...) {
-   }
-}
+void PsqlSink::flush() noexcept { flush_pending(); }
 
 void PsqlSink::close() noexcept {
    flush();
