@@ -227,10 +227,8 @@ void PsqlSink::flush() noexcept { flush_pending(); }
 
 void PsqlSink::close() noexcept {
    flush();
-   if (conn_) {
-      PQfinish(conn_);
-      conn_ = nullptr;
-   }
+   PQfinish(conn_);
+   conn_ = nullptr;
 }
 
 #else

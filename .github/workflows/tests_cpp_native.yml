@@ -149,10 +149,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cpp-test-results-${{ matrix.os }}
-          path: |
-            build/meson-logs/testlog.junit.xml
-            build/meson-logs/coverage.xml
-            coverage.xml
+          path: build/meson-logs/testlog.junit.xml
 
   comment-cpp-test-report:
     runs-on: ubuntu-latest
@@ -172,6 +169,6 @@ jobs:
       - name: Publish C++ Test Results
         uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d # v2
         with:
-          files: test-results/**/*.xml
+          files: test-results/**/testlog.junit.xml
           check_name: C++ Test Results - Native
           comment_title: C++ Test Results - Native
