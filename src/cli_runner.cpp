@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -484,12 +483,7 @@ std::string CliResult::to_json(int indent) const {
 
 int CliRunner::run(std::vector<std::string> const& args) {
    try {
-      int const rc = dispatch_cli(args, std::cout, std::cerr);
-      std::cout.flush();
-      std::cerr.flush();
-      std::fflush(stdout);
-      std::fflush(stderr);
-      return rc;
+      return dispatch_cli(args, std::cout, std::cerr);
    } catch (std::exception const& e) {
       bool wants_json = false;
       for (auto const& a : args) {
@@ -506,10 +500,6 @@ int CliRunner::run(std::vector<std::string> const& args) {
       } else {
          std::cerr << "Error: " << e.what() << "\n";
       }
-      std::cout.flush();
-      std::cerr.flush();
-      std::fflush(stdout);
-      std::fflush(stderr);
       return 1;
    }
 }
