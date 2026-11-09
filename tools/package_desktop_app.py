@@ -162,6 +162,18 @@ def build_pyinstaller_cmd(
         for dll_file in (REPO_ROOT / "ezsnmp_data_logger").glob("*.dll"):
             cmd.extend(["--add-binary", f"{dll_file}{sep}ezsnmp_data_logger"])
 
+        # Include Net-SNMP 5.10 DLLs if present on Windows
+        win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
+        if not win_bin:
+            for arch_cand in ("x64", "AMD64", "x86", "ARM64"):
+                cand = Path(f"C:/ezsnmp-netsnmp-dist/{arch_cand}/bin/release")
+                if cand.is_dir():
+                    win_bin = str(cand)
+                    break
+        if win_bin and Path(win_bin).is_dir():
+            for dll in Path(win_bin).glob("*.dll"):
+                cmd.extend(["--add-binary", f"{dll}{sep}."])
+
         for pyd_file in (REPO_ROOT / "ezsnmp_data_logger").glob("_ezsnmp_data_logger*.pyd"):
             cmd.extend(["--add-binary", f"{pyd_file}{sep}ezsnmp_data_logger"])
 

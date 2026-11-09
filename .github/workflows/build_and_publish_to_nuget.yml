@@ -51,10 +51,10 @@ jobs:
         with:
           linux: |
             sudo apt-get update
-            sudo apt-get install -y swig libsnmp-dev libssl-dev patchelf
+            sudo apt-get install -y swig libssl-dev patchelf curl perl
             sudo bash ./tools/prepare_linux_netsnmp.sh
           macos: |
-            brew install swig pkg-config net-snmp openssl@3
+            brew install swig pkg-config openssl@3
             sudo bash ./tools/prepare_macos_netsnmp.sh
           windows: |
             choco install swig -y

@@ -59,6 +59,8 @@ jobs:
             meson.build
             meson_options.txt
             CMakeLists.txt
+            tools/prepare_linux_netsnmp.sh
+            tools/prepare_macos_netsnmp.sh
             tools/prepare_sqlite3_amalgamation.py
             .github/workflows/tests_cpp_native.yml
 
@@ -90,15 +92,20 @@ jobs:
           linux: |
             sudo apt-get update
             sudo apt-get install -y build-essential meson ninja-build pkg-config \
-              libsnmp-dev libssl-dev libpq-dev libgtest-dev lcov gcovr
+              libssl-dev libpq-dev libgtest-dev lcov gcovr curl perl
+            sudo bash ./tools/prepare_linux_netsnmp.sh
           macos: |
-            brew install meson ninja pkg-config net-snmp openssl@3 googletest
+            brew install meson ninja pkg-config openssl@3 googletest
+            sudo bash ./tools/prepare_macos_netsnmp.sh
 
       - name: Configure, Build & Run GoogleTest Suite
         uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
         with:
           linux: |
             python3 -m pip install --upgrade pip gcovr
+            export PATH="/usr/local/bin:${PATH}"
+            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
             meson setup build -Db_coverage=true
             meson compile -C build
             set +e
@@ -107,7 +114,9 @@ jobs:
             ninja -C build coverage-xml || gcovr -r . --xml -o coverage.xml || true
             exit $TEST_EXIT_CODE
           macos: |
-            export PKG_CONFIG_PATH="$(brew --prefix net-snmp)/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export PATH="/usr/local/bin:${PATH}"
+            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
             meson setup build
             meson compile -C build
             meson test -C build -v
