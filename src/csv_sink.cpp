@@ -99,7 +99,7 @@ void CsvSink::write(Batch const& batch) {
    }
 }
 
-void CsvSink::flush() {
+void CsvSink::flush() noexcept {
    for (auto& kv : files_) {
       auto& fs = kv.second;
       if (!fs.buffer.empty()) {
@@ -113,10 +113,7 @@ void CsvSink::flush() {
 }
 
 void CsvSink::close() noexcept {
-   try {
-      flush();
-   } catch (...) {
-   }
+   flush();
    for (auto& kv : files_) {
       kv.second.file.close();
    }

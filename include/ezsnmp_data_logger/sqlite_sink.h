@@ -24,7 +24,7 @@ class SqliteSink : public ISink {
    ~SqliteSink() override;
 
    void write(Batch const& batch) override;
-   void flush() override;
+   void flush() noexcept override;
    void close() noexcept override;
    std::string name() const override { return "sqlite3"; }
 

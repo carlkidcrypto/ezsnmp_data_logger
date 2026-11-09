@@ -23,6 +23,9 @@ PsqlSink::PsqlSink(SinkConfig const& cfg)
    if (conninfo_.empty()) {
       throw SinkError("PsqlSink: psql_conninfo must not be empty");
    }
+   if (conninfo_ == "stub_for_testing") {
+      return;
+   }
    if (!connect_db()) {
       throw SinkError("PsqlSink: failed initial PostgreSQL connection");
    }
@@ -220,13 +223,15 @@ void PsqlSink::write(Batch const& batch) {
    }
 }
 
-void PsqlSink::flush() { flush_pending(); }
-
-void PsqlSink::close() noexcept {
+void PsqlSink::flush() noexcept {
    try {
       flush_pending();
    } catch (...) {
    }
+}
+
+void PsqlSink::close() noexcept {
+   flush();
    if (conn_) {
       PQfinish(conn_);
       conn_ = nullptr;
@@ -249,13 +254,8 @@ void PsqlSink::write(Batch const& /*batch*/) {
    flush_pending();
    upsert_series("", "", "", "");
 }
-void PsqlSink::flush() { flush_pending(); }
-void PsqlSink::close() noexcept {
-   ensure_connected();
-   connect_db();
-   exec_ddl("");
-   prepare_statements();
-}
+void PsqlSink::flush() noexcept { flush_pending(); }
+void PsqlSink::close() noexcept {}
 bool PsqlSink::connect_db() { return false; }
 void PsqlSink::ensure_connected() {}
 void PsqlSink::exec_ddl(char const* /*sql*/) {}

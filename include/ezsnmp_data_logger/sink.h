@@ -49,7 +49,7 @@ class ISink {
    /**
     * @brief Flush any buffered samples to underlying storage.
     */
-   virtual void flush() = 0;
+   virtual void flush() noexcept = 0;
 
    /**
     * @brief Flush and release all resources held by this sink.

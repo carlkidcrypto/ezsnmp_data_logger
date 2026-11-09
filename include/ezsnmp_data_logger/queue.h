@@ -30,17 +30,16 @@ class BoundedQueue {
     * @return true if enqueued, false if the queue is full or shutting down.
     */
    bool try_push(T item) {
-      {
-         std::lock_guard<std::mutex> lk(mutex_);
-         if (shutdown_.load()) {
-            return false;
-         }
-         if (queue_.size() >= max_size_) {
-            ++dropped_;
-            return false;
-         }
-         queue_.push(std::move(item));
+      std::unique_lock<std::mutex> lk(mutex_);
+      if (shutdown_.load()) {
+         return false;
       }
+      if (queue_.size() >= max_size_) {
+         ++dropped_;
+         return false;
+      }
+      queue_.push(std::move(item));
+      lk.unlock();
       cv_.notify_one();
       return true;
    }

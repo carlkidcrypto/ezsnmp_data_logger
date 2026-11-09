@@ -162,34 +162,31 @@ class DataLogger::Impl {
    }
 
    void stop() noexcept {
-      try {
-         std::lock_guard<std::mutex> lock(lifecycle_mutex_);
-         if (!running_.load()) {
-            return;
-         }
-
-         stop_requested_.store(true);
-         sched_cv_.notify_all();
-         wait_cv_.notify_all();
-
-         for (auto& wt : workers_) {
-            if (wt.joinable()) {
-               wt.join();
-            }
-         }
-         workers_.clear();
-
-         queue_.shutdown();
-         if (writer_thread_.joinable()) {
-            writer_thread_.join();
-         }
-
-         flush_sinks();
-         running_.store(false);
-         update_status_file();
-         wait_cv_.notify_all();
-      } catch (...) {
+      std::lock_guard<std::mutex> lock(lifecycle_mutex_);
+      if (!running_.load()) {
+         return;
       }
+
+      stop_requested_.store(true);
+      sched_cv_.notify_all();
+      wait_cv_.notify_all();
+
+      for (auto& wt : workers_) {
+         if (wt.joinable()) {
+            wt.join();
+         }
+      }
+      workers_.clear();
+
+      queue_.shutdown();
+      if (writer_thread_.joinable()) {
+         writer_thread_.join();
+      }
+
+      flush_sinks();
+      running_.store(false);
+      update_status_file();
+      wait_cv_.notify_all();
    }
 
    void run() {

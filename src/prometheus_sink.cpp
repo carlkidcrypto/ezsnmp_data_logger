@@ -285,20 +285,17 @@ std::string PrometheusSink::render_metrics() const {
    return out.str();
 }
 
-void PrometheusSink::flush() {}
+void PrometheusSink::flush() noexcept {}
 
 void PrometheusSink::close() noexcept {
-   try {
-      bool was_running = running_.exchange(false);
-      SocketHandle lfd = static_cast<SocketHandle>(listen_fd_);
-      if (lfd != kInvalidSocket) {
-         close_socket(lfd);
-         listen_fd_ = static_cast<intptr_t>(kInvalidSocket);
-      }
-      if (was_running && server_thread_.joinable()) {
-         server_thread_.join();
-      }
-   } catch (...) {
+   bool was_running = running_.exchange(false);
+   SocketHandle lfd = static_cast<SocketHandle>(listen_fd_);
+   if (lfd != kInvalidSocket) {
+      close_socket(lfd);
+      listen_fd_ = static_cast<intptr_t>(kInvalidSocket);
+   }
+   if (was_running && server_thread_.joinable()) {
+      server_thread_.join();
    }
 }
 

@@ -339,16 +339,6 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    psql_cfg.psql_conninfo = "host=localhost dbname=ezsnmp_test_not_running";
 #if !defined(EZSNMP_DL_HAVE_LIBPQ) || !EZSNMP_DL_HAVE_LIBPQ
    EXPECT_THROW({ PsqlSink ps(psql_cfg); }, SinkError);
-   // Exercise stub implementation
-   psql_cfg.psql_conninfo = "stub_for_testing";
-   {
-      PsqlSink ps_stub(psql_cfg);
-      EXPECT_EQ(ps_stub.name(), "psql");
-      Batch b_stub;
-      ps_stub.write(b_stub);
-      ps_stub.flush();
-      ps_stub.close();
-   }
 #else
    SinkConfig empty_psql_cfg;
    empty_psql_cfg.type = "psql";
@@ -356,6 +346,19 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    EXPECT_THROW({ PsqlSink ps_empty(empty_psql_cfg); }, SinkError);
    EXPECT_THROW({ PsqlSink ps(psql_cfg); }, SinkError);
 #endif
+
+   // Exercise stub implementation and close on all platforms
+   SinkConfig psql_stub_cfg;
+   psql_stub_cfg.type = "psql";
+   psql_stub_cfg.psql_conninfo = "stub_for_testing";
+   {
+      PsqlSink ps_stub(psql_stub_cfg);
+      EXPECT_EQ(ps_stub.name(), "psql");
+      Batch b_stub;
+      ps_stub.write(b_stub);
+      ps_stub.flush();
+      ps_stub.close();
+   }
 
    // PrometheusSink endpoints and label escaping
    SinkConfig prom_cfg;

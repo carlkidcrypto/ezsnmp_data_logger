@@ -226,7 +226,7 @@ void SqliteSink::write(Batch const& batch) {
    maybe_commit();
 }
 
-void SqliteSink::flush() { commit_txn(); }
+void SqliteSink::flush() noexcept { commit_txn(); }
 
 void SqliteSink::close() noexcept {
    if (!db_) {
