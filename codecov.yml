@@ -19,6 +19,12 @@ coverage:
         threshold: 1%
         informational: false
 
+# Bundle analysis configuration
+# Documentation: https://docs.codecov.com/docs/javascript-bundle-analysis
+bundle_analysis:
+  warning_threshold: "5%"
+  status: "informational"
+
 # Ignore paths - exclude test files, build files, and docs from coverage reports
 ignore:
   - "python_tests/**"
@@ -73,6 +79,8 @@ comment:
   require_changes: false
   require_base: false
   require_head: false
+  require_bundle_changes: true
+  bundle_change_threshold: "1Kb"
 
 # Component configuration to track Python and C++ separately
 component_management:

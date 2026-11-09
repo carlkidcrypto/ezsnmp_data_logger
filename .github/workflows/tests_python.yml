@@ -177,3 +177,10 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload JavaScript Bundle Analysis to Codecov
+        if: always() && runner.os == 'Linux' && matrix.python-version == '3.13'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          npx --yes @codecov/bundle-analyzer ezsnmp_data_logger/gui/static --bundle-name=ezsnmp-web-gui --upload-token="${CODECOV_TOKEN}" || true

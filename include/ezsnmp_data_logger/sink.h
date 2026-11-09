@@ -54,7 +54,7 @@ class ISink {
    /**
     * @brief Flush and release all resources held by this sink.
     */
-   virtual void close() = 0;
+   virtual void close() noexcept = 0;
 
    /**
     * @brief Return the short type identifier of this sink (e.g. "csv", "sqlite3").

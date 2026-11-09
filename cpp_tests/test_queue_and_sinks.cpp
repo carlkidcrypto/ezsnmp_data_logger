@@ -43,6 +43,29 @@ TEST(BoundedQueueTest, EnforcesCapacityAndDrainsBeforeShutdown) {
    EXPECT_EQ(*v1 + *v2 + *v3, 60);
 }
 
+TEST(BufferedFileStateTest, MoveConstructAndMoveAssign) {
+   BufferedFileState fs1;
+   fs1.buffer.push_back("sample_row_1");
+   BufferedFileState fs2(std::move(fs1));
+   EXPECT_EQ(fs2.buffer.size(), 1u);
+   EXPECT_EQ(fs2.buffer[0], "sample_row_1");
+
+   BufferedFileState fs3;
+   fs3 = std::move(fs2);
+   EXPECT_EQ(fs3.buffer.size(), 1u);
+   EXPECT_EQ(fs3.buffer[0], "sample_row_1");
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-move"
+#endif
+   fs3 = std::move(fs3);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+   EXPECT_EQ(fs3.buffer.size(), 1u);
+}
+
 TEST(SinksAndInspectorTest, WritesAndInspectsSqliteJsonlAndCsvSinks) {
    ScopedTempDir tmp("ezsnmp_sinks_");
 

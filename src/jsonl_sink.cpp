@@ -34,12 +34,7 @@ JsonlSink::JsonlSink(SinkConfig const& cfg)
    }
 }
 
-JsonlSink::~JsonlSink() {
-   try {
-      close();
-   } catch (...) {
-   }
-}
+JsonlSink::~JsonlSink() { close(); }
 
 JsonlSink::FileState& JsonlSink::get_or_open(std::string const& dut_name) {
    auto it = files_.find(dut_name);
@@ -99,8 +94,11 @@ void JsonlSink::flush() {
    }
 }
 
-void JsonlSink::close() {
-   flush();
+void JsonlSink::close() noexcept {
+   try {
+      flush();
+   } catch (...) {
+   }
    for (auto& kv : files_) {
       kv.second.file.close();
    }

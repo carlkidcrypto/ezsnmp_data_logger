@@ -67,7 +67,7 @@ class DataLogger {
    /**
     * @brief Signal all polling threads to stop, drain the bounded queue, and flush sinks.
     */
-   void stop();
+   void stop() noexcept;
 
    /**
     * @brief Run the logger synchronously in the foreground until stop(), max_cycles, or duration.

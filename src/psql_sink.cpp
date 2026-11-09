@@ -222,7 +222,7 @@ void PsqlSink::write(Batch const& batch) {
 
 void PsqlSink::flush() { flush_pending(); }
 
-void PsqlSink::close() {
+void PsqlSink::close() noexcept {
    try {
       flush_pending();
    } catch (...) {
@@ -250,7 +250,7 @@ void PsqlSink::write(Batch const& /*batch*/) {
    upsert_series("", "", "", "");
 }
 void PsqlSink::flush() { flush_pending(); }
-void PsqlSink::close() {
+void PsqlSink::close() noexcept {
    ensure_connected();
    connect_db();
    exec_ddl("");

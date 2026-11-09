@@ -228,7 +228,7 @@ void SqliteSink::write(Batch const& batch) {
 
 void SqliteSink::flush() { commit_txn(); }
 
-void SqliteSink::close() {
+void SqliteSink::close() noexcept {
    if (!db_) {
       return;
    }
@@ -260,7 +260,7 @@ SqliteSink::SqliteSink(SinkConfig const& /*cfg*/) {
 SqliteSink::~SqliteSink() = default;
 void SqliteSink::write(Batch const& /*batch*/) {}
 void SqliteSink::flush() {}
-void SqliteSink::close() {}
+void SqliteSink::close() noexcept {}
 void SqliteSink::exec(char const* /*sql*/) {}
 void SqliteSink::prepare_statements() {}
 void SqliteSink::begin_txn() {}

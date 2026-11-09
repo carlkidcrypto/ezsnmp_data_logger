@@ -430,15 +430,21 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
 
    // Template files & parse_config / parse_config_file
    ScopedTempDir tmp_c("ezsnmp_tmp_conf_");
-   std::string cfg_f = (tmp_c.path() / "test_conf.json").string();
-   std::string tmpl = generate_template_config_json("minimal", 2);
-   {
-      std::ofstream out(cfg_f);
-      out << tmpl;
+   for (std::string const& tpl_name : {"minimal", "demo", "enterprise", "snmpv3"}) {
+      std::string tpl_json = generate_template_config_json(tpl_name, 2);
+      EXPECT_FALSE(tpl_json.empty());
+      EXPECT_TRUE(validate_config(tpl_json).valid);
+      EXPECT_NO_THROW({ (void)parse_config(tpl_json); });
+
+      std::string cfg_f = (tmp_c.path() / ("test_" + tpl_name + ".json")).string();
+      {
+         std::ofstream out(cfg_f);
+         out << tpl_json;
+      }
+      EXPECT_TRUE(validate_config_file(cfg_f).valid);
+      EXPECT_NO_THROW({ (void)LoggerConfig::from_file(cfg_f); });
+      EXPECT_NO_THROW({ (void)parse_config_file(cfg_f); });
    }
-   EXPECT_TRUE(validate_config_file(cfg_f).valid);
-   EXPECT_NO_THROW({ (void)LoggerConfig::from_file(cfg_f); });
-   EXPECT_NO_THROW({ (void)parse_config_file(cfg_f); });
    EXPECT_THROW({ parse_config_file("/non/existent/cfg.json"); }, ConfigError);
 
    // ValidationReport::to_json serialization

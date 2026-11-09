@@ -22,7 +22,7 @@ class JsonlSink : public ISink {
 
    void write(Batch const& batch) override;
    void flush() override;
-   void close() override;
+   void close() noexcept override;
    std::string name() const override { return "jsonl"; }
 
   private:

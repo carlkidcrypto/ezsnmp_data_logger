@@ -222,6 +222,7 @@ def test_codecov_configuration() -> None:
     assert "name: cpp" in content
     assert "component_id: python_code" in content
     assert "component_id: cpp_code" in content
+    assert "bundle_analysis:" in content
 
     workflows_dir = REPO_ROOT / ".github" / "workflows"
     python_wf = (workflows_dir / "tests_python.yml").read_text(encoding="utf-8")

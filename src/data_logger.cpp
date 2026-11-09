@@ -112,21 +112,12 @@ class DataLogger::Impl {
    }
 
    ~Impl() {
-      try {
-         stop();
-      } catch (...) {
+      stop();
+      std::lock_guard<std::mutex> lock(sinks_mutex_);
+      for (auto& s : sinks_) {
+         s->close();
       }
-      try {
-         std::lock_guard<std::mutex> lock(sinks_mutex_);
-         for (auto& s : sinks_) {
-            try {
-               s->close();
-            } catch (...) {
-            }
-         }
-         sinks_.clear();
-      } catch (...) {
-      }
+      sinks_.clear();
    }
 
    void set_batch_callback(std::function<void(Batch const&)> cb) {
@@ -170,32 +161,35 @@ class DataLogger::Impl {
       }
    }
 
-   void stop() {
-      std::lock_guard<std::mutex> lock(lifecycle_mutex_);
-      if (!running_.load()) {
-         return;
-      }
-
-      stop_requested_.store(true);
-      sched_cv_.notify_all();
-      wait_cv_.notify_all();
-
-      for (auto& wt : workers_) {
-         if (wt.joinable()) {
-            wt.join();
+   void stop() noexcept {
+      try {
+         std::lock_guard<std::mutex> lock(lifecycle_mutex_);
+         if (!running_.load()) {
+            return;
          }
-      }
-      workers_.clear();
 
-      queue_.shutdown();
-      if (writer_thread_.joinable()) {
-         writer_thread_.join();
-      }
+         stop_requested_.store(true);
+         sched_cv_.notify_all();
+         wait_cv_.notify_all();
 
-      flush_sinks();
-      running_.store(false);
-      update_status_file();
-      wait_cv_.notify_all();
+         for (auto& wt : workers_) {
+            if (wt.joinable()) {
+               wt.join();
+            }
+         }
+         workers_.clear();
+
+         queue_.shutdown();
+         if (writer_thread_.joinable()) {
+            writer_thread_.join();
+         }
+
+         flush_sinks();
+         running_.store(false);
+         update_status_file();
+         wait_cv_.notify_all();
+      } catch (...) {
+      }
    }
 
    void run() {
@@ -508,7 +502,7 @@ void DataLogger::set_batch_callback(std::function<void(Batch const&)> cb) {
 
 void DataLogger::start() { impl_->start(); }
 
-void DataLogger::stop() {
+void DataLogger::stop() noexcept {
    if (impl_) {
       impl_->stop();
    }
