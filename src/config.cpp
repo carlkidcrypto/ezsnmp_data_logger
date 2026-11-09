@@ -731,20 +731,21 @@ std::string generate_template_config_json(std::string const& template_name, int 
       SinkConfig psql;
       psql.type = "psql";
       psql.enabled = false;
-      psql.psql_conninfo = "host=127.0.0.1 port=5432 dbname=snmp user=snmp password=snmp";
+      psql.psql_conninfo =
+          "host=127.0.0.1 port=5432 dbname=snmp user=snmp password=snmp"; // NOSONAR
       cfg.sinks.push_back(std::move(psql));
    } else if (template_name == "snmpv3") {
       DutConfig dut;
       dut.name = "core_fw_v3";
-      dut.dut_ip = "10.20.0.1";
+      dut.dut_ip = "10.20.0.1"; // NOSONAR
       dut.snmp.mode = "ezsnmp";
       dut.snmp.version = "3";
       dut.snmp.security_level = "authPriv";
       dut.snmp.security_username = "netops_monitor";
       dut.snmp.auth_protocol = "SHA-256";
-      dut.snmp.auth_passphrase = "replace_with_auth_secret";
+      dut.snmp.auth_passphrase = "replace_with_auth_secret"; // NOSONAR
       dut.snmp.privacy_protocol = "AES";
-      dut.snmp.privacy_passphrase = "replace_with_priv_secret";
+      dut.snmp.privacy_passphrase = "replace_with_priv_secret"; // NOSONAR
       dut.metrics = {
           {"sysUpTime", ".1.3.6.1.2.1.1.3.0", "get", 10, "s", ""},
           {"sysDescr", ".1.3.6.1.2.1.1.1.0", "get", 10, "s", ""},

@@ -51,7 +51,12 @@ CsvSink::CsvSink(SinkConfig const& cfg)
    }
 }
 
-CsvSink::~CsvSink() { close(); }
+CsvSink::~CsvSink() {
+   try {
+      close();
+   } catch (...) {
+   }
+}
 
 CsvSink::FileState& CsvSink::get_or_open(std::string const& dut_name) {
    auto it = files_.find(dut_name);

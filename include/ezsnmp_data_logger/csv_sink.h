@@ -32,6 +32,19 @@ class CsvSink : public ISink {
    struct FileState {
       std::ofstream file;
       std::vector<std::string> buffer;
+
+      FileState() = default;
+      FileState(FileState&& other) noexcept
+          : file(std::move(other.file)), buffer(std::move(other.buffer)) {}
+      FileState& operator=(FileState&& other) noexcept {
+         if (this != &other) {
+            file = std::move(other.file);
+            buffer = std::move(other.buffer);
+         }
+         return *this;
+      }
+      FileState(FileState const&) = delete;
+      FileState& operator=(FileState const&) = delete;
    };
 
    std::unordered_map<std::string, FileState> files_;

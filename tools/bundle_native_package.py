@@ -238,10 +238,26 @@ def _bundle_linux(artifact: Path, libs_dir: Path) -> list[str]:
 
 def _pe_extract_dll_imports(binary: Path) -> list[str]:
     data = binary.read_bytes()
-    matches = set(re.findall(rb"([A-Za-z0-9_.\-]+\.[dD][lL][lL])", data))
+    valid_chars = set(b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-")
+    matches: set[str] = set()
+    offset = 0
+    lower_data = data.lower()
+    needle = b".dll"
+    while True:
+        idx = lower_data.find(needle, offset)
+        if idx == -1:
+            break
+        start = idx
+        while start > 0 and data[start - 1] in valid_chars:
+            start -= 1
+        raw_name = data[start : idx + 4]
+        if len(raw_name) > 4:
+            name = raw_name.decode("ascii", errors="ignore")
+            matches.add(name)
+        offset = idx + 4
+
     names = []
-    for raw in sorted(matches):
-        name = raw.decode("ascii", errors="ignore")
+    for name in sorted(matches):
         low = name.lower()
         if low == binary.name.lower():
             continue

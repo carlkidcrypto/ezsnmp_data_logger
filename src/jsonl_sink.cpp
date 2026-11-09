@@ -34,7 +34,12 @@ JsonlSink::JsonlSink(SinkConfig const& cfg)
    }
 }
 
-JsonlSink::~JsonlSink() { close(); }
+JsonlSink::~JsonlSink() {
+   try {
+      close();
+   } catch (...) {
+   }
+}
 
 JsonlSink::FileState& JsonlSink::get_or_open(std::string const& dut_name) {
    auto it = files_.find(dut_name);
