@@ -192,8 +192,11 @@ def _bundle_macos(
     return sorted(p.name for p in libs_dir.glob("*.dylib"))
 
 
-def _linux_list_deps(binary: Path) -> list[tuple[str, str]]:
-    res = subprocess.run(["ldd", str(binary)], capture_output=True, text=True, check=True)
+def _linux_list_deps(binary: Path, clean_env: bool = False) -> list[tuple[str, str]]:
+    env = dict(os.environ)
+    if clean_env:
+        env.pop("LD_LIBRARY_PATH", None)
+    res = subprocess.run(["ldd", str(binary)], capture_output=True, text=True, check=True, env=env)
     pairs: list[tuple[str, str]] = []
     for line in res.stdout.splitlines():
         line = line.strip()
@@ -283,7 +286,7 @@ def verify_self_contained(artifact: Path, libs_dir: Path | None = None) -> dict[
                     external.append({"binary": t.name, "dependency": dep})
     elif sys.platform.startswith("linux"):
         for t in targets:
-            deps_pairs = _linux_list_deps(t)
+            deps_pairs = _linux_list_deps(t, clean_env=True)
             inspected[t.name] = [f"{k} => {v}" for k, v in deps_pairs]
             for soname, resolved in deps_pairs:
                 if _linux_is_system_lib(soname):
