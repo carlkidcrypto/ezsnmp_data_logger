@@ -130,14 +130,28 @@ jobs:
             export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
             python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
-            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
+            python -m pytest -v \
+              -o junit_family=legacy \
+              --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml \
+              --junitxml=test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml \
+              --cov-report=term | tee test-outputs_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            TEST_EXIT_CODE=${PIPESTATUS[0]}
+            if [ -f .coverage ]; then python -m coverage report > pytest-coverage_${{ matrix.os }}_${{ matrix.python-version }}.txt || true; fi
+            exit $TEST_EXIT_CODE
           macos: |
             export PATH="/usr/local/bin:${PATH}"
             export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
             python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             python setup.py build_ext --inplace
-            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
+            python -m pytest -v \
+              -o junit_family=legacy \
+              --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml \
+              --junitxml=test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml \
+              --cov-report=term | tee test-outputs_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            TEST_EXIT_CODE=${PIPESTATUS[0]}
+            if [ -f .coverage ]; then python -m coverage report > pytest-coverage_${{ matrix.os }}_${{ matrix.python-version }}.txt || true; fi
+            exit $TEST_EXIT_CODE
           windows: |
             python -m pip install --pre --upgrade pip setuptools wheel pytest pytest-cov "ezsnmp>=2026.11.4a0"
             $env:PATH = "C:\ezsnmp-netsnmp-dist\x64\bin\release;" + $env:PATH
@@ -152,15 +166,34 @@ jobs:
               Copy-Item "C:\Program Files\OpenSSL-Win64\bin\*.dll" ezsnmp_data_logger/ -Force
             }
             python setup.py build_ext --inplace
-            python -m pytest -v --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml --junitxml=test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml --cov-report=term
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            python -m pytest -v `
+              -o junit_family=legacy `
+              --cov=ezsnmp_data_logger --cov-report=xml:coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml `
+              --junitxml=test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml `
+              --cov-report=term | Tee-Object -FilePath test-outputs_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            $testExitCode = $LASTEXITCODE
+            if (Test-Path .coverage) {
+              python -m coverage report | Out-File -Encoding utf8 pytest-coverage_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            }
+            if ($testExitCode -ne 0) { exit $testExitCode }
+
+      - name: Upload Test Results Artifacts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pytest-results_${{ matrix.os }}_${{ matrix.python-version }}
+          path: |
+            test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml
+            test-outputs_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            pytest-coverage_${{ matrix.os }}_${{ matrix.python-version }}.txt
+            coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml
 
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage_${{ matrix.os }}_py${{ matrix.python-version }}.xml
+          files: ./coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml
           flags: python
           fail_ci_if_error: false
         env:
@@ -171,7 +204,7 @@ jobs:
         uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./test-results_${{ matrix.os }}_py${{ matrix.python-version }}.xml
+          files: ./test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml
           flags: python
           report_type: test_results
           fail_ci_if_error: false
@@ -184,3 +217,176 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
           npx --yes @codecov/bundle-analyzer ezsnmp_data_logger/gui/static --bundle-name=ezsnmp-web-gui --upload-token="${CODECOV_TOKEN}" || true
+
+  comment-pytest-coverage-report:
+    runs-on: ubuntu-latest
+    needs: python-and-gui-tests
+    if: always() && needs.python-and-gui-tests.result != 'skipped'
+    permissions:
+      pull-requests: write # This is needed to create/update PR comments
+      contents: write # Needed for commit comments when workflow runs on push
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: pytest-results_*
+          merge-multiple: false
+
+      - name: List files
+        run: ls -R pytest-results_*
+
+      - name: Pytest coverage comment - Native
+        id: pytest-coverage-native
+        uses: MishaKav/pytest-coverage-comment@9516bf7f32a9229cf18d5e1717ae387c7154f279 # v1.13.0
+        with:
+          title: Pytest Coverage Report - Native
+          unique-id-for-comment: native-tests
+          hide-badge: true
+          hide-report: true
+          create-new-comment: false
+          hide-comment: true
+          report-only-changed-files: false
+          multiple-files: |
+            ubuntu-latest - Native - 3.12, pytest-results_ubuntu-latest_3.12/test-outputs_ubuntu-latest_3.12.txt, pytest-results_ubuntu-latest_3.12/test-results_ubuntu-latest_3.12.xml
+            ubuntu-latest - Native - 3.13, pytest-results_ubuntu-latest_3.13/test-outputs_ubuntu-latest_3.13.txt, pytest-results_ubuntu-latest_3.13/test-results_ubuntu-latest_3.13.xml
+            windows-latest - Native - 3.12, pytest-results_windows-latest_3.12/test-outputs_windows-latest_3.12.txt, pytest-results_windows-latest_3.12/test-results_windows-latest_3.12.xml
+            windows-latest - Native - 3.13, pytest-results_windows-latest_3.13/test-outputs_windows-latest_3.13.txt, pytest-results_windows-latest_3.13/test-results_windows-latest_3.13.xml
+
+      - name: Strip leading newlines from Native summaryReport
+        id: clean-native-report
+        env:
+          SUMMARY_REPORT: ${{ steps.pytest-coverage-native.outputs.summaryReport }}
+        run: |
+          python3 -c "
+          import os, json
+          report = os.environ.get('SUMMARY_REPORT', '')
+          try:
+              decoded = json.loads(report)
+              if isinstance(decoded, str):
+                  report = decoded
+          except (json.JSONDecodeError, ValueError):
+              pass
+          lines = [line.strip() for line in report.splitlines() if line.strip()]
+          report = '\n'.join(lines)
+          delimiter = 'GHADELIMITER'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'report<<{delimiter}\n')
+              f.write(report)
+              if not report.endswith('\n'):
+                  f.write('\n')
+              f.write(f'{delimiter}\n')
+          "
+
+      - name: Find existing pytest coverage comment (PR) - Native
+        id: find-native-comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- pytest-coverage-native -->'
+
+      - name: Post collapsible pytest coverage comment (PR) - Native
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@2b6bdb56ad3073fa0e4beef00447158f55a18414 # v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find-native-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            <!-- pytest-coverage-native -->
+            ## Pytest Coverage Report - Native 🐍
+            <details>
+            <summary>📊 Test Results (click to expand)</summary>
+
+            ${{ steps.clean-native-report.outputs.report }}
+            </details>
+
+      - name: Post pytest coverage comment (Push) - Native
+        if: github.event_name == 'push'
+        uses: peter-evans/commit-comment@f6d60c65d05bb59f750fa51ad3de1d443ba0eb52 # v4
+        with:
+          body: |
+            ## Pytest Coverage Report - Native 🐍
+            <details>
+            <summary>📊 Test Results (click to expand)</summary>
+
+            ${{ steps.clean-native-report.outputs.report }}
+            </details>
+
+      - name: Pytest coverage comment - Homebrew
+        id: pytest-coverage-homebrew
+        uses: MishaKav/pytest-coverage-comment@9516bf7f32a9229cf18d5e1717ae387c7154f279 # v1.13.0
+        with:
+          title: Pytest Coverage Report - Homebrew
+          unique-id-for-comment: homebrew-tests
+          hide-badge: true
+          hide-report: true
+          create-new-comment: false
+          hide-comment: true
+          report-only-changed-files: false
+          multiple-files: |
+            macos-latest - Homebrew - 3.12, pytest-results_macos-latest_3.12/test-outputs_macos-latest_3.12.txt, pytest-results_macos-latest_3.12/test-results_macos-latest_3.12.xml
+            macos-latest - Homebrew - 3.13, pytest-results_macos-latest_3.13/test-outputs_macos-latest_3.13.txt, pytest-results_macos-latest_3.13/test-results_macos-latest_3.13.xml
+
+      - name: Strip leading newlines from Homebrew summaryReport
+        id: clean-homebrew-report
+        env:
+          SUMMARY_REPORT: ${{ steps.pytest-coverage-homebrew.outputs.summaryReport }}
+        run: |
+          python3 -c "
+          import os, json
+          report = os.environ.get('SUMMARY_REPORT', '')
+          try:
+              decoded = json.loads(report)
+              if isinstance(decoded, str):
+                  report = decoded
+          except (json.JSONDecodeError, ValueError):
+              pass
+          lines = [line.strip() for line in report.splitlines() if line.strip()]
+          report = '\n'.join(lines)
+          delimiter = 'GHADELIMITER'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'report<<{delimiter}\n')
+              f.write(report)
+              if not report.endswith('\n'):
+                  f.write('\n')
+              f.write(f'{delimiter}\n')
+          "
+
+      - name: Find existing pytest coverage comment (PR) - Homebrew
+        id: find-homebrew-comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- pytest-coverage-homebrew -->'
+
+      - name: Post collapsible pytest coverage comment (PR) - Homebrew
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@2b6bdb56ad3073fa0e4beef00447158f55a18414 # v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find-homebrew-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            <!-- pytest-coverage-homebrew -->
+            ## Pytest Coverage Report - Homebrew 🐍
+            <details>
+            <summary>📊 Test Results (click to expand)</summary>
+
+            ${{ steps.clean-homebrew-report.outputs.report }}
+            </details>
+
+      - name: Post pytest coverage comment (Push) - Homebrew
+        if: github.event_name == 'push'
+        uses: peter-evans/commit-comment@f6d60c65d05bb59f750fa51ad3de1d443ba0eb52 # v4
+        with:
+          body: |
+            ## Pytest Coverage Report - Homebrew 🐍
+            <details>
+            <summary>📊 Test Results (click to expand)</summary>
+
+            ${{ steps.clean-homebrew-report.outputs.report }}
+            </details>

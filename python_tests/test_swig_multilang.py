@@ -350,3 +350,27 @@ def test_netsnmp_5_10_build_requirements() -> None:
 
     npm_wf = (workflows_dir / "build_and_publish_to_npm.yml").read_text(encoding="utf-8")
     assert "prepare_linux_netsnmp.sh" in npm_wf
+
+
+def test_pytest_and_cpp_test_commenting_configuration():
+    """Verify that CI workflows configure automated PR test comments for Native and Homebrew."""
+    workflows_dir = REPO_ROOT / ".github" / "workflows"
+
+    # Verify tests_python.yml has Pytest Coverage Report comments for Native and Homebrew
+    tests_python = (workflows_dir / "tests_python.yml").read_text(encoding="utf-8")
+    assert "comment-pytest-coverage-report" in tests_python
+    assert "MishaKav/pytest-coverage-comment" in tests_python
+    assert "Pytest Coverage Report - Native" in tests_python
+    assert "Pytest Coverage Report - Homebrew" in tests_python
+    assert "<!-- pytest-coverage-native -->" in tests_python
+    assert "<!-- pytest-coverage-homebrew -->" in tests_python
+    assert "upload-artifact" in tests_python
+    assert "download-artifact" in tests_python
+
+    # Verify tests_cpp_native.yml has C++ Test Results comment job
+    tests_cpp = (workflows_dir / "tests_cpp_native.yml").read_text(encoding="utf-8")
+    assert "comment-cpp-test-report" in tests_cpp
+    assert "EnricoMi/publish-unit-test-result-action" in tests_cpp
+    assert "C++ Test Results - Native" in tests_cpp
+    assert "upload-artifact" in tests_cpp
+    assert "download-artifact" in tests_cpp
