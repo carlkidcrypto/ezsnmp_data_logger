@@ -210,10 +210,8 @@ TEST(DataLoggerEngineTest, ExhaustiveRuntimeAndAccessors) {
    LoggerConfig queue_full_cfg = LoggerConfig::from_json(cfg_str);
    queue_full_cfg.logger.queue_depth = 1;
    DataLogger dl_q_full(queue_full_cfg);
-   dl_q_full.start();
-   dl_q_full.push_batch(b);
+   EXPECT_TRUE(dl_q_full.push_batch(b));
    EXPECT_FALSE(dl_q_full.push_batch(b));
-   dl_q_full.stop();
 }
 
 TEST(DataLoggerEngineTest, StubPollerExhaustive) {
