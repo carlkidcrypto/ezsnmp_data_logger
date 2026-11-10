@@ -86,7 +86,7 @@ jobs:
 
       - name: Cache compiled Net-SNMP for Windows
         if: runner.os == 'Windows'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: C:\ezsnmp-netsnmp-dist
           key: ${{ runner.os }}-netsnmp-5.10.pre2-x64-${{ hashFiles('.github/actions/prepare-windows-netsnmp/action.yml') }}
@@ -100,7 +100,7 @@ jobs:
         run: python tools/prepare_sqlite3_amalgamation.py
 
       - name: Install system dependencies
-        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
         with:
           linux: |
             sudo apt-get update
@@ -120,7 +120,7 @@ jobs:
           arch: x64
 
       - name: Build C++ extension and package standalone desktop app
-        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
         with:
           linux: |
             export PATH="/usr/local/bin:${PATH}"
@@ -154,7 +154,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Smoke test packaged executable
-        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
         with:
           linux: |
             ./dist/EzSnmpDataLogger cli version
