@@ -440,3 +440,25 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    bad_sink_type.type = "unknown_sink_xyz";
    EXPECT_THROW({ create_sink(bad_sink_type); }, SinkError);
 }
+
+TEST(SqliteSinkTest, CommitsByElapsedTimeAndToleratesRepeatedFlushAndClose) {
+   ScopedTempDir tmp("ezsnmp_sqlite_time_");
+   SinkConfig cfg;
+   cfg.type = "sqlite3";
+   cfg.sqlite_path = (tmp.path() / "time.sqlite").string();
+   cfg.sqlite_commit_every_n = 1000;
+   cfg.sqlite_commit_every_ms = 0;
+
+   SqliteSink sink(cfg);
+   Batch b;
+   b.ts_unix_ns = 1700000000003LL;
+   b.dut_name = "time-dut";
+   b.dut_ip = "127.0.0.1";
+   b.samples.push_back(Sample::make_int("count", "1.1", 1));
+   EXPECT_NO_THROW(sink.write(b));
+   EXPECT_NO_THROW(sink.flush());
+   EXPECT_NO_THROW(sink.flush());
+   sink.close();
+   EXPECT_NO_THROW(sink.close());
+   EXPECT_THROW(sink.write(b), SinkError);
+}
