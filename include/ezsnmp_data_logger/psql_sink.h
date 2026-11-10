@@ -23,8 +23,8 @@ class PsqlSink : public ISink {
    ~PsqlSink() override;
 
    void write(Batch const& batch) override;
-   void flush() noexcept override;
-   void close() noexcept override;
+   void flush() override;
+   void close() override;
    std::string name() const override { return "psql"; }
 
   private:

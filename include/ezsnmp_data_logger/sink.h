@@ -49,12 +49,12 @@ class ISink {
    /**
     * @brief Flush any buffered samples to underlying storage.
     */
-   virtual void flush() noexcept = 0;
+   virtual void flush() = 0;
 
    /**
     * @brief Flush and release all resources held by this sink.
     */
-   virtual void close() noexcept = 0;
+   virtual void close() = 0;
 
    /**
     * @brief Return the short type identifier of this sink (e.g. "csv", "sqlite3").

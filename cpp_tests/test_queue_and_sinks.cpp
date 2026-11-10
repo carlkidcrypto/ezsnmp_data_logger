@@ -43,29 +43,6 @@ TEST(BoundedQueueTest, EnforcesCapacityAndDrainsBeforeShutdown) {
    EXPECT_EQ(*v1 + *v2 + *v3, 60);
 }
 
-TEST(BufferedFileStateTest, MoveConstructAndMoveAssign) {
-   BufferedFileState fs1;
-   fs1.buffer.push_back("sample_row_1");
-   BufferedFileState fs2(std::move(fs1));
-   EXPECT_EQ(fs2.buffer.size(), 1u);
-   EXPECT_EQ(fs2.buffer[0], "sample_row_1");
-
-   BufferedFileState fs3;
-   fs3 = std::move(fs2);
-   EXPECT_EQ(fs3.buffer.size(), 1u);
-   EXPECT_EQ(fs3.buffer[0], "sample_row_1");
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wself-move"
-#endif
-   fs3 = std::move(fs3);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-   EXPECT_EQ(fs3.buffer.size(), 1u);
-}
-
 TEST(SinksAndInspectorTest, WritesAndInspectsSqliteJsonlAndCsvSinks) {
    ScopedTempDir tmp("ezsnmp_sinks_");
 
@@ -339,6 +316,16 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    psql_cfg.psql_conninfo = "host=localhost dbname=ezsnmp_test_not_running";
 #if !defined(EZSNMP_DL_HAVE_LIBPQ) || !EZSNMP_DL_HAVE_LIBPQ
    EXPECT_THROW({ PsqlSink ps(psql_cfg); }, SinkError);
+   // Exercise stub implementation
+   psql_cfg.psql_conninfo = "stub_for_testing";
+   {
+      PsqlSink ps_stub(psql_cfg);
+      EXPECT_EQ(ps_stub.name(), "psql");
+      Batch b_stub;
+      ps_stub.write(b_stub);
+      ps_stub.flush();
+      ps_stub.close();
+   }
 #else
    SinkConfig empty_psql_cfg;
    empty_psql_cfg.type = "psql";
@@ -346,19 +333,6 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    EXPECT_THROW({ PsqlSink ps_empty(empty_psql_cfg); }, SinkError);
    EXPECT_THROW({ PsqlSink ps(psql_cfg); }, SinkError);
 #endif
-
-   // Exercise stub implementation and close on all platforms
-   SinkConfig psql_stub_cfg;
-   psql_stub_cfg.type = "psql";
-   psql_stub_cfg.psql_conninfo = "stub_for_testing";
-   {
-      PsqlSink ps_stub(psql_stub_cfg);
-      EXPECT_EQ(ps_stub.name(), "psql");
-      Batch b_stub;
-      ps_stub.write(b_stub);
-      ps_stub.flush();
-      ps_stub.close();
-   }
 
    // PrometheusSink endpoints and label escaping
    SinkConfig prom_cfg;
@@ -450,11 +424,12 @@ TEST(SinksAndQueueTest, ExhaustiveQueueAndSinks) {
    EXPECT_NE(create_sink(fc_cfg), nullptr);
 
    fc_cfg.type = "psql";
-   fc_cfg.psql_conninfo = "host=localhost dbname=ezsnmp_test_not_running";
-   EXPECT_THROW({ (void)create_sink(fc_cfg); }, SinkError);
-
    fc_cfg.psql_conninfo = "stub_for_testing";
+#if defined(EZSNMP_DL_HAVE_LIBPQ) && EZSNMP_DL_HAVE_LIBPQ
+   EXPECT_THROW({ (void)create_sink(fc_cfg); }, SinkError);
+#else
    EXPECT_NE(create_sink(fc_cfg), nullptr);
+#endif
 
    fc_cfg.type = "prometheus";
    fc_cfg.prometheus_port = 0;

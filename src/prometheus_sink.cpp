@@ -285,9 +285,9 @@ std::string PrometheusSink::render_metrics() const {
    return out.str();
 }
 
-void PrometheusSink::flush() noexcept {}
+void PrometheusSink::flush() {}
 
-void PrometheusSink::close() noexcept {
+void PrometheusSink::close() {
    bool was_running = running_.exchange(false);
    SocketHandle lfd = static_cast<SocketHandle>(listen_fd_);
    if (lfd != kInvalidSocket) {

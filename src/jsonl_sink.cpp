@@ -81,7 +81,7 @@ void JsonlSink::write(Batch const& batch) {
    }
 }
 
-void JsonlSink::flush() noexcept {
+void JsonlSink::flush() {
    for (auto& kv : files_) {
       auto& fs = kv.second;
       if (!fs.buffer.empty()) {

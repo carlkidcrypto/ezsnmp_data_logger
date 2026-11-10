@@ -21,7 +21,7 @@ class CsvSink : public ISink {
    ~CsvSink() override;
 
    void write(Batch const& batch) override;
-   void flush() noexcept override;
+   void flush() override;
    void close() noexcept override;
    std::string name() const override { return "csv"; }
 
