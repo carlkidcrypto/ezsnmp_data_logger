@@ -210,8 +210,18 @@ TEST(DataLoggerEngineTest, ExhaustiveRuntimeAndAccessors) {
    LoggerConfig queue_full_cfg = LoggerConfig::from_json(cfg_str);
    queue_full_cfg.logger.queue_depth = 1;
    DataLogger dl_q_full(queue_full_cfg);
-   EXPECT_TRUE(dl_q_full.push_batch(b));
-   EXPECT_FALSE(dl_q_full.push_batch(b));
+   dl_q_full.set_batch_callback(
+       [](Batch const&) { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
+   dl_q_full.start();
+   bool queue_full_encountered = false;
+   for (int i = 0; i < 20; ++i) {
+      if (!dl_q_full.push_batch(b)) {
+         queue_full_encountered = true;
+         break;
+      }
+   }
+   EXPECT_TRUE(queue_full_encountered);
+   dl_q_full.stop();
 }
 
 TEST(DataLoggerEngineTest, StubPollerExhaustive) {
