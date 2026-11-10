@@ -49,11 +49,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.7a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.9a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.7-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.9-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.7``) for Git releases, Sphinx documentation
+  ``v2026.11.9``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -434,3 +434,12 @@ Testing, Documentation & CI/CD Requirements
 - **[CICD-14]** Python test suite and CLI/GUI modules **Shall** maintain
   100% statement and branch coverage across all hand-authored code, omitting
   machine-generated SWIG bindings in ``pyproject.toml`` coverage settings.
+
+- **[CICD-15]** Automated pull request workflows **Shall** generate and
+  publish rich test summary comments for native and Homebrew Python test
+  runs and native C++ GoogleTest results using
+  ``EnricoMi/publish-unit-test-result-action``.
+
+- **[CICD-16]** Frontend static assets **Shall** be monitored for bundle size
+  regressions and module size drift on pull requests via Codecov JavaScript
+  Bundle Analysis using ``@codecov/bundle-analyzer``.

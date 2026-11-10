@@ -28,14 +28,14 @@ def test_init_py_contains_only_imports_and_metadata() -> None:
 
 
 def test_calsemver_version_and_capabilities() -> None:
-    assert edl.__version__ == "2026.11.7"
-    assert edl.version() == "2026.11.7"
+    assert edl.__version__ == "2026.11.9"
+    assert edl.version() == "2026.11.9"
     assert edl.ezsnmp_target_version() == "2026.11.4a0"
     assert edl.is_valid_calsemver(edl.__version__) is True
     assert edl.is_valid_calsemver(edl.ezsnmp_target_version()) is True
     assert edl.is_valid_calsemver("2026.11.1") is True
-    assert edl.is_valid_calsemver("v2026.11.7") is True
-    assert edl.is_valid_calsemver("2026.11.7-alpha.0") is True
+    assert edl.is_valid_calsemver("v2026.11.9") is True
+    assert edl.is_valid_calsemver("2026.11.9-alpha.0") is True
     assert edl.is_valid_calsemver("2026.01.05") is False
     assert edl.is_valid_calsemver("0.1.0") is False
     assert edl.has_sqlite3_support() is True
@@ -45,7 +45,7 @@ def test_calsemver_version_and_capabilities() -> None:
     assert langs == ["python", "javascript", "csharp", "go"]
 
     info = json.loads(edl.build_info_json(2))
-    assert info["version"] == "2026.11.7"
+    assert info["version"] == "2026.11.9"
     assert info["versioning_scheme"] == "CalSemVer"
     assert info["calsemver_valid"] is True
     assert info["ezsnmp_target_version"] == "2026.11.4a0"
@@ -204,4 +204,4 @@ def test_data_logger_lifecycle_and_cli_runner(tmp_path: Path) -> None:
     # Verify programmatic CliRunner
     cli_res = edl.CliRunner.execute(edl.StringVector(["version", "--json"]))
     assert cli_res.exit_code == 0
-    assert json.loads(cli_res.stdout_text)["version"] == "2026.11.7"
+    assert json.loads(cli_res.stdout_text)["version"] == "2026.11.9"

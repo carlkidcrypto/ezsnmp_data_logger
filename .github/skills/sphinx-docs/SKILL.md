@@ -32,7 +32,7 @@ All requirements in `sphinx_docs_build/source/software_requirements.rst` must st
 
 ## 3. Versioned Documentation & Landing Page
 
-- **Directory Naming**: Always lowercase `docs/html_v<version>` (e.g., `docs/html_v2026.11.7/`).
-- **Prerelease Replacement**: When a stable release (e.g. `2026.11.7`) is published, it replaces and retires all prerelease directories for that series.
+- **Directory Naming**: Always lowercase `docs/html_v<version>` (e.g., `docs/html_v2026.11.9/`).
+- **Prerelease Replacement**: When a stable release (e.g. `2026.11.9`) is published, it replaces and retires all prerelease directories for that series.
 - **Landing Page Sentinel**: Update `sphinx_docs_build/landing/source/index.rst` between `VERSION_LIST_START` and `VERSION_LIST_END` with active versions in reverse chronological order.
 - **`.nojekyll`**: Always ensure `.nojekyll` is present in deployment outputs so underscore-prefixed directories (`_static/`, `_sources/`) are preserved.

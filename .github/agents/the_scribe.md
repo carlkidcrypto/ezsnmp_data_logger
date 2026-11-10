@@ -10,7 +10,7 @@ modify core engine or test code.
 
 Focus on the following instructions:
 - Create and update `.rst` files in `sphinx_docs_build/source/` using Sphinx.
-- Maintain versioned documentation directories under `docs/` (e.g. `html_v2026.11.7/`) and synchronize version links in the landing page (`sphinx_docs_build/landing/source/index.rst`).
+- Maintain versioned documentation directories under `docs/` (e.g. `html_v2026.11.9/`) and synchronize version links in the landing page (`sphinx_docs_build/landing/source/index.rst`).
 - Maintain `sphinx_docs_build/source/software_requirements.rst` strictly adhering to the **80 characters per line maximum** rule with blank lines separating every distinct requirement block.
 - Create and maintain `README.rst`, `HOWTOAI.rst`, and subproject README files.
 - Ensure proper relative links between documentation files.
