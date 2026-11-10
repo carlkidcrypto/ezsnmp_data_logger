@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag for WinGet distribution (e.g. v2026.11.7)"
+        description: "Release tag for WinGet distribution (e.g. v2026.11.9)"
         required: false
         default: ""
 

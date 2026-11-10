@@ -124,7 +124,7 @@ def test_package_linux_artifacts_deb_and_tarball(tmp_path: Path) -> None:
 
     artifacts = package_linux_artifacts(
         dist_dir=tmp_path,
-        version="2026.11.7",
+        version="2026.11.9",
         arch="x64",
         skip_deb=False,
         skip_rpm=True,
@@ -134,7 +134,7 @@ def test_package_linux_artifacts_deb_and_tarball(tmp_path: Path) -> None:
     assert "EzSnmpDataLogger-Linux-x64" in names
     assert "EzSnmpDataLogger-Linux-x64.tar.gz" in names
     assert "EzSnmpDataLogger-Linux-x64.deb" in names
-    assert "ezsnmp-data-logger_2026.11.7_amd64.deb" in names
+    assert "ezsnmp-data-logger_2026.11.9_amd64.deb" in names
 
     # Verify tarball contents
     tar_path = tmp_path / "EzSnmpDataLogger-Linux-x64.tar.gz"

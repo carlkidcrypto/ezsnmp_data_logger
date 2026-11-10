@@ -247,7 +247,7 @@ Text Output:
 
 .. code-block:: text
 
-   ezsnmp-data-logger 2026.11.7 (ezsnmp=yes, sqlite3=yes, psql=no)
+   ezsnmp-data-logger 2026.11.9 (ezsnmp=yes, sqlite3=yes, psql=no)
 
 JSON Output:
 
@@ -258,7 +258,7 @@ JSON Output:
 .. code-block:: json
 
    {
-     "version": "2026.11.7",
+     "version": "2026.11.9",
      "calsemver": true,
      "capabilities": {
        "ezsnmp": true,
