@@ -1,4 +1,11 @@
-const COLORS = ["#06b6d4", "#10b981", "#f59e0b", "#a855f7", "#f43f5e", "#3b82f6"];
+const COLORS = [
+  "#06b6d4",
+  "#10b981",
+  "#f59e0b",
+  "#a855f7",
+  "#f43f5e",
+  "#3b82f6",
+];
 
 let currentLocale = "en";
 let localeStrings = {};
@@ -50,7 +57,10 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n");
     const translated = t(key, null);
     if (translated) {
-      if (el.tagName === "INPUT" && (el.type === "button" || el.type === "submit")) {
+      if (
+        el.tagName === "INPUT" &&
+        (el.type === "button" || el.type === "submit")
+      ) {
         el.value = translated;
       } else {
         el.textContent = translated;
@@ -73,7 +83,9 @@ function applyTranslations() {
 
 async function initLocale(targetLocale) {
   try {
-    const url = targetLocale ? `/api/locale?locale=${encodeURIComponent(targetLocale)}` : "/api/locale";
+    const url = targetLocale
+      ? `/api/locale?locale=${encodeURIComponent(targetLocale)}`
+      : "/api/locale";
     const res = await apiGet(url);
     if (res.ok) {
       currentLocale = res.locale || "en";
@@ -148,9 +160,17 @@ function renderChart(seriesMap) {
   updateSeriesPills(seriesMap);
 
   const svg = document.getElementById("telemetry-chart");
-  const W = 900, H = 240, padL = 55, padR = 20, padT = 26, padB = 24;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const allEntries = Object.entries(seriesMap || {}).filter(([, pts]) => pts && pts.length > 0);
+  const W = 900,
+    H = 240,
+    padL = 55,
+    padR = 20,
+    padT = 26,
+    padB = 24;
+  const plotW = W - padL - padR,
+    plotH = H - padT - padB;
+  const allEntries = Object.entries(seriesMap || {}).filter(
+    ([, pts]) => pts && pts.length > 0,
+  );
 
   let html = "";
   for (let i = 0; i < 5; i++) {
@@ -161,7 +181,7 @@ function renderChart(seriesMap) {
   if (allEntries.length === 0) {
     const emptyMsg = t(
       "status_bar.chart_empty_web",
-      'Start CLI Logger or click "Run 1 Cycle (--once)" to stream SNMP telemetry'
+      'Start CLI Logger or click "Run 1 Cycle (--once)" to stream SNMP telemetry',
     );
     html += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#94a3b8" font-size="13">${emptyMsg}</text>`;
     svg.innerHTML = html;
@@ -174,16 +194,22 @@ function renderChart(seriesMap) {
   if (activeEntries.length === 0) {
     const noSelMsg = t(
       "status_bar.no_series_selected",
-      "No series selected. Select one or more fields above to view telemetry."
+      "No series selected. Select one or more fields above to view telemetry.",
     );
     html += `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#94a3b8" font-size="13">${noSelMsg}</text>`;
     svg.innerHTML = html;
     return;
   }
 
-  const allVals = activeEntries.flatMap(([, pts]) => pts.map((p) => Number(p.value)));
-  let vmin = Math.min(...allVals), vmax = Math.max(...allVals);
-  if (Math.abs(vmax - vmin) < 1e-9) { vmin -= 1; vmax += 1; }
+  const allVals = activeEntries.flatMap(([, pts]) =>
+    pts.map((p) => Number(p.value)),
+  );
+  let vmin = Math.min(...allVals),
+    vmax = Math.max(...allVals);
+  if (Math.abs(vmax - vmin) < 1e-9) {
+    vmin -= 1;
+    vmax += 1;
+  }
 
   html += `<text x="${padL - 8}" y="${padT + 4}" text-anchor="end" fill="#94a3b8" font-size="11">${vmax.toFixed(1)}</text>`;
   html += `<text x="${padL - 8}" y="${padT + plotH}" text-anchor="end" fill="#94a3b8" font-size="11">${vmin.toFixed(1)}</text>`;
@@ -201,11 +227,14 @@ function renderChart(seriesMap) {
       return;
     }
     const span = Math.max(1, pts.length - 1);
-    const poly = pts.map((pt, i) => {
-      const x = padL + (i / span) * plotW;
-      const y = padT + plotH - ((Number(pt.value) - vmin) / (vmax - vmin)) * plotH;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(" ");
+    const poly = pts
+      .map((pt, i) => {
+        const x = padL + (i / span) * plotW;
+        const y =
+          padT + plotH - ((Number(pt.value) - vmin) / (vmax - vmin)) * plotH;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
     html += `<polyline fill="none" stroke="${color}" stroke-width="2.2" points="${poly}"/>`;
   });
 
@@ -216,7 +245,8 @@ async function loadConfigIntoUi() {
   const data = await apiGet("/api/config");
   if (!data.ok) return;
   const prefix = t("app.json_config_prefix", "JSON Config: ");
-  document.getElementById("config-subtitle").textContent = `${prefix}${data.path}`;
+  document.getElementById("config-subtitle").textContent =
+    `${prefix}${data.path}`;
   document.getElementById("json-editor").value = data.raw;
 
   const dutSel = document.getElementById("req-dut");
@@ -230,7 +260,8 @@ async function loadConfigIntoUi() {
 
   if (data.config && data.config.gui) {
     if (data.config.gui.theme) {
-      document.body.dataset.theme = data.config.gui.theme === "light" ? "light" : "dark";
+      document.body.dataset.theme =
+        data.config.gui.theme === "light" ? "light" : "dark";
     }
   }
 }
@@ -240,16 +271,25 @@ async function pollStatus() {
     const snap = await apiGet("/api/status");
     if (!snap.ok) return;
     const st = snap.stats || {};
-    document.getElementById("kpi-state").textContent = snap.running ? "RUNNING" : "IDLE";
-    document.getElementById("kpi-cycles").textContent = st.cycles_completed ?? 0;
-    document.getElementById("kpi-batches").textContent = st.processed_batches ?? 0;
-    document.getElementById("kpi-samples").textContent = st.processed_samples ?? 0;
+    document.getElementById("kpi-state").textContent = snap.running
+      ? "RUNNING"
+      : "IDLE";
+    document.getElementById("kpi-cycles").textContent =
+      st.cycles_completed ?? 0;
+    document.getElementById("kpi-batches").textContent =
+      st.processed_batches ?? 0;
+    document.getElementById("kpi-samples").textContent =
+      st.processed_samples ?? 0;
     document.getElementById("kpi-queue").textContent = st.queue_depth ?? 0;
-    document.getElementById("kpi-errors").textContent = `${st.poll_errors ?? 0} / ${st.sink_errors ?? 0}`;
+    document.getElementById("kpi-errors").textContent =
+      `${st.poll_errors ?? 0} / ${st.sink_errors ?? 0}`;
 
     renderChart(snap.series || {});
-    document.getElementById("cli-log").textContent = (snap.cli_lines || []).slice(-35).join("\n");
-    document.getElementById("footer-cli").textContent = `Backend CLI: ${snap.cli_command}`;
+    document.getElementById("cli-log").textContent = (snap.cli_lines || [])
+      .slice(-35)
+      .join("\n");
+    document.getElementById("footer-cli").textContent =
+      `Backend CLI: ${snap.cli_command}`;
 
     const audits = snap.audit || [];
     if (audits.length > 0) {
@@ -258,30 +298,38 @@ async function pollStatus() {
         `Last CLI [${a0.exit_code ?? "running"}, ${a0.duration_ms} ms]: ${a0.command}`;
     }
     const auditBody = document.getElementById("audit-tbody");
-    auditBody.innerHTML = audits.map((a) =>
-      `<tr><td>${a.timestamp}</td><td>${a.exit_code ?? "..."}</td><td>${a.duration_ms}</td><td><code>${a.command}</code></td></tr>`
-    ).join("");
+    auditBody.innerHTML = audits
+      .map(
+        (a) =>
+          `<tr><td>${a.timestamp}</td><td>${a.exit_code ?? "..."}</td><td>${a.duration_ms}</td><td><code>${a.command}</code></td></tr>`,
+      )
+      .join("");
   } catch (_e) {}
 }
 
 function setupEvents() {
   document.querySelectorAll(".tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+      document
+        .querySelectorAll(".tab")
+        .forEach((b) => b.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-panel")
+        .forEach((p) => p.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
     });
   });
 
   document.getElementById("btn-theme").addEventListener("click", () => {
-    document.body.dataset.theme = document.body.dataset.theme === "light" ? "dark" : "light";
+    document.body.dataset.theme =
+      document.body.dataset.theme === "light" ? "dark" : "light";
   });
 
   const langSelect = document.getElementById("lang-select");
   if (langSelect) {
     langSelect.addEventListener("change", (e) => {
-      switchLocale(e.target.value);
+      void switchLocale(e.target.value);
     });
   }
 
@@ -320,91 +368,130 @@ function setupEvents() {
     });
   }
 
-  document.getElementById("btn-probe-all").addEventListener("click", async () => {
-    const res = await apiPost("/api/probe", {});
-    const rows = ((res.data && res.data.results) || []).flatMap((r) => r.samples || []);
-    document.getElementById("req-tbody").innerHTML = rows.map((s) =>
-      `<tr><td>${s.oid}</td><td>${s.oid_index}</td><td>${s.snmp_type}</td><td>${s.raw_value}</td><td>${s.type_name}</td><td>${s.status}</td></tr>`
-    ).join("");
-    document.getElementById("req-status").textContent = `CLI probe returned ${rows.length} sample(s).`;
-    document.querySelector('[data-tab="studio"]').click();
-    await pollStatus();
-  });
+  document
+    .getElementById("btn-probe-all")
+    .addEventListener("click", async () => {
+      const res = await apiPost("/api/probe", {});
+      const rows = ((res.data && res.data.results) || []).flatMap(
+        (r) => r.samples || [],
+      );
+      document.getElementById("req-tbody").innerHTML = rows
+        .map(
+          (s) =>
+            `<tr><td>${s.oid}</td><td>${s.oid_index}</td><td>${s.snmp_type}</td><td>${s.raw_value}</td><td>${s.type_name}</td><td>${s.status}</td></tr>`,
+        )
+        .join("");
+      document.getElementById("req-status").textContent =
+        `CLI probe returned ${rows.length} sample(s).`;
+      document.querySelector('[data-tab="studio"]').click();
+      await pollStatus();
+    });
 
-  document.getElementById("btn-exec-req").addEventListener("click", async () => {
-    const dut = document.getElementById("req-dut").value;
-    const op = document.getElementById("req-op").value;
-    const oids = document.getElementById("req-oids").value;
-    const record = document.getElementById("req-record").checked;
-    let res;
-    if (op === "set") {
-      res = await apiPost("/api/set", {
-        dut,
-        oid: oids.split(",")[0].trim(),
-        set_type: document.getElementById("req-set-type").value,
-        value: document.getElementById("req-set-val").value,
-        record,
-      });
-    } else {
-      res = await apiPost("/api/request", { dut, operation: op, oids, record });
-    }
-    const payload = res.data || {};
-    const samples = payload.samples || [];
-    document.getElementById("req-tbody").innerHTML = samples.map((s) =>
-      `<tr><td>${s.oid}</td><td>${s.oid_index}</td><td>${s.snmp_type}</td><td>${s.raw_value}</td><td>${s.type_name}</td><td>${s.status}</td></tr>`
-    ).join("");
-    document.getElementById("req-status").textContent = res.ok
-      ? `OK: ${samples.length} sample(s) in ${(payload.latency_ms || 0).toFixed(2)} ms`
-      : `Error: ${(payload && payload.error) || res.stderr || res.error}`;
-    await pollStatus();
-  });
+  document
+    .getElementById("btn-exec-req")
+    .addEventListener("click", async () => {
+      const dut = document.getElementById("req-dut").value;
+      const op = document.getElementById("req-op").value;
+      const oids = document.getElementById("req-oids").value;
+      const record = document.getElementById("req-record").checked;
+      let res;
+      if (op === "set") {
+        res = await apiPost("/api/set", {
+          dut,
+          oid: oids.split(",")[0].trim(),
+          set_type: document.getElementById("req-set-type").value,
+          value: document.getElementById("req-set-val").value,
+          record,
+        });
+      } else {
+        res = await apiPost("/api/request", {
+          dut,
+          operation: op,
+          oids,
+          record,
+        });
+      }
+      const payload = res.data || {};
+      const samples = payload.samples || [];
+      document.getElementById("req-tbody").innerHTML = samples
+        .map(
+          (s) =>
+            `<tr><td>${s.oid}</td><td>${s.oid_index}</td><td>${s.snmp_type}</td><td>${s.raw_value}</td><td>${s.type_name}</td><td>${s.status}</td></tr>`,
+        )
+        .join("");
+      document.getElementById("req-status").textContent = res.ok
+        ? `OK: ${samples.length} sample(s) in ${(payload.latency_ms || 0).toFixed(2)} ms`
+        : `Error: ${(payload && payload.error) || res.stderr || res.error}`;
+      await pollStatus();
+    });
 
   document.getElementById("btn-inspect").addEventListener("click", async () => {
-    const dut = encodeURIComponent(document.getElementById("exp-dut").value.trim());
-    const metric = encodeURIComponent(document.getElementById("exp-metric").value.trim());
-    const limit = encodeURIComponent(document.getElementById("exp-limit").value || "50");
-    const res = await apiGet(`/api/inspect?limit=${limit}&dut=${dut}&metric=${metric}`);
+    const dut = encodeURIComponent(
+      document.getElementById("exp-dut").value.trim(),
+    );
+    const metric = encodeURIComponent(
+      document.getElementById("exp-metric").value.trim(),
+    );
+    const limit = encodeURIComponent(
+      document.getElementById("exp-limit").value || "50",
+    );
+    const res = await apiGet(
+      `/api/inspect?limit=${limit}&dut=${dut}&metric=${metric}`,
+    );
     const rows = (res.data && res.data.rows) || [];
-    document.getElementById("exp-tbody").innerHTML = rows.map((r) =>
-      `<tr><td>${r.ts_unix_ns}</td><td>${r.dut_name}</td><td>${r.metric_name}</td><td>${r.oid}</td><td>${r.snmp_type}</td><td>${r.raw_value || r.str_val}</td><td>${r.sink_type}</td></tr>`
-    ).join("");
+    document.getElementById("exp-tbody").innerHTML = rows
+      .map(
+        (r) =>
+          `<tr><td>${r.ts_unix_ns}</td><td>${r.dut_name}</td><td>${r.metric_name}</td><td>${r.oid}</td><td>${r.snmp_type}</td><td>${r.raw_value || r.str_val}</td><td>${r.sink_type}</td></tr>`,
+      )
+      .join("");
     await pollStatus();
   });
 
-  document.getElementById("btn-load-tpl").addEventListener("click", async () => {
-    const name = document.getElementById("tpl-select").value;
-    const res = await apiGet(`/api/template?name=${encodeURIComponent(name)}`);
-    if (res.ok && res.raw) {
-      document.getElementById("json-editor").value = res.raw;
-      document.getElementById("json-status").textContent = `Loaded '${name}' CLI template.`;
-    }
-    await pollStatus();
-  });
+  document
+    .getElementById("btn-load-tpl")
+    .addEventListener("click", async () => {
+      const name = document.getElementById("tpl-select").value;
+      const res = await apiGet(
+        `/api/template?name=${encodeURIComponent(name)}`,
+      );
+      if (res.ok && res.raw) {
+        document.getElementById("json-editor").value = res.raw;
+        document.getElementById("json-status").textContent =
+          `Loaded '${name}' CLI template.`;
+      }
+      await pollStatus();
+    });
 
-  document.getElementById("btn-validate-json").addEventListener("click", async () => {
-    const raw = document.getElementById("json-editor").value;
-    const res = await apiPost("/api/validate", { raw });
-    const rep = res.data || {};
-    document.getElementById("json-status").textContent = rep.valid
-      ? `VALID (${rep.enabled_duts} DUTs, ${rep.total_metrics} metrics, ${rep.enabled_sinks} sinks)`
-      : `INVALID: ${(rep.errors || [res.stderr]).join("; ")}`;
-    await pollStatus();
-  });
+  document
+    .getElementById("btn-validate-json")
+    .addEventListener("click", async () => {
+      const raw = document.getElementById("json-editor").value;
+      const res = await apiPost("/api/validate", { raw });
+      const rep = res.data || {};
+      document.getElementById("json-status").textContent = rep.valid
+        ? `VALID (${rep.enabled_duts} DUTs, ${rep.total_metrics} metrics, ${rep.enabled_sinks} sinks)`
+        : `INVALID: ${(rep.errors || [res.stderr]).join("; ")}`;
+      await pollStatus();
+    });
 
-  document.getElementById("btn-save-json").addEventListener("click", async () => {
-    const raw = document.getElementById("json-editor").value;
-    const res = await apiPost("/api/config", { raw });
-    if (res.error) {
-      document.getElementById("json-status").textContent = `Error: ${res.error}`;
-      return;
-    }
-    const rep = res.data || {};
-    document.getElementById("json-status").textContent = rep.valid
-      ? "Saved JSON configuration and validated via CLI."
-      : `Saved with validation warnings/errors: ${(rep.errors || []).join("; ")}`;
-    await loadConfigIntoUi();
-    await pollStatus();
-  });
+  document
+    .getElementById("btn-save-json")
+    .addEventListener("click", async () => {
+      const raw = document.getElementById("json-editor").value;
+      const res = await apiPost("/api/config", { raw });
+      if (res.error) {
+        document.getElementById("json-status").textContent =
+          `Error: ${res.error}`;
+        return;
+      }
+      const rep = res.data || {};
+      document.getElementById("json-status").textContent = rep.valid
+        ? "Saved JSON configuration and validated via CLI."
+        : `Saved with validation warnings/errors: ${(rep.errors || []).join("; ")}`;
+      await loadConfigIntoUi();
+      await pollStatus();
+    });
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -412,5 +499,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await initLocale();
   await loadConfigIntoUi();
   await pollStatus();
-  setInterval(pollStatus, 1000);
+  setInterval(() => {
+    void pollStatus();
+  }, 1000);
 });

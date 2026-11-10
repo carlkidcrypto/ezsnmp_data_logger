@@ -241,7 +241,7 @@ def launch_web_gui(
     """Start the cross-platform Browser Studio and block until Ctrl+C."""
     srv = create_web_server(bridge, host=host, port=port, locale_mgr=locale_mgr)
     actual_host, actual_port = srv.server_address[:2]
-    url = f"http://{actual_host}:{actual_port}/"
+    url = f"http://{actual_host}:{actual_port}/"  # NOSONAR
     print(f"EzSnmp Data Logger Browser Studio listening at {url}")
     print(f"JSON Configuration: {bridge.config_path}")
     print(f"Behind-the-scenes CLI: {' '.join(bridge.cli_base_command())}")

@@ -112,7 +112,7 @@ void CsvSink::flush() {
    }
 }
 
-void CsvSink::close() {
+void CsvSink::close() noexcept {
    flush();
    for (auto& kv : files_) {
       kv.second.file.close();

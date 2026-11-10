@@ -115,10 +115,7 @@ class DataLogger::Impl {
       stop();
       std::lock_guard<std::mutex> lock(sinks_mutex_);
       for (auto& s : sinks_) {
-         try {
-            s->close();
-         } catch (...) {
-         }
+         s->close();
       }
       sinks_.clear();
    }
@@ -164,7 +161,7 @@ class DataLogger::Impl {
       }
    }
 
-   void stop() {
+   void stop() noexcept {
       std::lock_guard<std::mutex> lock(lifecycle_mutex_);
       if (!running_.load()) {
          return;
@@ -502,7 +499,7 @@ void DataLogger::set_batch_callback(std::function<void(Batch const&)> cb) {
 
 void DataLogger::start() { impl_->start(); }
 
-void DataLogger::stop() {
+void DataLogger::stop() noexcept {
    if (impl_) {
       impl_->stop();
    }

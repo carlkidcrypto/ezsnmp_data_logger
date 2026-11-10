@@ -2,6 +2,7 @@
 
 #ifndef SWIG
 
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,6 +11,27 @@
 #include "ezsnmp_data_logger/datatypes.h"
 
 namespace ezsnmp_data_logger {
+
+/**
+ * @brief Line-buffered file handle state for persistent file sinks (CSV, JSONL).
+ */
+struct BufferedFileState {
+   std::ofstream file;
+   std::vector<std::string> buffer;
+
+   BufferedFileState() = default;
+   BufferedFileState(BufferedFileState&& other) noexcept
+       : file(std::move(other.file)), buffer(std::move(other.buffer)) {}
+   BufferedFileState& operator=(BufferedFileState&& other) noexcept {
+      if (this != &other) {
+         file = std::move(other.file);
+         buffer = std::move(other.buffer);
+      }
+      return *this;
+   }
+   BufferedFileState(BufferedFileState const&) = delete;
+   BufferedFileState& operator=(BufferedFileState const&) = delete;
+};
 
 /**
  * @brief Abstract storage/telemetry output sink interface.

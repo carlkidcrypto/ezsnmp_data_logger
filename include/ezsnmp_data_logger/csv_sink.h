@@ -22,18 +22,14 @@ class CsvSink : public ISink {
 
    void write(Batch const& batch) override;
    void flush() override;
-   void close() override;
+   void close() noexcept override;
    std::string name() const override { return "csv"; }
 
   private:
    std::string csv_dir_;
    size_t flush_every_n_ = 64;
 
-   struct FileState {
-      std::ofstream file;
-      std::vector<std::string> buffer;
-   };
-
+   using FileState = BufferedFileState;
    std::unordered_map<std::string, FileState> files_;
    FileState& get_or_open(std::string const& dut_name);
 };

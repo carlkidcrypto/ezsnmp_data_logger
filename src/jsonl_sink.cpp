@@ -94,7 +94,7 @@ void JsonlSink::flush() {
    }
 }
 
-void JsonlSink::close() {
+void JsonlSink::close() noexcept {
    flush();
    for (auto& kv : files_) {
       kv.second.file.close();

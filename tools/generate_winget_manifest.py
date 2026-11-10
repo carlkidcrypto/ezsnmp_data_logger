@@ -81,8 +81,7 @@ def compute_sha256(path_or_url: str) -> str:
 
             ctx.load_verify_locations(certifi.where())
         except Exception:
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
+            pass
 
         try:
             req = urllib.request.Request(
