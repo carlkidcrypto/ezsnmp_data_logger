@@ -355,6 +355,7 @@ TEST(EzSnmpPollerTest, ExecutesLiveGetAndSetThroughEzSnmpSessionBase) {
    auto poller_empty = create_snmp_poller(dut_empty);
    EXPECT_TRUE(poller_empty->poll().samples.empty());
 
+#if defined(EZSNMP_DL_HAVE_EZSNMP) && EZSNMP_DL_HAVE_EZSNMP
    // 8. Test result_to_sample exhaustive conversions
    ::Result r;
    r.oid = "1.3.6.1.2.1.1.1";
@@ -413,5 +414,6 @@ TEST(EzSnmpPollerTest, ExecutesLiveGetAndSetThroughEzSnmpSessionBase) {
    EXPECT_EQ(test_map_ezsnmp_exception(::ParseErrorBase("parse")), -4);
    EXPECT_EQ(test_map_ezsnmp_exception(::PacketErrorBase("packet")), -5);
    EXPECT_EQ(test_map_ezsnmp_exception(::GenericErrorBase("generic")), -6);
+#endif
 #endif
 }

@@ -1,5 +1,5 @@
 --pre
-ezsnmp>=2026.11.4a0
+ezsnmp>=2026.11.9b0
 pytest>=8.0.0
 black>=24.0.0
 yamllint>=1.35.0

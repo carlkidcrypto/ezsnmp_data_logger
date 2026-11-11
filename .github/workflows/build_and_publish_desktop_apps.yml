@@ -77,11 +77,11 @@ jobs:
       - name: Checkout ezsnmp_data_logger
         uses: actions/checkout@v7
 
-      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer alpha v2026.11.4a0)
+      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer beta v2026.11.9b0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.4a0
+          ref: v2026.11.9b0
           path: third_party/ezsnmp
 
       - name: Cache compiled Net-SNMP for Windows
@@ -126,18 +126,18 @@ jobs:
             export PATH="/usr/local/bin:${PATH}"
             export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.9b0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform linux
           macos: |
             export PATH="/usr/local/bin:${PATH}"
             export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.9b0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform macos
           windows: |
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.4a0"
+            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.9b0"
             $env:PATH = "C:\ezsnmp-netsnmp-dist\x64\bin\release;" + $env:PATH
             if (Test-Path "C:\ezsnmp-netsnmp-dist\x64\bin\release\netsnmp.dll") {
               Copy-Item "C:\ezsnmp-netsnmp-dist\x64\bin\release\*.dll" ezsnmp_data_logger/ -Force

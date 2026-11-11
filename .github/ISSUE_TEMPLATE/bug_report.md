@@ -11,7 +11,7 @@ assignees: ''
 > **AI-Assisted Issue Resolution**: This project utilizes AI-assisted development tools to triage, diagnose, and expedite the resolution of issues. The more detailed and comprehensive the information you provide (exact version numbers, OS environment, minimal reproduction steps, and full error logs/stack traces), the faster AI tooling and maintainers can diagnose root causes and deliver verified fixes.
 
 **EzSnmpDataLogger release version OR commit SHA**
-ex. 2026.11.4a0 OR abcd1234
+ex. 2026.11.9 OR abcd1234
 
 **Component or Interface**
 - [ ] CLI (`ezsnmp-data-logger`)
