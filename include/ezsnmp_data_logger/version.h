@@ -12,10 +12,10 @@ namespace ezsnmp_data_logger {
 std::string version() noexcept;
 
 /**
- * @brief Return the standardized CalSemVer alpha baseline version of ezsnmp targeted by this build.
- * @return Target ezsnmp CalSemVer string (e.g. "2026.11.4a0").
+ * @brief Return the standardized CalSemVer beta baseline version of ezsnmp targeted by this build.
+ * @return Target ezsnmp CalSemVer string (e.g. "2026.11.9b0").
  */
-std::string ezsnmp_target_version();
+std::string ezsnmp_target_version() noexcept;
 
 /**
  * @brief Validate whether a version or git tag conforms to CalSemVer

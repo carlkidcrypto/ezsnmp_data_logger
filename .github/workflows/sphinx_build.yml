@@ -70,11 +70,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.4a0)
+      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.9b0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.4a0
+          ref: v2026.11.9b0
           path: third_party/ezsnmp
 
       - name: Set up Python 3.14 env for sphinx...
@@ -102,7 +102,7 @@ jobs:
 
       - name: Install Pip Requirements
         run: |
-          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.4a0"
+          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.9b0"
           python -m pip install -r sphinx_docs_build/requirements.txt
           python -m pip install -r sphinx_docs_build/landing/requirements.txt
 
@@ -160,11 +160,11 @@ jobs:
           fetch-tags: true
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.4a0)
+      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.9b0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.4a0
+          ref: v2026.11.9b0
           path: third_party/ezsnmp
 
       - name: Set up Python 3.14 env for sphinx...
@@ -192,7 +192,7 @@ jobs:
 
       - name: Install Pip Requirements
         run: |
-          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.4a0"
+          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.9b0"
           python -m pip install -r sphinx_docs_build/requirements.txt
           python -m pip install -r sphinx_docs_build/landing/requirements.txt
 

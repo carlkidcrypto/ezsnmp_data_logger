@@ -76,7 +76,7 @@ CalSemVer Versioning Requirements
   [--json]``.
 
 - **[VER-05]** ``ezsnmp_data_logger`` **Shall** standardize on ``ezsnmp``'s
-  CalSemVer release line (``ezsnmp>=2026.11.4a0``, git tag ``v2026.11.4a0``)
+  CalSemVer release line (``ezsnmp>=2026.11.9b0``, git tag ``v2026.11.9b0``)
   until a stable CalSemVer ``ezsnmp`` release is published.
 
 JSON Configuration & Validation Requirements
@@ -195,7 +195,7 @@ Self-Contained Multi-Language Packaging Requirements
 - **[PKG-03]** Standalone dependency scripts
   (``tools/prepare_linux_netsnmp.sh``, ``tools/prepare_macos_netsnmp.sh``,
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
-  **Shall** provision ``ezsnmp`` ``v2026.11.4a0`` and build minimal
+  **Shall** provision ``ezsnmp`` ``v2026.11.9b0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
   Blumenthal-AES support. Native build systems (``setup.py``, ``meson.build``,
   ``CMakeLists.txt``) and CI matrices (``tests_cpp_native.yml``,
@@ -204,7 +204,7 @@ Self-Contained Multi-Language Packaging Requirements
   rejecting incompatible (< 5.10) system installations.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
-  ``[build-system] requires`` and ``ezsnmp>=2026.11.4a0`` in ``dependencies``.
+  ``[build-system] requires`` and ``ezsnmp>=2026.11.9b0`` in ``dependencies``.
 
 - **[PKG-05]** ``cibuildwheel`` **Shall** configure ``auditwheel repair``
   (Linux ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and
