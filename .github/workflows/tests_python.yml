@@ -88,7 +88,7 @@ jobs:
 
       - name: Cache compiled Net-SNMP for Windows
         if: runner.os == 'Windows'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: C:\ezsnmp-netsnmp-dist
           key: ${{ runner.os }}-netsnmp-5.10.pre2-x64-${{ hashFiles('.github/actions/prepare-windows-netsnmp/action.yml') }}
@@ -102,7 +102,7 @@ jobs:
         run: python tools/prepare_sqlite3_amalgamation.py
 
       - name: Install system dependencies
-        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
         with:
           linux: |
             sudo apt-get update
@@ -122,7 +122,7 @@ jobs:
           arch: x64
 
       - name: Build self-contained extension & run pytest
-        uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
+        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
         with:
           linux: |
             export PATH="/usr/local/bin:${PATH}"
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml
@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload test results to Codecov
         if: always()
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./test-results_${{ matrix.os }}_${{ matrix.python-version }}.xml
@@ -288,7 +288,7 @@ jobs:
 
       - name: Post collapsible pytest coverage comment (PR) - Native
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@2b6bdb56ad3073fa0e4beef00447158f55a18414 # v5
+        uses: peter-evans/create-or-update-comment@b13c6b3a371fec341992ce50ebda4740e3d7ed52 # v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find-native-comment.outputs.comment-id }}
@@ -365,7 +365,7 @@ jobs:
 
       - name: Post collapsible pytest coverage comment (PR) - Homebrew
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@2b6bdb56ad3073fa0e4beef00447158f55a18414 # v5
+        uses: peter-evans/create-or-update-comment@b13c6b3a371fec341992ce50ebda4740e3d7ed52 # v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find-homebrew-comment.outputs.comment-id }}
