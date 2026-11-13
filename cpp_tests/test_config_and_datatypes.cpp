@@ -149,6 +149,45 @@ TEST(DatatypesTest, DatatypesExhaustive) {
    EXPECT_EQ(sc2.type, "csv");
 }
 
+TEST(DatatypesTest, StructsSerializeToJson) {
+   EXPECT_EQ(type_tag_to_string(TypeTag::Int64), "i64");
+   EXPECT_EQ(type_tag_to_string(TypeTag::Float64), "f64");
+   EXPECT_EQ(type_tag_to_string(TypeTag::Str), "str");
+
+   DutProbeResult probe;
+   probe.dut_name = "dut-a";
+   probe.dut_ip = "10.0.0.1";
+   probe.reachable = true;
+   probe.latency_ms = 1.5;
+   probe.error = "none";
+   probe.samples.push_back(Sample::make_int("m", "1.1", 7));
+   std::string const probe_json = probe.to_json(-1);
+   EXPECT_NE(probe_json.find("\"dut_name\":\"dut-a\""), std::string::npos);
+   EXPECT_NE(probe_json.find("\"reachable\":true"), std::string::npos);
+   EXPECT_NE(probe_json.find("\"type_name\":\"i64\""), std::string::npos);
+
+   LoggerStats stats;
+   stats.running = true;
+   stats.cycles_completed = 3;
+   stats.last_error = "boom";
+   std::string const stats_json = stats.to_json(-1);
+   EXPECT_NE(stats_json.find("\"cycles_completed\":3"), std::string::npos);
+   EXPECT_NE(stats_json.find("\"last_error\":\"boom\""), std::string::npos);
+
+   InspectRow row;
+   row.dut_name = "dut-a";
+   row.type_tag = TypeTag::Str;
+   row.str_val = "hello";
+   row.sink_type = "csv";
+   std::string const row_json = row.to_json(-1);
+   EXPECT_NE(row_json.find("\"type_name\":\"str\""), std::string::npos);
+   EXPECT_NE(row_json.find("\"sink_type\":\"csv\""), std::string::npos);
+
+   Sample sf = Sample::make_float("f", "1.2", 2.5);
+   EXPECT_EQ(sf.display_value(), "2.5");
+   EXPECT_EQ(Sample::from_json(sf.to_json()).f64, 2.5);
+}
+
 TEST(ConfigTest, TemplatesValidateAndRoundTripCleanly) {
    for (char const* tpl : {"minimal", "demo", "enterprise", "snmpv3"}) {
       std::string json_text = generate_template_config_json(tpl, 2);
