@@ -6,6 +6,12 @@ concurrency:
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional release tag to highlight in the changelog PR"
+        required: false
+        type: string
   skip-if-match:
     query: 'is:pr is:open head:automation/update-changelog label:documentation label:automated-pr'
 permissions:
@@ -21,6 +27,8 @@ safe-outputs:
     draft: false
     preserve-branch-name: true
     if-no-changes: "ignore"
+    base-branch: main
+    protected-files: allowed
 timeout-minutes: 15
 max-ai-credits: 25
 model: sonnet
@@ -60,8 +68,13 @@ Generate and open a changelog update PR only when substantive changelog content 
    - Verify: `git-chglog --version`
    - **If git-chglog cannot be installed by either method, stop immediately with a clear error message. Do NOT attempt to re-implement changelog generation using Python, shell, or any other scripting language.**
 
-2. Generate candidate changelog content:
+2. Generate candidate changelog content and verify the latest section is non-empty:
    - `git-chglog --config .chglog/config.yml -o CHANGELOG.tmp`
+   - Validate that the latest release section in `CHANGELOG.tmp` contains at least one entry before proceeding:
+     ```bash
+     awk '/^## /{found=1; next} found && /^---$/{exit} found && /^- /{count++} END{if (count==0) {print "ERROR: Latest changelog section is empty" > "/dev/stderr"; exit 1}}' CHANGELOG.tmp
+     ```
+   - If the section is empty, stop immediately with an error rather than opening an empty PR.
 
 3. Build commit intelligence context for summary quality:
    - Identify the current release tag from the triggering release.
@@ -118,4 +131,5 @@ Include:
 
 - Only modify `CHANGELOG.md`.
 - Do not make unrelated code or workflow edits.
+- If generation fails due to missing tags/history or produces an empty latest section, report clearly and stop.
 - Never choose a prerelease base for a stable release if an earlier stable release exists.

@@ -5,38 +5,40 @@ info:
   repository_url: https://github.com/carlkidcrypto/ezsnmp_data_logger
 options:
   commits:
-    filters:
-      Type:
-        - feat
-        - fix
-        - perf
-        - refactor
-        - docs
-        - test
-        - build
-        - ci
-        - chore
-        - style
-        - revert
   commit_groups:
     title_maps:
+      # Lowercase conventional commits
       feat: Features
       fix: Bug Fixes
       perf: Performance Improvements
       refactor: Code Refactoring
-      docs: Documentation
-      test: Tests
+      docs: Documentation Updates
+      chore: Maintenance
       build: Build System
       ci: Continuous Integration
-      chore: Chores
+      test: Tests
       style: Styles
       revert: Reverts
+      # Capitalized word prefixes
+      Bump: Dependency Updates
+      Release: Releases
+      Add: Features
+      Fix: Bug Fixes
+      Update: Updates & Improvements
+      Refactor: Code Refactoring
+      Document: Documentation Updates
+      Enhance: Enhancements
+      Hotfix: Critical Bug Fixes
+      Initial: Initial Setup
+      # Merge commits
+      Merge: Merged Pull Requests
+      # Fallback
+      other: Other Changes
   header:
-    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
+    pattern: "^\\s*((?:\\[[^\\]]+\\]\\s*)?([\\w]*)(?:\\([^)]*\\))?!?.*)$"
     pattern_maps:
-      - Type
-      - Scope
       - Subject
+      - Type
   notes:
     keywords:
       - BREAKING CHANGE
