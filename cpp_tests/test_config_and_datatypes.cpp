@@ -555,3 +555,33 @@ TEST(VersionTest, VersionAndCapabilitiesExhaustive) {
    std::string info_indented = build_info_json(2);
    EXPECT_NE(info_indented.find("\n"), std::string::npos);
 }
+
+TEST(DatatypesTest, BatchRoundTripAndNumericTypeTags) {
+   Batch b;
+   b.ts_unix_ns = 123456789LL;
+   b.dut_name = "dut1";
+   b.dut_ip = "10.0.0.1";
+   b.samples.push_back(Sample::make_int("i", "1.1", 7));
+   b.samples.push_back(Sample::make_float("f", "1.2", 2.5));
+   b.samples.push_back(Sample::make_string("s", "1.3", "txt"));
+
+   Batch parsed = Batch::from_json(b.to_json(-1));
+   EXPECT_EQ(parsed.ts_unix_ns, 123456789LL);
+   EXPECT_EQ(parsed.dut_name, "dut1");
+   EXPECT_EQ(parsed.dut_ip, "10.0.0.1");
+   ASSERT_EQ(parsed.samples.size(), 3U);
+   EXPECT_EQ(parsed.samples[0].type_tag, TypeTag::Int64);
+   EXPECT_EQ(parsed.samples[0].i64, 7);
+   EXPECT_EQ(parsed.samples[1].type_tag, TypeTag::Float64);
+   EXPECT_DOUBLE_EQ(parsed.samples[1].f64, 2.5);
+   EXPECT_EQ(parsed.samples[2].type_tag, TypeTag::Str);
+   EXPECT_EQ(parsed.samples[2].str_val, "txt");
+
+   Batch empty = Batch::from_json("{\"dut_name\":\"x\"}");
+   EXPECT_TRUE(empty.samples.empty());
+   EXPECT_EQ(empty.dut_name, "x");
+
+   EXPECT_EQ(Sample::from_json("{\"oid\":\"1.1\",\"type_tag\":0}").type_tag, TypeTag::Null);
+   EXPECT_EQ(Sample::from_json("{\"oid\":\"1.1\",\"type_tag\":3,\"str_val\":\"a\"}").type_tag,
+             TypeTag::Str);
+}
