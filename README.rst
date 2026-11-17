@@ -2,40 +2,28 @@
 EzSnmp Data Logger
 ===================
 
-.. list-table::
-   :widths: auto
+|Tests C++ Native| |Tests Python + GUI| |SWIG 4 Languages| |Black| |Clang-format| |Sphinx Docs|
 
-   * - |Python Code Style|
-     - |Clang-format Code Style|
-     - |Black|
-   * - |Clang-format|
-     - |Sphinx Docs Check|
-     - |Tests C++ Native|
-   * - |Tests Python|
-     - |SWIG Multi-Language|
-     - |License|
-   * - |Quality Gate Status|
-     - |Security Rating|
-     - |Maintainability Rating|
+|Codecov| |Quality Gate Status| |Security Rating| |Maintainability Rating|
 
-.. |Python Code Style| image:: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
-    :target: https://github.com/psf/black
-.. |Clang-format Code Style| image:: https://img.shields.io/badge/code%20style-clang--format-brightgreen.svg?style=flat-square
-    :target: https://clang.llvm.org/docs/ClangFormat.html
+|PyPI Version| |PyPI Downloads| |npm Version| |npm Downloads| |NuGet Version| |PyPI Distributions| |TestPyPI Distributions|
+
+|Python Versions| |License|
+
+.. |Tests C++ Native| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/tests_cpp_native.yml?style=flat-square&label=Tests+C%2B%2B+Native
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/tests_cpp_native.yml
+.. |Tests Python + GUI| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/tests_python.yml?style=flat-square&label=Tests+Python+%2B+GUI
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/tests_python.yml
+.. |SWIG 4 Languages| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/swig_multilang.yml?style=flat-square&label=SWIG+4+Languages
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/swig_multilang.yml
 .. |Black| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/black.yml?style=flat-square&label=Black
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/black.yml
 .. |Clang-format| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/clang_format.yml?style=flat-square&label=Clang-format
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/clang_format.yml
-.. |Sphinx Docs Check| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/sphinx_build.yml?style=flat-square&label=Sphinx+Docs+Check
+.. |Sphinx Docs| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/sphinx_build.yml?style=flat-square&label=Sphinx+Docs
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/sphinx_build.yml
-.. |Tests C++ Native| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/tests_cpp_native.yml?style=flat-square&label=Tests+C%2B%2B+Native
-    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/tests_cpp_native.yml
-.. |Tests Python| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/tests_python.yml?style=flat-square&label=Tests+Python+%2B+GUI
-    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/tests_python.yml
-.. |SWIG Multi-Language| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/swig_multilang.yml?style=flat-square&label=SWIG+4+Languages
-    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/swig_multilang.yml
-.. |License| image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
-    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/blob/main/LICENSE
+.. |Codecov| image:: https://img.shields.io/codecov/c/github/carlkidcrypto/ezsnmp_data_logger/main?style=flat-square&label=Codecov
+    :target: https://codecov.io/gh/carlkidcrypto/ezsnmp_data_logger
 .. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=carlkidcrypto_ezsnmp_data_logger&metric=alert_status
     :target: https://sonarcloud.io/summary/new_code?id=carlkidcrypto_ezsnmp_data_logger
     :alt: Quality Gate Status
@@ -45,11 +33,29 @@ EzSnmp Data Logger
 .. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=carlkidcrypto_ezsnmp_data_logger&metric=sqale_rating
     :target: https://sonarcloud.io/summary/new_code?id=carlkidcrypto_ezsnmp_data_logger
     :alt: Maintainability Rating
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/ezsnmp-data-logger?style=flat-square
+    :target: https://pypi.org/project/ezsnmp-data-logger/
+.. |PyPI Downloads| image:: https://img.shields.io/pypi/dm/ezsnmp-data-logger?style=flat-square
+    :target: https://pypi.org/project/ezsnmp-data-logger/
+.. |npm Version| image:: https://img.shields.io/npm/v/ezsnmp-data-logger?style=flat-square
+    :target: https://www.npmjs.com/package/ezsnmp-data-logger
+.. |npm Downloads| image:: https://img.shields.io/npm/dm/ezsnmp-data-logger?style=flat-square
+    :target: https://www.npmjs.com/package/ezsnmp-data-logger
+.. |NuGet Version| image:: https://img.shields.io/nuget/v/EzSnmpDataLogger?style=flat-square
+    :target: https://www.nuget.org/packages/EzSnmpDataLogger
+.. |PyPI Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_pypi.yml?style=flat-square&label=PyPI+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_pypi.yml
+.. |TestPyPI Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_test_pypi.yml?style=flat-square&label=TestPyPI+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_test_pypi.yml
+.. |Python Versions| image:: https://img.shields.io/pypi/pyversions/ezsnmp-data-logger?style=flat-square
+    :target: https://pypi.org/project/ezsnmp-data-logger/
+.. |License| image:: https://img.shields.io/github/license/carlkidcrypto/ezsnmp_data_logger?style=flat-square
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/blob/main/LICENSE
 
 Introduction
 ------------
 
-**EzSnmp Data Logger** (``ezsnmp_data_logger``) is a **self-contained**, portable **C++17** SNMP telemetry collection and storage package built directly on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_ (standardized on the **CalSemVer** release stream ``ezsnmp>=2026.11.9b0``).
+**EzSnmp Data Logger** (``ezsnmp_data_logger``) is a **self-contained**, portable **C++17** SNMP telemetry collection and storage package built directly on top of `EzSnmp <https://github.com/carlkidcrypto/ezsnmp>`_ (standardized on the **CalSemVer** release stream ``ezsnmp>=2026.11.15b0``).
 
 Every distributed language package—**Python**, **JavaScript (Node.js N-API)**, **C# (.NET 8+)**, and **Go (cgo)**—is built to be **100% self-contained** so end users never have to install extra native libraries (Net-SNMP, OpenSSL, SQLite3, or SWIG).
 
@@ -57,7 +63,7 @@ Key Highlights
 --------------
 
 1. **Powered by EzSnmp ("net-snmp" Layer — CalSemVer Standardized):**
-   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.11.9b0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
+   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.11.15b0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
 2. **Self-Contained Packages Across All 4 SWIG Target Languages:**
    Statically embeds the public-domain **SQLite3** C amalgamation directly into every binary and bundles/relocates **Net-SNMP 5.10 + OpenSSL** runtime libraries inside **Python** (`cibuildwheel`), **JavaScript / Node.js N-API** (`bindings/javascript/`), **C# / .NET** (`bindings/csharp/`), and **Go** (`bindings/go/`) packages—zero external system libraries required by users!
 3. **Multi-Sink Telemetry Persistence:**

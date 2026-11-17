@@ -70,11 +70,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.9b0)
+      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.15b0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.9b0
+          ref: v2026.11.15b0
           path: third_party/ezsnmp
 
       - name: Set up Python 3.14 env for sphinx...
@@ -102,7 +102,7 @@ jobs:
 
       - name: Install Pip Requirements
         run: |
-          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.9b0"
+          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.15b0"
           python -m pip install -r sphinx_docs_build/requirements.txt
           python -m pip install -r sphinx_docs_build/landing/requirements.txt
 
@@ -160,11 +160,11 @@ jobs:
           fetch-tags: true
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.9b0)
+      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.15b0)
         uses: actions/checkout@v7
         with:
           repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.9b0
+          ref: v2026.11.15b0
           path: third_party/ezsnmp
 
       - name: Set up Python 3.14 env for sphinx...
@@ -192,7 +192,7 @@ jobs:
 
       - name: Install Pip Requirements
         run: |
-          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.9b0"
+          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.15b0"
           python -m pip install -r sphinx_docs_build/requirements.txt
           python -m pip install -r sphinx_docs_build/landing/requirements.txt
 
@@ -304,7 +304,7 @@ jobs:
 
       - name: Create Pull Request with versioned docs
         id: create-pr
-        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v7
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "docs: add versioned documentation for ${{ github.event.release.tag_name }}"
