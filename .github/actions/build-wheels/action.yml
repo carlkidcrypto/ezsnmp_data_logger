@@ -60,7 +60,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: C:\ezsnmp-netsnmp-dist
-        key: ${{ runner.os }}-netsnmp-5.10.pre2-${{ inputs.arch }}-${{ hashFiles('.github/actions/prepare-windows-netsnmp/action.yml') }}
+        key: ${{ runner.os }}-netsnmp-5.10.pre2-${{ inputs.arch }}-902d603b
 
     - name: Set up Python 3.13
       uses: actions/setup-python@v7
@@ -76,8 +76,10 @@ runs:
 
     - name: Prepare Net-SNMP for Windows wheels
       if: runner.os == 'Windows'
-      uses: ./.github/actions/prepare-windows-netsnmp
+      uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@3178143deee5927b0b131bafef683efe8b2484b5
       with:
+        net-snmp-version: "5.10.pre2"
+        net-snmp-sha256: "7a5fc63515f0477d84fb160b6e8a2aee0196117d7e4ffe7d0fba2bdf3a8d72cc"
         arch: ${{ inputs.arch }}
 
     - name: Build wheels using cibuildwheel

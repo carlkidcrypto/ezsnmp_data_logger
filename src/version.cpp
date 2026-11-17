@@ -6,9 +6,9 @@
 
 namespace ezsnmp_data_logger {
 
-std::string version() noexcept { return "2026.11.9"; }
+std::string version() noexcept { return "2026.11.17"; }
 
-std::string ezsnmp_target_version() noexcept { return "2026.11.9b0"; }
+std::string ezsnmp_target_version() noexcept { return "2026.11.15b0"; }
 
 bool is_valid_calsemver(std::string const& ver) {
    static std::regex const kCalSemVerPattern(
