@@ -237,7 +237,7 @@ jobs:
 
       - name: Pytest coverage comment - Native
         id: pytest-coverage-native
-        uses: MishaKav/pytest-coverage-comment@9516bf7f32a9229cf18d5e1717ae387c7154f279 # v1.13.0
+        uses: MishaKav/pytest-coverage-comment@4cfb48edc8f875ac019afdcfd97c48d78ad2b723 # v1.13.1
         with:
           title: Pytest Coverage Report - Native
           unique-id-for-comment: native-tests
@@ -316,7 +316,7 @@ jobs:
 
       - name: Pytest coverage comment - Homebrew
         id: pytest-coverage-homebrew
-        uses: MishaKav/pytest-coverage-comment@9516bf7f32a9229cf18d5e1717ae387c7154f279 # v1.13.0
+        uses: MishaKav/pytest-coverage-comment@4cfb48edc8f875ac019afdcfd97c48d78ad2b723 # v1.13.1
         with:
           title: Pytest Coverage Report - Homebrew
           unique-id-for-comment: homebrew-tests
