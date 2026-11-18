@@ -1,6 +1,25 @@
-Last Updated: 2026-11-18 01:18:17 UTC
+Last Updated: 2026-11-18 22:59:57 UTC
 
 # Changelog
+
+<a name="v2026.11.18"></a>
+## [v2026.11.18](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.17...v2026.11.18) (2026-11-18)
+
+### Changes
+
+#### Bug Fixes
+- fix(ci): fix Windows NuGet OpenSSL linking, immutable release asset upload, and npm OIDC auth ([#67](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/67))
+
+#### Documentation Updates
+- docs: add versioned documentation for v2026.11.17 ([#66](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/66))
+
+#### Maintenance
+- chore(release): bump version to 2026.11.18 ([#68](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/68))
+
+#### Updates & Improvements
+- [changelog] Update CHANGELOG.md ([#65](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/65))
+
+---
 
 <a name="v2026.11.17"></a>
 ## [v2026.11.17](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.9...v2026.11.17) (2026-11-17)
