@@ -2,7 +2,7 @@
 ; Cross-platform SNMP Telemetry Engine
 
 #ifndef AppVersion
-#define AppVersion "2026.11.18"
+#define AppVersion "2026.11.18.1"
 #endif
 
 #ifndef SourceExe
