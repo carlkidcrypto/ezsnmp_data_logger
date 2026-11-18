@@ -178,7 +178,7 @@ def test_desktop_distribution_workflow_configuration() -> None:
 
     content = wf_path.read_text(encoding="utf-8")
     assert "release:" in content
-    assert "types: [published]" in content
+    assert "types: [created, published]" in content
     assert "pull_request:" in content
     assert "workflow_dispatch:" in content
     assert "tj-actions/changed-files" in content
