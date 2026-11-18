@@ -125,7 +125,7 @@ macOS (Apple Silicon & Intel)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.17"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.18"
 
    # Install native macOS Application Launcher in ~/Applications with Retina icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -136,7 +136,7 @@ Windows (Windows 10 / 11 / Server)
 .. code-block:: powershell
 
    py -m pip install --upgrade pip
-   py -m pip install --pre "ezsnmp-data-logger>=2026.11.17"
+   py -m pip install --pre "ezsnmp-data-logger>=2026.11.18"
 
    # Install Windows desktop launcher shortcut with custom icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -147,7 +147,7 @@ Linux (Ubuntu, Debian, Fedora, RHEL, Arch, Alpine)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.17"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.18"
 
    # Install desktop launcher (.desktop) in ~/.local/share/applications/:
    ezsnmp-data-logger-gui --install-launcher
