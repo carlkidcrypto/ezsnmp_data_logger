@@ -1,6 +1,37 @@
-Last Updated: 2026-11-16T23:42:01Z
+Last Updated: 2026-11-18 01:18:17 UTC
 
 # Changelog
+
+<a name="v2026.11.17"></a>
+## [v2026.11.17](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.9...v2026.11.17) (2026-11-17)
+
+### Changes
+
+#### Apply
+- Apply filtered changes ([#56](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/56))
+- Apply filtered changes ([#54](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/54))
+- Apply filtered changes ([#50](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/50))
+
+#### Build System
+- build(deps): bump the github-actions group with 2 updates ([#61](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/61))
+- build(deps): bump the github-actions group with 7 updates ([#51](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/51))
+
+#### Documentation Updates
+- docs: fix alpha/beta wording in HOWTOAI ([#55](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/55))
+- docs: standardize README status badges to 4-row flat-square layout ([#60](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/60))
+- docs: fix RST inline literals in HOWTOAI ([#53](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/53))
+- docs: add versioned documentation for v2026.11.9 ([#48](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/48))
+
+#### Maintenance
+- chore(release): bump version to 2026.11.17 ([#64](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/64))
+- chore(ci): adopt carlkidcrypto/shared-workflows ([#63](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/63))
+- chore(deps): bump ezsnmp dependency to v2026.11.15b0 ([#62](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/62))
+- chore(ci): recompile agentic workflows with gh-aw v1.2.2 ([#58](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/58))
+- chore(changelog): standardize git-chglog config, template, and auto-changelog workflow ([#57](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/57))
+- chore(deps): bump ezsnmp dependency to v2026.11.9b0 ([#52](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/52))
+- chore(docs): update changelog ([#49](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/49))
+
+---
 
 <a name="v2026.11.9"></a>
 ## [v2026.11.9](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.7...v2026.11.9) (2026-11-09)
