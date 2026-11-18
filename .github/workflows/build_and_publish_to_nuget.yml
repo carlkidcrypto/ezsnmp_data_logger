@@ -61,7 +61,7 @@ jobs:
 
       - name: Prepare Net-SNMP for Windows
         if: runner.os == 'Windows'
-        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@3178143deee5927b0b131bafef683efe8b2484b5
+        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@7be5e77f7d3a70d004199c6419572a61444ac714
         with:
           net-snmp-version: "5.10.pre2"
           net-snmp-sha256: "7a5fc63515f0477d84fb160b6e8a2aee0196117d7e4ffe7d0fba2bdf3a8d72cc"
