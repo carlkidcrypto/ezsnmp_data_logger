@@ -60,6 +60,12 @@ jobs:
           expected_version="${RELEASE_TAG#v}"
           if [[ "$expected_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             expected_version="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+          elif [[ "$expected_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)a([0-9]+)$ ]]; then
+            expected_version="${BASH_REMATCH[1]}-alpha.${BASH_REMATCH[2]}"
+          elif [[ "$expected_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)b([0-9]+)$ ]]; then
+            expected_version="${BASH_REMATCH[1]}-beta.${BASH_REMATCH[2]}"
+          elif [[ "$expected_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$ ]]; then
+            expected_version="${BASH_REMATCH[1]}-rc.${BASH_REMATCH[2]}"
           fi
           package_version=$(node -p "require('./package.json').version")
           if [ "$expected_version" != "$package_version" ]; then
@@ -100,16 +106,32 @@ jobs:
       - name: Publish to npm
         working-directory: bindings/javascript
         run: |
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            export NODE_AUTH_TOKEN="${{ secrets.NPM_TOKEN }}"
+          fi
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
             echo "Notice: ${PACKAGE_NAME}@${PACKAGE_VERSION} is already published on npm; skipping publish step."
             exit 0
           fi
-          if [[ "$PACKAGE_VERSION" =~ -alpha\. ]] || [[ "$PACKAGE_VERSION" =~ -beta\. ]] || [[ "$PACKAGE_VERSION" =~ -rc\. ]]; then
+          TARBALL=$(ls -1 ezsnmp-data-logger-*.tgz 2>/dev/null | head -n 1)
+          if [[ "$PACKAGE_VERSION" =~ -alpha\. ]] || \
+             [[ "$PACKAGE_VERSION" =~ -a[0-9] ]] || \
+             [[ "$PACKAGE_VERSION" =~ -beta\. ]] || \
+             [[ "$PACKAGE_VERSION" =~ -rc\. ]] || \
+             [[ "$PACKAGE_VERSION" =~ -[0-9]+$ ]]; then
             echo "Publishing prerelease version $PACKAGE_VERSION with tag 'next'..."
-            npm publish --access public --provenance --tag next
+            if [ -n "$TARBALL" ]; then
+              npm publish "$TARBALL" --access public --provenance --tag next
+            else
+              npm publish --access public --provenance --tag next
+            fi
           else
             echo "Publishing release version $PACKAGE_VERSION with tag 'latest'..."
-            npm publish --access public --provenance --tag latest
+            if [ -n "$TARBALL" ]; then
+              npm publish "$TARBALL" --access public --provenance --tag latest
+            else
+              npm publish --access public --provenance --tag latest
+            fi
           fi
