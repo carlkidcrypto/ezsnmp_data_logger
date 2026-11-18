@@ -100,9 +100,6 @@ jobs:
       - name: Publish to npm
         working-directory: bindings/javascript
         run: |
-          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
-            export NODE_AUTH_TOKEN="${{ secrets.NPM_TOKEN }}"
-          fi
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then

@@ -6,7 +6,7 @@ concurrency:
 
 on:
   release:
-    types: [published]
+    types: [created, published]
   pull_request:
     branches: [main]
     paths-ignore:
@@ -64,7 +64,9 @@ jobs:
   package-desktop-apps:
     name: Package Desktop App (${{ matrix.os }})
     needs: [verify-syntax, check-source-changes]
-    if: needs.check-source-changes.outputs.run_job == 'true' || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: >-
+      (github.event_name == 'release' && (github.event.action == 'published' || (github.event.action == 'created' && github.event.release.draft == true))) ||
+      (github.event_name != 'release' && (needs.check-source-changes.outputs.run_job == 'true' || github.event_name == 'workflow_dispatch'))
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -179,7 +181,9 @@ jobs:
   publish-release-assets:
     name: Publish Desktop Assets to GitHub Release
     needs: [verify-syntax, package-desktop-apps]
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: >-
+      (github.event_name == 'release' && (github.event.action == 'published' || (github.event.action == 'created' && github.event.release.draft == true))) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -237,6 +241,12 @@ jobs:
 
           echo "Found ${#ASSETS[@]} assets to publish:"
           printf ' - %s\n' "${ASSETS[@]}"
+
+          IS_IMMUTABLE=$(gh api "repos/${{ github.repository }}/releases/tags/$TARGET_TAG" --jq '.immutable // false' 2>/dev/null || echo "false")
+          if [ "$IS_IMMUTABLE" = "true" ]; then
+            echo "::warning::Release ${TARGET_TAG} is immutable (GitHub Immutable Releases prevents uploading assets to an already-published release). Create a draft release first so the 'created' trigger uploads assets while mutable, or disable Immutable Releases in repository settings. Skipping gh release upload; artifacts remain attached to the workflow run."
+            exit 0
+          fi
 
           for asset in "${ASSETS[@]}"; do
             echo "Uploading asset: ${asset} to release ${TARGET_TAG} ..."
