@@ -124,14 +124,12 @@ jobs:
 
       - name: Upload C++ coverage to Codecov
         if: always() && runner.os == 'Linux'
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        uses: carlkidcrypto/shared-workflows/actions/upload-codecov@14e025f6c182b7b20718538f533ca467a9ff9c6c
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/meson-logs/coverage.xml,./coverage.xml
           flags: cpp
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          fail-ci-if-error: false
 
       - name: Upload C++ test results to Codecov
         if: always()

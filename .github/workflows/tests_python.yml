@@ -116,7 +116,7 @@ jobs:
 
       - name: Prepare Net-SNMP for Windows
         if: runner.os == 'Windows'
-        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@88de7dd78ef1a992d2509818afcf0c76a2c631eb
+        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@14e025f6c182b7b20718538f533ca467a9ff9c6c
         with:
           net-snmp-version: "5.10.pre2"
           net-snmp-sha256: "7a5fc63515f0477d84fb160b6e8a2aee0196117d7e4ffe7d0fba2bdf3a8d72cc"
@@ -191,14 +191,12 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        uses: carlkidcrypto/shared-workflows/actions/upload-codecov@14e025f6c182b7b20718538f533ca467a9ff9c6c
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml
           flags: python
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          fail-ci-if-error: false
 
       - name: Upload test results to Codecov
         if: always()
