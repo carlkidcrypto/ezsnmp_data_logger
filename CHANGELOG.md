@@ -1,6 +1,24 @@
-Last Updated: 2026-11-18 22:59:57 UTC
+Last Updated: 2026-11-19 00:03:58 UTC
 
 # Changelog
+
+<a name="v2026.11.18.1"></a>
+## [v2026.11.18.1](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.18...v2026.11.18.1) (2026-11-18)
+
+### Changes
+
+#### Documentation Updates
+- docs: add versioned documentation for v2026.11.18 ([#70](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/70))
+
+#### Maintenance
+- chore(release): bump version to 2026.11.18.1 ([#75](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/75))
+- chore(ci): bump shared-workflows SHA to 88de7dd ([#72](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/72))
+- chore(ci): bump shared-workflows SHA to 7be5e77 ([#71](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/71))
+
+#### Updates & Improvements
+- [changelog] Update CHANGELOG.md ([#69](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/69))
+
+---
 
 <a name="v2026.11.18"></a>
 ## [v2026.11.18](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.17...v2026.11.18) (2026-11-18)
