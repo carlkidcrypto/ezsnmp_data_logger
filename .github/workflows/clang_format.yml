@@ -1,3 +1,4 @@
+---
 name: Clang-format
 
 concurrency:
@@ -35,17 +36,11 @@ jobs:
     uses: ./.github/workflows/verify_syntax.yml
   check-formatting:
     needs: verify-syntax
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Install Clang-Format 20
-        run: sudo apt-get update && sudo apt-get install -y clang-format-20
-
-      - name: Check C++17 Formatting
-        run: |
-          set -e
-          find include src cpp_tests -type f \( -name '*.h' -o -name '*.cpp' \) \
-            ! -name 'ezsnmp_data_logger_wrap.cxx' \
-            -exec clang-format-20 --dry-run --Werror {} +
+    permissions:
+      contents: read
+    uses: carlkidcrypto/shared-workflows/.github/workflows/reusable_clang_format.yml@14e025f6c182b7b20718538f533ca467a9ff9c6c
+    with:
+      target-dirs: 'include src cpp_tests'
+      file-extensions: 'cpp h'
+      clang-format-version: '20'
+      exclude-files: 'ezsnmp_data_logger_wrap.cxx'
