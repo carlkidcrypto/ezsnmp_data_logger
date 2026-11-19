@@ -1,3 +1,4 @@
+---
 # Refer to the following link for help
 # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 
@@ -12,81 +13,28 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  verify-syntax:
+  publish:
     permissions:
       contents: read
-    uses: ./.github/workflows/verify_syntax.yml
-
-  build_wheels:
-    needs: verify-syntax
-    name: Build wheels on ${{ matrix.os }} (${{ matrix.label || matrix.arch }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            arch: x86_64
-            label: x86_64-manylinux
-            cibw-build: "*-manylinux*"
-          - os: ubuntu-latest
-            arch: x86_64
-            label: x86_64-musllinux
-            cibw-build: "*-musllinux*"
-          - os: macos-latest
-            arch: arm64
-          - os: windows-latest
-            arch: AMD64
-          - os: windows-latest
-            arch: x86
-          - os: windows-latest
-            arch: ARM64
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer beta v2026.11.15b0)
-        uses: actions/checkout@v7
-        with:
-          repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.15b0
-          path: third_party/ezsnmp
-
-      - name: Build and upload wheels
-        uses: ./.github/actions/build-wheels
-        with:
-          os: ${{ matrix.os }}
-          arch: ${{ matrix.arch }}
-          job-index: ${{ strategy.job-index }}
-          cibw-build: ${{ matrix.cibw-build || '*' }}
-          label: ${{ matrix.label || matrix.arch }}
-
-  build-n-publish-pypi:
-    name: Build and Publish To PyPi
-    runs-on: ubuntu-latest
-    environment: build_and_publish_to_pypi
-    permissions:
       id-token: write
-    needs: build_wheels
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer beta v2026.11.15b0)
-        uses: actions/checkout@v7
-        with:
-          repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.15b0
-          path: third_party/ezsnmp
-
-      - name: Build distribution
-        uses: ./.github/actions/build-distribution
-
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1.14
-        with:
-          packages-dir: dist/
-          verify-metadata: false
-          skip-existing: true
-          print-hash: true
+    uses: carlkidcrypto/shared-workflows/.github/workflows/reusable_pypi_publish.yml@14e025f6c182b7b20718538f533ca467a9ff9c6c
+    with:
+      target: 'pypi'
+      environment-name: 'build_and_publish_to_pypi'
+      use-local-wheel-action: true
+      python-version: '3.13'
+      third-party-repo: 'carlkidcrypto/ezsnmp'
+      third-party-ref: 'v2026.11.15b0'
+      third-party-path: 'third_party/ezsnmp'
+      sdist-setup-cmd: >-
+        sudo bash ./tools/prepare_linux_netsnmp.sh &&
+        python3 tools/prepare_sqlite3_amalgamation.py &&
+        python3 tools/prepare_ezsnmp_source.py &&
+        echo "/usr/local/bin" >> "$GITHUB_PATH" &&
+        echo "EZSNMP_NETSNMP_CONFIG=/usr/local/bin/net-snmp-config" >> "$GITHUB_ENV"
+      skip-existing: true
+      verify-metadata: false
