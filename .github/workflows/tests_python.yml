@@ -47,7 +47,7 @@ jobs:
 
       - name: Check for changes in Python source and test code
         id: changed-files
-        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        uses: carlkidcrypto/shared-workflows/actions/check-source-changes@873e1fea29bbd9dc73651d85a28920cb0797cb85
         with:
           files: |
             codecov.yml
@@ -116,7 +116,7 @@ jobs:
 
       - name: Prepare Net-SNMP for Windows
         if: runner.os == 'Windows'
-        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@14e025f6c182b7b20718538f533ca467a9ff9c6c
+        uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@873e1fea29bbd9dc73651d85a28920cb0797cb85
         with:
           net-snmp-version: "5.10.pre2"
           net-snmp-sha256: "7a5fc63515f0477d84fb160b6e8a2aee0196117d7e4ffe7d0fba2bdf3a8d72cc"
