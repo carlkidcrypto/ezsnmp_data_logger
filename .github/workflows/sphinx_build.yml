@@ -1,3 +1,4 @@
+---
 name: "Sphinx Docs Build"
 
 concurrency:
@@ -19,6 +20,9 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   verify-syntax:
@@ -56,94 +60,31 @@ jobs:
   sphinx_docs_build:
     needs: [verify-syntax, check-source-changes]
     if: |
-      github.event_name == 'release' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'pull_request' && needs.check-source-changes.outputs.run_job == 'true')
-    runs-on: ubuntu-latest
     permissions:
-      contents: write
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-
-      - name: Check out ezsnmp C++17 SessionBase layer (v2026.11.15b0)
-        uses: actions/checkout@v7
-        with:
-          repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.15b0
-          path: third_party/ezsnmp
-
-      - name: Set up Python 3.14 env for sphinx...
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.14"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-sphinx-${{ hashFiles('sphinx_docs_build/requirements.txt', 'sphinx_docs_build/landing/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-sphinx-
-            ${{ runner.os }}-pip-
-
-      - name: Provision embedded SQLite3 amalgamation
-        run: python tools/prepare_sqlite3_amalgamation.py
-
-      - name: Install Build Requirements
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++ python3-dev python3-tk doxygen swig pkg-config \
-            libsnmp-dev libssl-dev
-
-      - name: Install Pip Requirements
-        run: |
-          python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.15b0"
-          python -m pip install -r sphinx_docs_build/requirements.txt
-          python -m pip install -r sphinx_docs_build/landing/requirements.txt
-
-      - name: Build C++ SWIG extension & Run Sphinx (latest)
-        run: |
-          python setup.py build_ext --inplace
-          mkdir -p doxygen_docs_build
-          doxygen .doxygen
-          cd sphinx_docs_build
-          mkdir -p source/_static source/_templates
-          make clean && make html SPHINXOPTS="-W"
-
-      - name: Build landing page
-        run: |
-          cd sphinx_docs_build/landing
-          mkdir -p source/_static source/_templates
-          make html SPHINXOPTS="-W"
-
-      - name: Ensure .nojekyll exists for GitHub Pages
-        run: touch docs/.nojekyll
-
-      - name: Upload artifact for GitHub Pages
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: docs/
-
-  deploy_pages:
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-    needs: sphinx_docs_build
-    runs-on: ubuntu-latest
-    permissions:
+      contents: read
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
-        continue-on-error: true
+    uses: carlkidcrypto/shared-workflows/.github/workflows/reusable_sphinx_build.yml@14e025f6c182b7b20718538f533ca467a9ff9c6c
+    with:
+      python-version: '3.14'
+      docs-dir: 'sphinx_docs_build'
+      requirements-file: 'sphinx_docs_build/requirements.txt'
+      extra-requirements-file: 'sphinx_docs_build/landing/requirements.txt'
+      output-dir: 'docs'
+      run-doxygen: true
+      doxygen-config: '.doxygen'
+      landing-dir: 'sphinx_docs_build/landing'
+      deploy-pages: true
+      pre-build-cmd: |
+        git clone --depth 1 --branch v2026.11.15b0 https://github.com/carlkidcrypto/ezsnmp.git third_party/ezsnmp
+        python tools/prepare_sqlite3_amalgamation.py
+        sudo apt-get update
+        sudo apt-get install -y g++ python3-dev python3-tk doxygen swig pkg-config libsnmp-dev libssl-dev
+        python -m pip install --pre --upgrade pip setuptools wheel "ezsnmp>=2026.11.15b0"
+        python setup.py build_ext --inplace
 
   sphinx_docs_build_release:
     needs: verify-syntax
