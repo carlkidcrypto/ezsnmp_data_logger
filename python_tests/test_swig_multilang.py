@@ -175,9 +175,16 @@ def test_smart_workflow_triggers_and_runners() -> None:
         wf_path = workflows_dir / wf_name
         assert wf_path.is_file(), f"{wf_name} must exist"
         wf_content = wf_path.read_text(encoding="utf-8")
+        if "reusable_swig_multilang.yml" in wf_content:
+            assert (
+                "carlkidcrypto/shared-workflows/.github/workflows/reusable_swig_multilang.yml"
+                in wf_content
+            )
+            continue
         assert (
             "tj-actions/changed-files" in wf_content
-        ), f"{wf_name} missing tj-actions/changed-files"
+            or "carlkidcrypto/shared-workflows/actions/check-source-changes" in wf_content
+        ), f"{wf_name} missing changed-files check"
         assert "check-source-changes:" in wf_content, f"{wf_name} missing check-source-changes job"
         assert "outputs.any_changed" in wf_content, f"{wf_name} missing any_changed output"
 
@@ -194,7 +201,10 @@ def test_smart_workflow_triggers_and_runners() -> None:
         wf_content = wf_path.read_text(encoding="utf-8")
         assert (
             "carlkidcrypto/os-specific-runner" in wf_content
-        ), f"{wf_name} missing carlkidcrypto/os-specific-runner"
+            or "reusable_tests_cpp_native.yml" in wf_content
+            or "reusable_swig_multilang.yml" in wf_content
+            or "reusable_nuget_publish.yml" in wf_content
+        ), f"{wf_name} missing carlkidcrypto/os-specific-runner or shared reusable workflow"
 
     # PyPI and TestPyPI distribution workflows pre-provision third_party/ezsnmp
     pypi_workflows = [
@@ -207,8 +217,12 @@ def test_smart_workflow_triggers_and_runners() -> None:
         wf_content = wf_path.read_text(encoding="utf-8")
         assert (
             "repository: carlkidcrypto/ezsnmp" in wf_content
+            or "third-party-repo: 'carlkidcrypto/ezsnmp'" in wf_content
         ), f"{wf_name} must checkout carlkidcrypto/ezsnmp"
-        assert "path: third_party/ezsnmp" in wf_content, f"{wf_name} must target third_party/ezsnmp"
+        assert (
+            "path: third_party/ezsnmp" in wf_content
+            or "third-party-path: 'third_party/ezsnmp'" in wf_content
+        ), f"{wf_name} must target third_party/ezsnmp"
 
 
 def test_codecov_configuration() -> None:
@@ -226,14 +240,17 @@ def test_codecov_configuration() -> None:
 
     workflows_dir = REPO_ROOT / ".github" / "workflows"
     python_wf = (workflows_dir / "tests_python.yml").read_text(encoding="utf-8")
-    assert "codecov/codecov-action" in python_wf
+    assert (
+        "codecov/codecov-action" in python_wf
+        or "carlkidcrypto/shared-workflows/actions/upload-codecov" in python_wf
+    )
     assert "CODECOV_TOKEN" in python_wf
     assert "flags: python" in python_wf
 
     cpp_wf = (workflows_dir / "tests_cpp_native.yml").read_text(encoding="utf-8")
-    assert "codecov/codecov-action" in cpp_wf
+    assert "codecov/codecov-action" in cpp_wf or "reusable_tests_cpp_native.yml" in cpp_wf
     assert "CODECOV_TOKEN" in cpp_wf
-    assert "flags: cpp" in cpp_wf
+    assert "flags: cpp" in cpp_wf or "codecov-flags: cpp" in cpp_wf
 
 
 def test_issue_templates() -> None:
@@ -372,5 +389,5 @@ def test_pytest_and_cpp_test_commenting_configuration():
     assert "comment-cpp-test-report" in tests_cpp
     assert "EnricoMi/publish-unit-test-result-action" in tests_cpp
     assert "C++ Test Results - Native" in tests_cpp
-    assert "upload-artifact" in tests_cpp
+    assert "upload-artifact" in tests_cpp or "reusable_tests_cpp_native.yml" in tests_cpp
     assert "download-artifact" in tests_cpp

@@ -181,7 +181,10 @@ def test_desktop_distribution_workflow_configuration() -> None:
     assert "types: [created, published]" in content
     assert "pull_request:" in content
     assert "workflow_dispatch:" in content
-    assert "tj-actions/changed-files" in content
+    assert (
+        "tj-actions/changed-files" in content
+        or "carlkidcrypto/shared-workflows/actions/check-source-changes" in content
+    )
     assert "carlkidcrypto/os-specific-runner" in content
     assert "package-desktop-apps:" in content
     assert "ubuntu-latest" in content
@@ -203,14 +206,20 @@ def test_winget_distribution_workflow_configuration() -> None:
     assert "types: [published]" in content
     assert "pull_request:" in content
     assert "workflow_dispatch:" in content
-    assert "publish-winget:" in content
-    assert "windows-latest" in content
     assert "generate_winget_manifest.py" in content
-    assert "actions/upload-artifact@v7" in content
-    assert "wingetcreate.exe" in content
-    assert "https://aka.ms/wingetcreate/latest" in content
-    assert "wingetcreate.exe submit" in content
-    assert "wingetcreate.exe update" in content
+    if "reusable_winget_publish.yml" in content:
+        assert (
+            "carlkidcrypto/shared-workflows/.github/workflows/reusable_winget_publish.yml"
+            in content
+        )
+    else:
+        assert "publish-winget:" in content
+        assert "windows-latest" in content
+        assert "actions/upload-artifact@v7" in content
+        assert "wingetcreate.exe" in content
+        assert "https://aka.ms/wingetcreate/latest" in content
+        assert "wingetcreate.exe submit" in content
+        assert "wingetcreate.exe update" in content
     assert "WINGET_CREATE_PAT" in content
     assert "WINGET_TOKEN" in content
     assert "WINGET_ACC_TOKEN" in content
