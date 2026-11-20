@@ -96,9 +96,13 @@ def _install_macos_app_bundle(target_dir: Path | None = None) -> Path:
 
     # 3. Write executable script
     launcher_exec = macos_dir / "EzSnmp Data Logger Studio"
+    py_bin = str(Path(sys.executable).resolve().parent)
     script_content = f"""#!/bin/bash
 # EzSnmp Data Logger Studio Launcher
-export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH="{py_bin}:/opt/homebrew/bin:/usr/local/bin:$PATH"
+WORK_DIR="$HOME/.ezsnmp_data_logger"
+mkdir -p "$WORK_DIR"
+cd "$WORK_DIR" || exit 1
 exec "{sys.executable}" -m ezsnmp_data_logger.gui "$@"
 """
     launcher_exec.write_text(script_content, encoding="utf-8")
