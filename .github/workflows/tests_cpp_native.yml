@@ -49,7 +49,7 @@ jobs:
 
       - name: Check for changes in C++ native code
         id: changed-files
-        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        uses: carlkidcrypto/shared-workflows/actions/check-source-changes@873e1fea29bbd9dc73651d85a28920cb0797cb85
         with:
           files: |
             codecov.yml
@@ -67,88 +67,46 @@ jobs:
   cpp-meson-tests:
     needs: [verify-syntax, check-source-changes]
     if: needs.check-source-changes.outputs.run_job == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - name: Checkout ezsnmp_data_logger
-        uses: actions/checkout@v7
-
-      - name: Checkout ezsnmp C++17 SessionBase layer (CalSemVer beta v2026.11.15b0)
-        uses: actions/checkout@v7
-        with:
-          repository: carlkidcrypto/ezsnmp
-          ref: v2026.11.15b0
-          path: third_party/ezsnmp
-
-      - name: Provision embedded SQLite3 amalgamation
-        run: python3 tools/prepare_sqlite3_amalgamation.py
-
-      - name: Install dependencies
-        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
-        with:
-          linux: |
-            sudo apt-get update
-            sudo apt-get install -y build-essential meson ninja-build pkg-config \
-              libssl-dev libpq-dev libgtest-dev lcov gcovr curl perl
-            sudo bash ./tools/prepare_linux_netsnmp.sh
-          macos: |
-            brew install meson ninja pkg-config openssl@3 googletest
-            sudo bash ./tools/prepare_macos_netsnmp.sh
-
-      - name: Configure, Build & Run GoogleTest Suite
-        uses: carlkidcrypto/os-specific-runner@8bf8551e08c48d9b72f768392e692fad5bb169e7 # v2.5.0
-        with:
-          linux: |
-            python3 -m pip install --upgrade pip gcovr
-            export PATH="/usr/local/bin:${PATH}"
-            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-            meson setup build -Db_coverage=true
-            meson compile -C build
-            set +e
-            meson test -C build -v
-            TEST_EXIT_CODE=$?
-            gcovr -r . --xml -o coverage.xml --exclude-throw-branches --exclude-unreachable-branches || ninja -C build coverage-xml || true
-            cp coverage.xml build/meson-logs/coverage.xml 2>/dev/null || true
-            exit $TEST_EXIT_CODE
-          macos: |
-            export PATH="/usr/local/bin:${PATH}"
-            export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
-            meson setup build
-            meson compile -C build
-            meson test -C build -v
-
-      - name: Upload C++ coverage to Codecov
-        if: always() && runner.os == 'Linux'
-        uses: carlkidcrypto/shared-workflows/actions/upload-codecov@14e025f6c182b7b20718538f533ca467a9ff9c6c
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./build/meson-logs/coverage.xml,./coverage.xml
-          flags: cpp
-          fail-ci-if-error: false
-
-      - name: Upload C++ test results to Codecov
-        if: always()
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./build/meson-logs/testlog.junit.xml
-          flags: cpp
-          report_type: test_results
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload C++ test results artifacts
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: cpp-test-results-${{ matrix.os }}
-          path: build/meson-logs/testlog.junit.xml
+    uses: carlkidcrypto/shared-workflows/.github/workflows/reusable_tests_cpp_native.yml@873e1fea29bbd9dc73651d85a28920cb0797cb85
+    with:
+      build-system: meson
+      install-netsnmp: false
+      codecov-flags: cpp
+      coverage-files: ./build/meson-logs/coverage.xml,./coverage.xml
+      junit-files: ./build/meson-logs/testlog.junit.xml
+      pre-build-cmd: |
+        set -euo pipefail
+        git clone --depth 1 --branch v2026.11.15b0 https://github.com/carlkidcrypto/ezsnmp.git third_party/ezsnmp
+        python3 tools/prepare_sqlite3_amalgamation.py
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential meson ninja-build pkg-config \
+            libssl-dev libpq-dev libgtest-dev lcov gcovr curl perl
+          sudo bash ./tools/prepare_linux_netsnmp.sh
+          python3 -m pip install --upgrade pip gcovr
+          echo "PATH=/usr/local/bin:${PATH}" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+        elif [ "$RUNNER_OS" = "macOS" ]; then
+          brew install meson ninja pkg-config openssl@3 googletest
+          sudo bash ./tools/prepare_macos_netsnmp.sh
+          echo "PATH=/usr/local/bin:${PATH}" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=/usr/local/lib:${DYLD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+        fi
+      test-command: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          set +e
+          meson test -C build -v
+          TEST_EXIT_CODE=$?
+          gcovr -r . --xml -o coverage.xml --exclude-throw-branches --exclude-unreachable-branches || ninja -C build coverage-xml || true
+          cp coverage.xml build/meson-logs/coverage.xml 2>/dev/null || true
+          exit $TEST_EXIT_CODE
+        else
+          meson test -C build -v
+        fi
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   comment-cpp-test-report:
     runs-on: ubuntu-latest
