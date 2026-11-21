@@ -158,21 +158,85 @@ def build_pyinstaller_cmd(
         if icon_ico.is_file():
             cmd.extend(["--icon", str(icon_ico)])
 
-        # Include bundled DLLs if present
-        for dll_file in (REPO_ROOT / "ezsnmp_data_logger").glob("*.dll"):
-            cmd.extend(["--add-binary", f"{dll_file}{sep}ezsnmp_data_logger"])
+        # Collect Windows runtime DLLs with deduplication so shared libraries
+        # (e.g. netsnmp.dll, libcrypto/libssl) are never bundled twice.
+        seen_dlls: set[str] = set()
 
-        # Include Net-SNMP 5.10 DLLs if present on Windows
+        def _add_win_dll(dll_path: Path, dest_dir: str = "ezsnmp_data_logger") -> None:
+            key = dll_path.name.lower()
+            if key in seen_dlls:
+                return
+            seen_dlls.add(key)
+            cmd.extend(["--add-binary", f"{dll_path}{sep}{dest_dir}"])
+
+        # 1. Bundled DLLs already placed in ezsnmp_data_logger/
+        for dll_file in sorted((REPO_ROOT / "ezsnmp_data_logger").glob("*.dll")):
+            _add_win_dll(dll_file, "ezsnmp_data_logger")
+
+        # 2. Net-SNMP 5.10 DLLs
         win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
         if not win_bin:
-            for arch_cand in ("x64", "AMD64", "x86", "ARM64"):
+            for arch_cand in ("x64", "AMD64", "ARM64", "x86"):
                 cand = Path(f"C:/ezsnmp-netsnmp-dist/{arch_cand}/bin/release")
                 if cand.is_dir():
                     win_bin = str(cand)
                     break
-        if win_bin and Path(win_bin).is_dir():
-            for dll in Path(win_bin).glob("*.dll"):
-                cmd.extend(["--add-binary", f"{dll}{sep}."])
+        if win_bin:
+            for part in win_bin.split(os.pathsep):
+                if part and Path(part).is_dir():
+                    for dll in sorted(Path(part).glob("*.dll")):
+                        _add_win_dll(dll, "ezsnmp_data_logger")
+
+        # 3. OpenSSL / vcpkg runtime DLLs
+        ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
+        if ssl_bin:
+            for part in ssl_bin.split(os.pathsep):
+                if part and Path(part).is_dir():
+                    for dll in sorted(Path(part).glob("*.dll")):
+                        _add_win_dll(dll, "ezsnmp_data_logger")
+        else:
+            machine = platform.machine().lower()
+            if machine in ("arm64", "aarch64"):
+                vcpkg_triplets = ("arm64-windows", "x64-windows", "x86-windows")
+            elif machine in ("x86", "i386", "i686"):
+                vcpkg_triplets = ("x86-windows", "x64-windows", "arm64-windows")
+            else:
+                vcpkg_triplets = ("x64-windows", "arm64-windows", "x86-windows")
+
+            ssl_candidates: list[tuple[Path, tuple[str, ...]]] = []
+            vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
+            if vcpkg_root:
+                for triplet in vcpkg_triplets:
+                    ssl_candidates.append(
+                        (
+                            Path(vcpkg_root) / "installed" / triplet / "bin",
+                            ("libcrypto*.dll", "libssl*.dll"),
+                        )
+                    )
+            for triplet in vcpkg_triplets:
+                ssl_candidates.append(
+                    (
+                        Path(f"C:/vcpkg/installed/{triplet}/bin"),
+                        ("libcrypto*.dll", "libssl*.dll"),
+                    )
+                )
+            for std_ssl in (
+                Path(r"C:\Program Files\OpenSSL\bin"),
+                Path(r"C:\Program Files\OpenSSL-Win64\bin"),
+                Path(r"C:\OpenSSL-Win64\bin"),
+            ):
+                ssl_candidates.append((std_ssl, ("libcrypto*.dll", "libssl*.dll")))
+
+            for cand_dir, patterns in ssl_candidates:
+                if not cand_dir.is_dir():
+                    continue
+                matched: list[Path] = []
+                for pat in patterns:
+                    matched.extend(sorted(cand_dir.glob(pat)))
+                if matched:
+                    for dll in matched:
+                        _add_win_dll(dll, "ezsnmp_data_logger")
+                    break
 
         for pyd_file in (REPO_ROOT / "ezsnmp_data_logger").glob("_ezsnmp_data_logger*.pyd"):
             cmd.extend(["--add-binary", f"{pyd_file}{sep}ezsnmp_data_logger"])
@@ -356,11 +420,12 @@ def package_windows_artifacts(
             cmd = [
                 iscc,
                 f"/DAppVersion={version}",
+                f"/DAppArch={arch}",
                 f"/DSourceExe={exe_src.resolve()}",
                 str(iss_file.resolve()),
             ]
             subprocess.run(cmd, check=True)
-            setup_exe = dist_dir / "EzSnmpDataLogger-Windows-x64-Setup.exe"
+            setup_exe = dist_dir / f"EzSnmpDataLogger-Windows-{arch}-Setup.exe"
             if setup_exe.is_file():
                 results.append(setup_exe)
         else:
@@ -520,8 +585,14 @@ Homepage: https://carlkidcrypto.github.io/ezsnmp_data_logger/
         shutil.copy2(exe_src, staging / "usr" / "bin" / "EzSnmpDataLogger")
         (staging / "usr" / "bin" / "EzSnmpDataLogger").chmod(0o755)
 
-        # Symlink ezsnmp-data-logger -> EzSnmpDataLogger
-        os.symlink("EzSnmpDataLogger", str(staging / "usr" / "bin" / "ezsnmp-data-logger"))
+        # Symlink ezsnmp-data-logger -> EzSnmpDataLogger (fall back to copy when
+        # symlink creation is unavailable, e.g. non-elevated Windows 11).
+        alias_path = staging / "usr" / "bin" / "ezsnmp-data-logger"
+        try:
+            os.symlink("EzSnmpDataLogger", str(alias_path))
+        except OSError:
+            shutil.copy2(exe_src, alias_path)
+            alias_path.chmod(0o755)
 
         shutil.copy2(
             desktop_file, staging / "usr" / "share" / "applications" / "ezsnmp-data-logger.desktop"

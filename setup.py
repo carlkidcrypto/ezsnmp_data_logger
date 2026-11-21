@@ -704,7 +704,7 @@ class SwigBuildExt(build_ext):
                 if os.path.isdir(inplace_pkg_dir) and inplace_pkg_dir not in target_dirs:
                     target_dirs.append(inplace_pkg_dir)
 
-                dll_sources = []
+                dll_sources: list[tuple[str, tuple[str, ...]]] = []
                 win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
                 if not win_bin:
                     for cand_arch in ("x64", "AMD64", "x86", "ARM64"):
@@ -713,28 +713,61 @@ class SwigBuildExt(build_ext):
                             win_bin = str(cand)
                             break
                 if win_bin and os.path.isdir(win_bin):
-                    dll_sources.append(win_bin)
+                    dll_sources.append((win_bin, ("*.dll",)))
 
                 ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
+                ssl_patterns: tuple[str, ...] = ("*.dll",)
                 if not ssl_bin:
-                    for cand_ssl in (
+                    machine = platform.machine().lower()
+                    if machine in ("arm64", "aarch64"):
+                        vcpkg_triplets = ("arm64-windows", "x64-windows", "x86-windows")
+                    elif machine in ("x86", "i386", "i686"):
+                        vcpkg_triplets = ("x86-windows", "x64-windows", "arm64-windows")
+                    else:
+                        vcpkg_triplets = ("x64-windows", "arm64-windows", "x86-windows")
+
+                    ssl_candidates: list[tuple[Path, tuple[str, ...]]] = []
+                    vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
+                    if vcpkg_root:
+                        for triplet in vcpkg_triplets:
+                            ssl_candidates.append(
+                                (
+                                    Path(vcpkg_root) / "installed" / triplet / "bin",
+                                    ("libcrypto*.dll", "libssl*.dll"),
+                                )
+                            )
+                    for triplet in vcpkg_triplets:
+                        ssl_candidates.append(
+                            (
+                                Path(f"C:/vcpkg/installed/{triplet}/bin"),
+                                ("libcrypto*.dll", "libssl*.dll"),
+                            )
+                        )
+                    for std_ssl in (
                         Path(r"C:\Program Files\OpenSSL\bin"),
                         Path(r"C:\Program Files\OpenSSL-Win64\bin"),
                         Path(r"C:\OpenSSL-Win64\bin"),
                     ):
-                        if cand_ssl.is_dir():
+                        ssl_candidates.append((std_ssl, ("*.dll",)))
+
+                    for cand_ssl, pats in ssl_candidates:
+                        if cand_ssl.is_dir() and any(
+                            any(cand_ssl.glob(p)) for p in ("libcrypto*.dll", "libssl*.dll")
+                        ):
                             ssl_bin = str(cand_ssl)
+                            ssl_patterns = pats
                             break
                 if ssl_bin and os.path.isdir(ssl_bin):
-                    dll_sources.append(ssl_bin)
+                    dll_sources.append((ssl_bin, ssl_patterns))
 
-                for sdir in dll_sources:
-                    for dll_file in Path(sdir).glob("*.dll"):
-                        for tdir in target_dirs:
-                            try:
-                                shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
-                            except (OSError, shutil.SameFileError):
-                                pass
+                for sdir, patterns in dll_sources:
+                    for pat in patterns:
+                        for dll_file in Path(sdir).glob(pat):
+                            for tdir in target_dirs:
+                                try:
+                                    shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
+                                except (OSError, shutil.SameFileError):
+                                    pass
 
 
 class BuildPy(_build_py):

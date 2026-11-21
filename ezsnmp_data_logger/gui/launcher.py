@@ -140,11 +140,14 @@ def _install_windows_shortcut(target_dir: Path | None = None) -> Path:
     base_dir.mkdir(parents=True, exist_ok=True)
 
     bat_file = base_dir / "EzSnmp Data Logger Studio.bat"
-    ico_path = STATIC_DIR / "app_icon.ico"
+    if getattr(sys, "frozen", False):
+        launch_cmd = f'start "" "{sys.executable}" %*'
+    else:
+        launch_cmd = f'start "" "{sys.executable}" -m ezsnmp_data_logger.gui %*'
 
     content = f"""@echo off
 rem EzSnmp Data Logger Studio Launcher
-start "" "{sys.executable}" -m ezsnmp_data_logger.gui %*
+{launch_cmd}
 """
     bat_file.write_text(content, encoding="utf-8")
     return bat_file

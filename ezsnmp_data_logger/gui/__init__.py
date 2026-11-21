@@ -13,10 +13,51 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from .cli_bridge import CliSubprocessBridge
 from .locale_manager import LocaleManager
+
+DEFAULT_DEV_CONFIG_PATH = "./configs/example.json"
+
+
+def _is_dir_writable(directory: Path) -> bool:
+    """Return True if files can be created inside *directory* (checks NTFS ACLs on Windows)."""
+    check_dir = directory
+    while not check_dir.exists() and check_dir != check_dir.parent:
+        check_dir = check_dir.parent
+    if not check_dir.is_dir() or not os.access(check_dir, os.W_OK):
+        return False
+    try:
+        with tempfile.TemporaryFile(dir=check_dir):
+            return True
+    except OSError:
+        return False
+
+
+def _user_config_path() -> Path:
+    """Return the per-user writable default config path for the current platform."""
+    if sys.platform == "win32" or os.name == "nt":
+        appdata = os.environ.get("APPDATA", "").strip()
+        base = Path(appdata) if appdata else (Path.home() / "AppData" / "Roaming")
+        return base / "EzSnmpDataLogger" / "config.json"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "EzSnmpDataLogger" / "config.json"
+    xdg = os.environ.get("XDG_CONFIG_HOME", "").strip()
+    base = Path(xdg) if xdg else (Path.home() / ".config")
+    return base / "EzSnmpDataLogger" / "config.json"
+
+
+def resolve_default_config_path() -> str:
+    """Resolve the default GUI config path, avoiding read-only install directories."""
+    if getattr(sys, "frozen", False):
+        return str(_user_config_path())
+    if sys.platform == "win32" or os.name == "nt":
+        dev_parent = Path(DEFAULT_DEV_CONFIG_PATH).resolve().parent
+        if not _is_dir_writable(dev_parent):
+            return str(_user_config_path())
+    return DEFAULT_DEV_CONFIG_PATH
 
 
 def can_use_tkinter_display() -> bool:
@@ -50,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "-c",
         "--config",
-        default="./configs/example.json",
+        default=None,
         help="Path to the JSON configuration file (created from demo template if missing).",
     )
     parser.add_argument(
@@ -110,7 +151,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[ezsnmp-data-logger-gui] Installed desktop launcher at: {path}")
         return 0
 
-    bridge = CliSubprocessBridge(Path(args.config), cli_override=args.cli_executable)
+    config_path = Path(args.config) if args.config else Path(resolve_default_config_path())
+    bridge = CliSubprocessBridge(config_path, cli_override=args.cli_executable)
     cfg = bridge.load_config_dict()
     gui_cfg = cfg.get("gui", {}) if isinstance(cfg.get("gui"), dict) else {}
 
@@ -152,8 +194,10 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = [
     "CliSubprocessBridge",
+    "DEFAULT_DEV_CONFIG_PATH",
     "LocaleManager",
     "can_use_tkinter_display",
     "main",
+    "resolve_default_config_path",
     "select_frontend",
 ]

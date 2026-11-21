@@ -119,3 +119,46 @@ def test_locale_manager_complete_coverage(tmp_path: Path, monkeypatch: pytest.Mo
     d_es = mgr_test.get_locale_dict("es")
     assert d_es["only_en"] == "Only English"
     assert d_es["flat_str"] == "Plain string for flat"
+
+
+def test_windows_shortcut_when_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _install_windows_shortcut invokes sys.executable directly when frozen."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        sys, "executable", r"C:\Program Files\EzSnmpDataLogger\EzSnmpDataLogger.exe"
+    )
+
+    win_out = tmp_path / "frozen_win"
+    bat_file = install_desktop_launcher(win_out)
+    content = bat_file.read_text(encoding="utf-8")
+    assert r'start "" "C:\Program Files\EzSnmpDataLogger\EzSnmpDataLogger.exe" %*' in content
+    assert "-m ezsnmp_data_logger.gui" not in content
+
+
+def test_resolve_default_config_path_frozen_and_readonly_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify default GUI config path avoids read-only dirs on Windows / frozen builds."""
+    import ezsnmp_data_logger.gui as gui_mod
+
+    fake_appdata = tmp_path / "AppData" / "Roaming"
+    monkeypatch.setenv("APPDATA", str(fake_appdata))
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    # 1. Frozen executable always uses %APPDATA%\EzSnmpDataLogger\config.json
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    assert Path(gui_mod.resolve_default_config_path()) == (
+        fake_appdata / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 2. Non-frozen in non-writable Windows directory (e.g., Program Files) falls back to APPDATA
+    monkeypatch.delattr(sys, "frozen")
+    monkeypatch.setattr(gui_mod, "_is_dir_writable", lambda _p: False)
+    assert Path(gui_mod.resolve_default_config_path()) == (
+        fake_appdata / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 3. Non-frozen in writable dev checkout keeps ./configs/example.json unchanged
+    monkeypatch.setattr(gui_mod, "_is_dir_writable", lambda _p: True)
+    assert gui_mod.resolve_default_config_path() == "./configs/example.json"

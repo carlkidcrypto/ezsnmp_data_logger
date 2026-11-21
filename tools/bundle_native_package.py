@@ -267,19 +267,54 @@ def _pe_extract_dll_imports(binary: Path) -> list[str]:
     return names
 
 
+def _windows_resolve_dll(dll_name: str, search_dirs: list[Path]) -> Path | None:
+    low = dll_name.lower()
+    for sdir in search_dirs:
+        if not sdir.is_dir():
+            continue
+        cand = sdir / dll_name
+        if cand.is_file():
+            return cand.resolve()
+        for entry in sdir.iterdir():
+            if entry.is_file() and entry.name.lower() == low:
+                return entry.resolve()
+    return None
+
+
 def _bundle_windows(artifact: Path, libs_dir: Path, search_dirs: list[Path]) -> list[str]:
     libs_dir.mkdir(parents=True, exist_ok=True)
-    copied: list[str] = []
-    for dll_name in _pe_extract_dll_imports(artifact):
-        for sdir in search_dirs:
-            cand = sdir / dll_name
-            if cand.is_file():
-                dest = libs_dir / cand.name
-                if not dest.exists():
-                    shutil.copy2(cand, dest)
-                copied.append(dest.name)
-                break
-    return sorted(set(copied))
+    effective_search_dirs: list[Path] = []
+    seen_dirs: set[Path] = set()
+    for d in [libs_dir, artifact.parent, *search_dirs]:
+        resolved_d = d.resolve() if d.exists() else d
+        if resolved_d not in seen_dirs:
+            seen_dirs.add(resolved_d)
+            effective_search_dirs.append(d)
+
+    copied: set[str] = set()
+    queue: list[Path] = [artifact]
+    visited: set[Path] = set()
+
+    while queue:
+        current = queue.pop(0)
+        current_key = current.resolve() if current.exists() else current
+        if current_key in visited:
+            continue
+        visited.add(current_key)
+
+        for dll_name in _pe_extract_dll_imports(current):
+            resolved = _windows_resolve_dll(dll_name, effective_search_dirs)
+            if resolved is None:
+                continue
+            dest = libs_dir / resolved.name
+            if not dest.exists():
+                shutil.copy2(resolved, dest)
+            copied.add(dest.name)
+            dest_key = dest.resolve()
+            if dest_key not in visited:
+                queue.append(dest)
+
+    return sorted(copied)
 
 
 def verify_self_contained(artifact: Path, libs_dir: Path | None = None) -> dict[str, object]:
@@ -314,9 +349,18 @@ def verify_self_contained(artifact: Path, libs_dir: Path | None = None) -> dict[
                 ):
                     external.append({"binary": t.name, "dependency": resolved})
     else:
+        available_dlls: set[str] = set()
+        for d in (libs_dir, artifact.parent):
+            if d and d.is_dir():
+                for entry in d.iterdir():
+                    if entry.is_file() and entry.suffix.lower() == ".dll":
+                        available_dlls.add(entry.name.lower())
         for t in targets:
             dlls = _pe_extract_dll_imports(t)
             inspected[t.name] = dlls
+            for dll in dlls:
+                if dll.lower() not in available_dlls:
+                    external.append({"binary": t.name, "dependency": dll})
 
     return {
         "ok": len(external) == 0,
@@ -365,6 +409,39 @@ def bundle_artifact(
     ):
         if std_dir.is_dir():
             search_dirs.append(std_dir)
+
+    if sys.platform == "win32":
+        win_std_dirs: list[Path] = []
+        vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
+        if vcpkg_root:
+            for triplet in ("x64-windows", "arm64-windows", "x86-windows"):
+                win_std_dirs.append(Path(vcpkg_root) / "installed" / triplet / "bin")
+        win_std_dirs.extend(
+            [
+                Path("C:/ezsnmp-netsnmp-dist/x64/bin/release"),
+                Path("C:/ezsnmp-netsnmp-dist/AMD64/bin/release"),
+                Path("C:/ezsnmp-netsnmp-dist/ARM64/bin/release"),
+                Path("C:/ezsnmp-netsnmp-dist/x86/bin/release"),
+                Path("C:/vcpkg/installed/x64-windows/bin"),
+                Path("C:/vcpkg/installed/arm64-windows/bin"),
+                Path("C:/vcpkg/installed/x86-windows/bin"),
+                Path(r"C:\Program Files\OpenSSL\bin"),
+                Path(r"C:\Program Files\OpenSSL-Win64\bin"),
+                Path(r"C:\OpenSSL-Win64\bin"),
+            ]
+        )
+        for std_dir in win_std_dirs:
+            if std_dir.is_dir():
+                search_dirs.append(std_dir.resolve())
+
+    deduped_search_dirs: list[Path] = []
+    seen_search: set[Path] = set()
+    for d in search_dirs:
+        key = d.resolve() if d.exists() else d
+        if key not in seen_search:
+            seen_search.add(key)
+            deduped_search_dirs.append(d)
+    search_dirs = deduped_search_dirs
 
     if sys.platform == "darwin":
         bundled = _bundle_macos(artifact, libs_dir, search_dirs)
