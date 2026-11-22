@@ -46,7 +46,7 @@ def resolve_default_config_path() -> str:
     cwd = Path.cwd()
     if (cwd / "configs" / "example.json").is_file():
         return "./configs/example.json"
-    if str(cwd) == "/" or not os.access(cwd, os.W_OK):
+    if cwd == Path("/") or str(cwd) in ("/", "\\") or not os.access(cwd, os.W_OK):
         return str(Path.home() / ".ezsnmp_data_logger" / "config.json")
     return "./configs/example.json"
 
