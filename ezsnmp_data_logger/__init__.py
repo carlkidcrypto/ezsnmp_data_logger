@@ -47,7 +47,7 @@ from .ezsnmp_data_logger import (
     version,
 )
 
-__version__ = "2026.11.18.1"
+__version__ = "2026.11.22b0"
 
 __all__ = [
     "__version__",
