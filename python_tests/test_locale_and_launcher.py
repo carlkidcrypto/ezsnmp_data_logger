@@ -207,7 +207,9 @@ def test_is_dir_writable_and_user_config_path_platforms(
     # 4. _user_config_path on macOS and Linux (with and without XDG_CONFIG_HOME)
     import os
 
+    real_home = Path.home()
     monkeypatch.setattr(os, "name", "posix")
+    monkeypatch.setenv("HOME", str(real_home))
     monkeypatch.setattr(sys, "platform", "darwin")
     assert gui_mod._user_config_path() == (
         Path.home() / "Library" / "Application Support" / "EzSnmpDataLogger" / "config.json"
