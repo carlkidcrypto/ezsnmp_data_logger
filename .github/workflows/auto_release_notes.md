@@ -21,24 +21,16 @@ permissions:
   actions: read
   contents: read
   copilot-requests: write
-safe-outputs:
-  noop:
-    report-as-issue: true
-  update-release:
 timeout-minutes: 20
 max-ai-credits: 40
 model: sonnet
-engine:
-  id: copilot
-network:
-  allowed: [defaults, github, python]
-tools:
-  bash: true
+imports:
+  - carlkidcrypto/shared-workflows/shared/auto-release-notes-core.md@3538efdfabdbcf0ae956cfc5685fd4c21a59696b
 ---
 
 # Auto Update Release Notes
 
-When a new release is published, generate and update its release notes body on GitHub using commit history, PR references, and grouped themes.
+When a new release is published, generate and update its release notes body on GitHub using commit history, PR references, and grouped themes following the shared auto-release-notes core rules.
 
 ## Goals
 
@@ -49,29 +41,3 @@ When a new release is published, generate and update its release notes body on G
 - Fully overwrite the release body with the generated notes — no content from the previous body is preserved.
 - Skip any release whose body contains the exact marker `<!-- PROTECTED -->` — these are manually curated and must never be touched.
 - When triggered manually with `backfill_all: true`, reformat ALL existing releases to the same standard.
-
-## Steps
-
-0. **Token & AIC Optimization (Helper Script)**:
-   Use the deterministic helper script `.github/scripts/generate_release_notes.py` to minimize token consumption and AI Credit (AIC) usage.
-
-   - If triggered by `release: published`:
-     Determine the published tag name from the release event, then execute:
-     ```bash
-     mkdir -p /tmp/gh-aw/agent
-     python3 .github/scripts/generate_release_notes.py --tag <tag_name> --output-file /tmp/gh-aw/agent/release_notes.md
-     ```
-     (Pass `--additional-context "<context>"` if `additional_context` input is provided).
-     Review `/tmp/gh-aw/agent/release_notes.md` and use the `update_release` tool (or run with `--publish`) to update the release.
-
-   - If triggered by `workflow_dispatch` with `backfill_all: true`:
-     Execute:
-     ```bash
-     python3 .github/scripts/generate_release_notes.py --backfill --publish
-     ```
-
-## Constraints
-
-- Only update GitHub release bodies.
-- Never edit releases containing `<!-- PROTECTED -->`.
-- Never choose a prerelease base for a stable release if an earlier stable release exists.
