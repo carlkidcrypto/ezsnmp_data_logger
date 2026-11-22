@@ -23,83 +23,18 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
+    - name: Build wheels via shared-workflows
+      uses: carlkidcrypto/shared-workflows/actions/build-wheels@3538efdfabdbcf0ae956cfc5685fd4c21a59696b
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Cache cibuildwheel downloads and environments
-      uses: actions/cache@v4
-      with:
-        path: ${{ runner.temp }}/cibw-cache
-        key: ${{ runner.os }}-cibw-cache-${{ inputs.label || inputs.arch }}-${{ hashFiles('pyproject.toml', 'requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-cibw-cache-${{ inputs.label || inputs.arch }}-
-
-    - name: Cache Python-independent C++ objects
-      if: runner.os != 'Linux'
-      uses: actions/cache@v4
-      with:
-        path: ${{ runner.temp }}/ezsnmp-obj-cache
-        key: ${{ runner.os }}-obj-cache-${{ inputs.arch }}-${{ hashFiles('include/**', 'src/**/*.cpp', 'setup.py', 'tools/**') }}
-        restore-keys: |
-          ${{ runner.os }}-obj-cache-${{ inputs.arch }}-
-
-    - name: Cache vcpkg installed
-      if: runner.os == 'Windows' && (inputs.arch == 'x86' || inputs.arch == 'ARM64')
-      uses: actions/cache@v4
-      with:
-        path: C:\vcpkg\installed
-        key: ${{ runner.os }}-vcpkg-openssl-${{ inputs.arch }}-v1
-
-    - name: Cache compiled Net-SNMP for Windows
-      if: runner.os == 'Windows'
-      uses: actions/cache@v4
-      with:
-        path: C:\ezsnmp-netsnmp-dist
-        key: ${{ runner.os }}-netsnmp-5.10.pre2-${{ inputs.arch }}-902d603b
-
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v7
-      with:
+        os: ${{ inputs.os }}
+        arch: ${{ inputs.arch }}
+        job-index: ${{ inputs.job-index }}
+        cibw-build: ${{ inputs.cibw-build }}
+        label: ${{ inputs.label }}
         python-version: "3.13"
-
-    - name: Install cibuildwheel & delvewheel
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ "${{ runner.os }}" = "Windows" ]; then pip install delvewheel; fi
-
-    - name: Prepare Net-SNMP for Windows wheels
-      if: runner.os == 'Windows'
-      uses: carlkidcrypto/shared-workflows/actions/prepare-windows-netsnmp@14e025f6c182b7b20718538f533ca467a9ff9c6c
-      with:
+        obj-cache-dir: "ezsnmp-obj-cache"
+        obj-cache-hash: ${{ hashFiles('include/**', 'src/**/*.cpp', 'setup.py', 'tools/**') }}
+        prepare-windows-netsnmp: "true"
         net-snmp-version: "5.10.pre2"
         net-snmp-sha256: "7a5fc63515f0477d84fb160b6e8a2aee0196117d7e4ffe7d0fba2bdf3a8d72cc"
-        arch: ${{ inputs.arch }}
-
-    - name: Build wheels using cibuildwheel
-      uses: carlkidcrypto/os-specific-runner@d6494ebfd6437452a44d3f9d6633339772e95070 # v2.4.0
-      env:
-        CIBW_BUILD: ${{ inputs.cibw-build }}
-        CIBW_CACHE_PATH: ${{ runner.temp }}/cibw-cache
-        EZSNMP_OBJECT_CACHE_DIR: ${{ runner.temp }}/ezsnmp-obj-cache
-      with:
-        linux: python -m cibuildwheel --output-dir wheelhouse --platform linux;
-        macos: |
-          MACOS_MAJOR=$(sw_vers -productVersion | cut -d. -f1)
-          export MACOSX_DEPLOYMENT_TARGET="${MACOS_MAJOR}.0"
-          python -m cibuildwheel --output-dir wheelhouse --platform macos;
-        windows: |
-          python -m cibuildwheel --output-dir wheelhouse --platform windows --archs ${{ inputs.arch }}
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-    - name: Upload wheel artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: cibw-wheels-${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.job-index }}
-        path: wheelhouse/*.whl
+        install-delvewheel: "true"

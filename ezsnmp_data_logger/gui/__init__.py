@@ -82,6 +82,16 @@ def select_frontend(requested: str) -> str:
     return "tk" if can_use_tkinter_display() else "web"
 
 
+def resolve_default_config_path() -> str:
+    """Return a writable default JSON config path, avoiding read-only roots like '/'."""
+    cwd = Path.cwd()
+    if (cwd / "configs" / "example.json").is_file():
+        return "./configs/example.json"
+    if str(cwd) == "/" or not os.access(cwd, os.W_OK):
+        return str(Path.home() / ".ezsnmp_data_logger" / "config.json")
+    return "./configs/example.json"
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for `ezsnmp-data-logger-gui` and `ezsnmp-data-logger gui`."""
     parser = argparse.ArgumentParser(
@@ -91,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "-c",
         "--config",
-        default=None,
+        default=resolve_default_config_path(),
         help="Path to the JSON configuration file (created from demo template if missing).",
     )
     parser.add_argument(

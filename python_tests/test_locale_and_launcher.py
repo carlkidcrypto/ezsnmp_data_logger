@@ -44,6 +44,24 @@ def test_launcher_meipass_and_platform_shortcuts(
     path_linux = install_desktop_launcher(linux_out)
     assert path_linux.suffix == ".desktop"
 
+    # 4. Test install_desktop_launcher on macOS platform uses writable WORK_DIR
+    monkeypatch.setattr(sys, "platform", "darwin")
+    mac_out = tmp_path / "mac_out"
+    path_mac = install_desktop_launcher(mac_out)
+    assert path_mac.suffix == ".app"
+    launcher_script = (path_mac / "Contents" / "MacOS" / "EzSnmp Data Logger Studio").read_text(
+        encoding="utf-8"
+    )
+    assert 'cd "$WORK_DIR"' in launcher_script
+    assert str(Path(sys.executable).resolve().parent) in launcher_script
+
+    # 5. Test resolve_default_config_path avoids read-only root '/'
+    from ezsnmp_data_logger.gui import resolve_default_config_path
+
+    monkeypatch.setattr(Path, "cwd", staticmethod(lambda: Path("/")))
+    resolved = resolve_default_config_path()
+    assert resolved == str(Path.home() / ".ezsnmp_data_logger" / "config.json")
+
 
 def test_locale_manager_complete_coverage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # 1. MEIPASS check
