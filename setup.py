@@ -26,6 +26,7 @@ if str(ROOT_DIR / "tools") not in sys.path:
 from build_utils import (
     collect_files_with_suffixes,
     compute_object_cache_key,
+    discover_windows_openssl_dlls,
     is_python_independent_source,
     is_up_to_date,
     resolve_build_jobs,
@@ -715,48 +716,7 @@ class SwigBuildExt(build_ext):
                 if win_bin and os.path.isdir(win_bin):
                     dll_sources.append((win_bin, ("*.dll",)))
 
-                ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
-                ssl_patterns: tuple[str, ...] = ("*.dll",)
-                if not ssl_bin:
-                    machine = platform.machine().lower()
-                    if machine in ("arm64", "aarch64"):
-                        vcpkg_triplets = ("arm64-windows", "x64-windows", "x86-windows")
-                    elif machine in ("x86", "i386", "i686"):
-                        vcpkg_triplets = ("x86-windows", "x64-windows", "arm64-windows")
-                    else:
-                        vcpkg_triplets = ("x64-windows", "arm64-windows", "x86-windows")
-
-                    ssl_candidates: list[tuple[Path, tuple[str, ...]]] = []
-                    vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
-                    if vcpkg_root:
-                        for triplet in vcpkg_triplets:
-                            ssl_candidates.append(
-                                (
-                                    Path(vcpkg_root) / "installed" / triplet / "bin",
-                                    ("libcrypto*.dll", "libssl*.dll"),
-                                )
-                            )
-                    for triplet in vcpkg_triplets:
-                        ssl_candidates.append(
-                            (
-                                Path(f"C:/vcpkg/installed/{triplet}/bin"),
-                                ("libcrypto*.dll", "libssl*.dll"),
-                            )
-                        )
-                    for std_ssl in (
-                        Path(r"C:\Program Files\OpenSSL\bin"),
-                        Path(r"C:\Program Files\OpenSSL-Win64\bin"),
-                        Path(r"C:\OpenSSL-Win64\bin"),
-                    ):
-                        ssl_candidates.append((std_ssl, ("*.dll",)))
-
-                    for cand_ssl, pats in ssl_candidates:
-                        if cand_ssl.is_dir() and any(
-                            any(cand_ssl.glob(p)) for p in ("libcrypto*.dll", "libssl*.dll")
-                        ):
-                            ssl_bin = str(cand_ssl)
-                            ssl_patterns = pats
-                            break
+                ssl_bin, ssl_patterns = discover_windows_openssl_dlls()
                 if ssl_bin and os.path.isdir(ssl_bin):
                     dll_sources.append((ssl_bin, ssl_patterns))
 

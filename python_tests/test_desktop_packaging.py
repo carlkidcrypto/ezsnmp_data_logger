@@ -293,11 +293,13 @@ def test_package_linux_artifacts_symlink_oserror_fallback(tmp_path: Path) -> Non
 
 
 def test_setup_py_includes_vcpkg_windows_dll_search() -> None:
-    """Verify setup.py searches vcpkg bin dirs for OpenSSL runtime DLLs on Windows."""
+    """Verify setup.py and build_utils search vcpkg bin dirs for OpenSSL runtime DLLs on Windows."""
     setup_text = (REPO_ROOT / "setup.py").read_text(encoding="utf-8")
-    assert "C:/vcpkg/installed/{triplet}/bin" in setup_text
-    assert "x64-windows" in setup_text
-    assert "arm64-windows" in setup_text
+    assert "discover_windows_openssl_dlls" in setup_text
+    build_utils_text = (REPO_ROOT / "tools" / "build_utils.py").read_text(encoding="utf-8")
+    assert "C:/vcpkg/installed/{triplet}/bin" in build_utils_text
+    assert "x64-windows" in build_utils_text
+    assert "arm64-windows" in build_utils_text
 
 
 def test_winget_distribution_workflow_configuration() -> None:

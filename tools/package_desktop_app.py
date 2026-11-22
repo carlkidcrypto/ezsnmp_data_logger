@@ -30,6 +30,10 @@ import zipfile
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+
+from build_utils import discover_windows_openssl_dlls
 
 
 def read_version() -> str:
@@ -195,48 +199,13 @@ def build_pyinstaller_cmd(
                     for dll in sorted(Path(part).glob("*.dll")):
                         _add_win_dll(dll, "ezsnmp_data_logger")
         else:
-            machine = platform.machine().lower()
-            if machine in ("arm64", "aarch64"):
-                vcpkg_triplets = ("arm64-windows", "x64-windows", "x86-windows")
-            elif machine in ("x86", "i386", "i686"):
-                vcpkg_triplets = ("x86-windows", "x64-windows", "arm64-windows")
-            else:
-                vcpkg_triplets = ("x64-windows", "arm64-windows", "x86-windows")
-
-            ssl_candidates: list[tuple[Path, tuple[str, ...]]] = []
-            vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
-            if vcpkg_root:
-                for triplet in vcpkg_triplets:
-                    ssl_candidates.append(
-                        (
-                            Path(vcpkg_root) / "installed" / triplet / "bin",
-                            ("libcrypto*.dll", "libssl*.dll"),
-                        )
-                    )
-            for triplet in vcpkg_triplets:
-                ssl_candidates.append(
-                    (
-                        Path(f"C:/vcpkg/installed/{triplet}/bin"),
-                        ("libcrypto*.dll", "libssl*.dll"),
-                    )
-                )
-            for std_ssl in (
-                Path(r"C:\Program Files\OpenSSL\bin"),
-                Path(r"C:\Program Files\OpenSSL-Win64\bin"),
-                Path(r"C:\OpenSSL-Win64\bin"),
-            ):
-                ssl_candidates.append((std_ssl, ("libcrypto*.dll", "libssl*.dll")))
-
-            for cand_dir, patterns in ssl_candidates:
-                if not cand_dir.is_dir():
-                    continue
-                matched: list[Path] = []
-                for pat in patterns:
-                    matched.extend(sorted(cand_dir.glob(pat)))
-                if matched:
-                    for dll in matched:
+            ssl_dir, ssl_patterns = discover_windows_openssl_dlls(
+                std_patterns=("libcrypto*.dll", "libssl*.dll")
+            )
+            if ssl_dir:
+                for pat in ssl_patterns:
+                    for dll in sorted(Path(ssl_dir).glob(pat)):
                         _add_win_dll(dll, "ezsnmp_data_logger")
-                    break
 
         for pyd_file in (REPO_ROOT / "ezsnmp_data_logger").glob("_ezsnmp_data_logger*.pyd"):
             cmd.extend(["--add-binary", f"{pyd_file}{sep}ezsnmp_data_logger"])

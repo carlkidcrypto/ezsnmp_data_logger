@@ -180,3 +180,46 @@ def test_resolve_default_config_path_frozen_and_readonly_windows(
     # 3. Non-frozen in writable dev checkout keeps ./configs/example.json unchanged
     monkeypatch.setattr(gui_mod, "_is_dir_writable", lambda _p: True)
     assert gui_mod.resolve_default_config_path() == "./configs/example.json"
+
+
+def test_is_dir_writable_and_user_config_path_platforms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cover _is_dir_writable edge cases, _user_config_path on macOS/Linux, and cwd fallback."""
+    import tempfile
+    import ezsnmp_data_logger.gui as gui_mod
+
+    # 1. _is_dir_writable walks up missing subdirectories and succeeds on writable parent
+    assert gui_mod._is_dir_writable(tmp_path / "does_not_exist" / "nested") is True
+
+    # 2. _is_dir_writable returns False for a regular file
+    reg_file = tmp_path / "file.txt"
+    reg_file.write_text("x", encoding="utf-8")
+    assert gui_mod._is_dir_writable(reg_file) is False
+
+    # 3. _is_dir_writable returns False when TemporaryFile raises OSError
+    def _fail_temp(*_args, **_kwargs):
+        raise OSError("read-only")
+
+    monkeypatch.setattr(tempfile, "TemporaryFile", _fail_temp)
+    assert gui_mod._is_dir_writable(tmp_path) is False
+
+    # 4. _user_config_path on macOS and Linux (with and without XDG_CONFIG_HOME)
+    monkeypatch.setattr(sys, "platform", "darwin")
+    assert gui_mod._user_config_path() == (
+        Path.home() / "Library" / "Application Support" / "EzSnmpDataLogger" / "config.json"
+    )
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    custom_xdg = tmp_path / "xdg_cfg"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(custom_xdg))
+    assert gui_mod._user_config_path() == custom_xdg / "EzSnmpDataLogger" / "config.json"
+
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    assert gui_mod._user_config_path() == (
+        Path.home() / ".config" / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 5. resolve_default_config_path in writable non-root cwd without configs/example.json
+    monkeypatch.setattr(Path, "cwd", staticmethod(lambda: tmp_path))
+    assert gui_mod.resolve_default_config_path() == gui_mod.DEFAULT_DEV_CONFIG_PATH

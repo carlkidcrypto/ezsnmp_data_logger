@@ -57,6 +57,11 @@ def resolve_default_config_path() -> str:
         dev_parent = Path(DEFAULT_DEV_CONFIG_PATH).resolve().parent
         if not _is_dir_writable(dev_parent):
             return str(_user_config_path())
+    cwd = Path.cwd()
+    if (cwd / "configs" / "example.json").is_file():
+        return DEFAULT_DEV_CONFIG_PATH
+    if cwd == Path("/") or str(cwd) in ("/", "\\") or not os.access(cwd, os.W_OK):
+        return str(Path.home() / ".ezsnmp_data_logger" / "config.json")
     return DEFAULT_DEV_CONFIG_PATH
 
 
@@ -80,16 +85,6 @@ def select_frontend(requested: str) -> str:
     if mode == "web":
         return "web"
     return "tk" if can_use_tkinter_display() else "web"
-
-
-def resolve_default_config_path() -> str:
-    """Return a writable default JSON config path, avoiding read-only roots like '/'."""
-    cwd = Path.cwd()
-    if (cwd / "configs" / "example.json").is_file():
-        return "./configs/example.json"
-    if str(cwd) == "/" or not os.access(cwd, os.W_OK):
-        return str(Path.home() / ".ezsnmp_data_logger" / "config.json")
-    return "./configs/example.json"
 
 
 def main(argv: list[str] | None = None) -> int:
