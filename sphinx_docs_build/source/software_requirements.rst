@@ -197,11 +197,15 @@ Self-Contained Multi-Language Packaging Requirements
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
   **Shall** provision ``ezsnmp`` ``v2026.11.22b0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
-  Blumenthal-AES support. Native build systems (``setup.py``, ``meson.build``,
-  ``CMakeLists.txt``) and CI matrices (``tests_cpp_native.yml``,
-  ``tests_python.yml``, ``build_and_publish_desktop_apps.yml``) **Shall** enforce
-  and compile against Net-SNMP >= 5.10 matching ``ezsnmp`` requirements,
-  rejecting incompatible (< 5.10) system installations.
+  Blumenthal-AES support. On macOS, ``tools/prepare_macos_netsnmp.sh``
+  **Shall** discover OpenSSL 3 exclusively via Homebrew
+  (``/opt/homebrew/opt/openssl@3``, ``/usr/local/opt/openssl@3``) or an
+  explicit ``OPENSSL_PREFIX`` without MacPorts (``/opt/local``) fallback.
+  Native build systems (``setup.py``, ``meson.build``, ``CMakeLists.txt``) and
+  CI matrices (``tests_cpp_native.yml``, ``tests_python.yml``,
+  ``build_and_publish_desktop_apps.yml``) **Shall** enforce and compile against
+  Net-SNMP >= 5.10 matching ``ezsnmp`` requirements, rejecting incompatible
+  (< 5.10) system installations.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
   ``[build-system] requires`` and ``ezsnmp>=2026.11.22b0`` in ``dependencies``.
@@ -216,7 +220,8 @@ Self-Contained Multi-Language Packaging Requirements
   ``csharp`` (``runtimes/<rid>/native/``), and ``go`` (``bindings/go/lib/``),
   bundle non-OS shared libraries into a package-local runtime directory, rewrite
   dynamic loader search paths (``$ORIGIN`` via ``patchelf`` on Linux,
-  ``@loader_path`` via ``install_name_tool`` on macOS, and side-by-side DLLs on
+  ``@loader_path`` via ``install_name_tool`` on macOS, and recursively
+  resolved side-by-side DLLs with case-insensitive PE import traversal on
   Windows), and verify zero external non-OS runtime library dependencies
   remain.
 
@@ -315,6 +320,14 @@ Cross-Platform GUI Requirements
   ``ezsnmp-data-logger-gui --install-launcher`` and
   ``tools/install_desktop_launcher.py``.
 
+- **[GUI-11]** Frozen desktop executables (``sys.frozen``) and GUI sessions
+  launched from read-only working or installation directories (such as
+  ``Program Files`` on Windows or ``/`` from macOS ``.app`` bundles) **Shall**
+  resolve their default configuration path via ``resolve_default_config_path``
+  to a writable per-user configuration directory (``%APPDATA%\EzSnmpDataLogger\config.json``
+  on Windows, ``~/Library/Application Support/EzSnmpDataLogger/config.json`` on
+  macOS, and ``$XDG_CONFIG_HOME/EzSnmpDataLogger/config.json`` on Linux).
+
 Testing, Documentation & CI/CD Requirements
 ===========================================
 
@@ -362,7 +375,12 @@ Testing, Documentation & CI/CD Requirements
   ``build_and_publish_to_test_pypi.yml``) using ``cibuildwheel`` and
   ``carlkidcrypto/os-specific-runner`` across Linux, macOS, and Windows,
   pre-provisioning embedded C++17 dependencies (``third_party/ezsnmp``) with
-  retry resilience, and skipping existing distribution artifacts idempotently.
+  retry resilience, skipping existing distribution artifacts idempotently,
+  and separating artifact builds (``reusable_pypi_publish.yml`` with
+  ``skip-publish: true``) from a caller-side ``publish`` job
+  (``permissions: id-token: write``, ``contents: read``) executing
+  ``pypa/gh-action-pypi-publish`` so OIDC Trusted Publishing receives the
+  caller repository's ``job_workflow_ref`` claim.
 
 - **[CICD-03]** Automated release publishing workflows **Shall** support
   publishing self-contained Node.js packages to npm
