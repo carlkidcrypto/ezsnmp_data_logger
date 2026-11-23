@@ -76,7 +76,7 @@ jobs:
       junit-files: ./build/meson-logs/testlog.junit.xml
       pre-build-cmd: |
         set -euo pipefail
-        git clone --depth 1 --branch v2026.11.15b0 https://github.com/carlkidcrypto/ezsnmp.git third_party/ezsnmp
+        git clone --depth 1 --branch v2026.11.22b0 https://github.com/carlkidcrypto/ezsnmp.git third_party/ezsnmp
         python3 tools/prepare_sqlite3_amalgamation.py
         if [ "$RUNNER_OS" = "Linux" ]; then
           sudo apt-get update

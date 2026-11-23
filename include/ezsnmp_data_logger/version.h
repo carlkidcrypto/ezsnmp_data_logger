@@ -13,7 +13,7 @@ std::string version() noexcept;
 
 /**
  * @brief Return the standardized CalSemVer beta baseline version of ezsnmp targeted by this build.
- * @return Target ezsnmp CalSemVer string (e.g. "2026.11.15b0").
+ * @return Target ezsnmp CalSemVer string (e.g. "2026.11.22b0").
  */
 std::string ezsnmp_target_version() noexcept;
 
