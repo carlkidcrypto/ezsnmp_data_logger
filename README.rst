@@ -6,7 +6,7 @@ EzSnmp Data Logger
 
 |Codecov| |Quality Gate Status| |Security Rating| |Maintainability Rating|
 
-|PyPI Version| |PyPI Downloads| |npm Version| |npm Downloads| |NuGet Version| |PyPI Distributions| |TestPyPI Distributions|
+|PyPI Version| |TestPyPI Version| |PyPI Downloads| |npm Version| |npm Downloads| |NuGet Version| |PyPI Distributions| |TestPyPI Distributions|
 
 |Python Versions| |License|
 
@@ -35,6 +35,8 @@ EzSnmp Data Logger
     :alt: Maintainability Rating
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/ezsnmp-data-logger?style=flat-square
     :target: https://pypi.org/project/ezsnmp-data-logger/
+.. |TestPyPI Version| image:: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Fezsnmp-data-logger%2Fjson&query=%24.info.version&label=TestPyPI&style=flat-square&color=blue
+    :target: https://test.pypi.org/project/ezsnmp-data-logger/
 .. |PyPI Downloads| image:: https://img.shields.io/pypi/dm/ezsnmp-data-logger?style=flat-square
     :target: https://pypi.org/project/ezsnmp-data-logger/
 .. |npm Version| image:: https://img.shields.io/npm/v/ezsnmp-data-logger?style=flat-square
