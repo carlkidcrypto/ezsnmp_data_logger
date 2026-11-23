@@ -15,16 +15,79 @@ import ezsnmp_data_logger as edl
 from tools import bundle_native_package
 
 
+def _is_allowed_init_dll_helper(name: str) -> bool:
+    return name == "_register_windows_dll_directories" or name.startswith("_delvewheel_patch_")
+
+
 def test_init_py_contains_only_imports_and_metadata() -> None:
-    """Verify [GEN-05]: __init__.py has no executable logic or import-time side effects."""
+    """Verify [GEN-05]: __init__.py has only imports, metadata, and Windows DLL directory helpers."""
     init_path = Path(edl.__file__).resolve()
     tree = ast.parse(init_path.read_text(encoding="utf-8"))
     for node in tree.body:
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
             continue
+        if isinstance(node, ast.FunctionDef) and _is_allowed_init_dll_helper(node.name):
+            continue
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+            and _is_allowed_init_dll_helper(node.value.func.id)
+        ):
+            continue
+        if isinstance(node, ast.Delete) and all(
+            isinstance(t, ast.Name) and _is_allowed_init_dll_helper(t.id) for t in node.targets
+        ):
+            continue
         assert isinstance(
-            node, (ast.Import, ast.ImportFrom, ast.Assign)
+            node, (ast.Import, ast.ImportFrom, ast.Assign, ast.AnnAssign)
         ), f"Disallowed statement in __init__.py: {type(node).__name__}"
+
+
+def test_windows_dll_directory_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify _register_windows_dll_directories registers package, .libs, and _MEIPASS dirs."""
+    import os
+    import sys
+
+    if not hasattr(edl, "_register_windows_dll_directories"):
+        pytest.skip("Installed package predates _register_windows_dll_directories helper")
+
+    pkg_dir = tmp_path / "ezsnmp_data_logger"
+    dot_libs = pkg_dir / ".libs"
+    sibling_libs = tmp_path / "ezsnmp_data_logger.libs"
+    meipass_dir = tmp_path / "meipass"
+    meipass_pkg = meipass_dir / "ezsnmp_data_logger"
+    for d in (pkg_dir, dot_libs, sibling_libs, meipass_dir, meipass_pkg):
+        d.mkdir(parents=True, exist_ok=True)
+    fake_init = pkg_dir / "__init__.py"
+    fake_init.write_text("", encoding="utf-8")
+
+    added_dirs: list[str] = []
+
+    def fake_add_dll_directory(path: str) -> object:
+        added_dirs.append(path)
+        return f"handle:{path}"
+
+    handles: list[object] = []
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "_MEIPASS", str(meipass_dir), raising=False)
+    monkeypatch.setattr(os, "add_dll_directory", fake_add_dll_directory, raising=False)
+    monkeypatch.setattr(edl, "__file__", str(fake_init))
+    monkeypatch.setattr(edl, "_DLL_DIR_HANDLES", handles)
+
+    edl._register_windows_dll_directories()
+
+    expected = {
+        str(pkg_dir.resolve()),
+        str(dot_libs.resolve()),
+        str(sibling_libs.resolve()),
+        str(meipass_dir.resolve()),
+        str(meipass_pkg.resolve()),
+    }
+    assert expected.issubset(set(added_dirs))
+    assert len(handles) == len(added_dirs)
 
 
 def test_calsemver_version_and_capabilities() -> None:
@@ -122,7 +185,12 @@ def test_self_contained_native_extension_bundling(tmp_path: Path) -> None:
     staged_ext = tmp_path / src_ext.name
     shutil.copy2(src_ext, staged_ext)
 
-    report = bundle_native_package.bundle_artifact(staged_ext)
+    extra_search_dirs = [
+        d
+        for d in (pkg_dir, pkg_dir / ".libs", pkg_dir.parent / f"{pkg_dir.name}.libs")
+        if d.is_dir()
+    ]
+    report = bundle_native_package.bundle_artifact(staged_ext, extra_search_dirs=extra_search_dirs)
     assert report["ok"] is True, f"External deps remained after bundling: {report}"
     assert report["external_dependencies"] == []
 

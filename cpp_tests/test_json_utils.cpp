@@ -240,3 +240,28 @@ TEST(JsonUtilsTest, ExhaustiveParserAndSerializerEdgeCases) {
    EXPECT_EQ(rt["int_v"].as_int(), -500);
    EXPECT_FALSE(rt["bool_v"].as_bool());
 }
+
+TEST(JsonUtilsTest, StripsLeadingUtf8BomInParseAndParseFile) {
+   std::string const bom = "\xEF\xBB\xBF";
+   Value parsed = Value::parse(bom + R"({"host": "127.0.0.1", "port": 161})");
+   ASSERT_TRUE(parsed.is_object());
+   EXPECT_EQ(parsed["host"].as_string(), "127.0.0.1");
+   EXPECT_EQ(parsed["port"].as_int(), 161);
+
+   Value parsed_ws = Value::parse(bom + "  \n\t [1, 2, 3]");
+   ASSERT_TRUE(parsed_ws.is_array());
+   EXPECT_EQ(parsed_ws.size(), 3u);
+
+   EXPECT_THROW({ (void)Value::parse(bom); }, ConfigError);
+   EXPECT_THROW({ (void)Value::parse(bom + "   "); }, ConfigError);
+
+   ScopedTempDir tmp_bom("ezsnmp_json_bom_");
+   std::string bom_file = (tmp_bom.path() / "bom_config.json").string();
+   {
+      std::ofstream out(bom_file, std::ios::out | std::ios::binary);
+      out << bom << R"({"bom": true})";
+   }
+   Value from_file = Value::parse_file(bom_file);
+   ASSERT_TRUE(from_file.is_object());
+   EXPECT_TRUE(from_file["bom"].as_bool());
+}

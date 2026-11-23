@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import sys
 import urllib.parse
 import webbrowser
 from http import HTTPStatus
@@ -18,11 +19,18 @@ from typing import Any
 from .cli_bridge import CliSubprocessBridge
 from .locale_manager import LocaleManager, get_default_locale_manager
 
-STATIC_DIR = Path(__file__).resolve().parent / "static"
-if not STATIC_DIR.is_dir() and getattr(sys, "_MEIPASS", None):  # pragma: no cover
-    _cand = Path(sys._MEIPASS) / "ezsnmp_data_logger" / "gui" / "static"
-    if _cand.is_dir():
-        STATIC_DIR = _cand
+
+def _resolve_static_dir() -> Path:
+    static_dir = Path(__file__).resolve().parent / "static"
+    meipass = getattr(sys, "_MEIPASS", None)
+    if not static_dir.is_dir() and meipass:
+        cand = Path(meipass) / "ezsnmp_data_logger" / "gui" / "static"
+        if cand.is_dir():
+            return cand
+    return static_dir
+
+
+STATIC_DIR = _resolve_static_dir()
 mimetypes.add_type("image/x-icon", ".ico")
 mimetypes.add_type("image/svg+xml", ".svg")
 mimetypes.add_type("image/png", ".png")

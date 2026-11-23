@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -129,3 +130,52 @@ def compute_object_cache_key(
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def discover_windows_openssl_dlls(
+    std_patterns: tuple[str, ...] = ("*.dll",),
+) -> tuple[str, tuple[str, ...]]:
+    """Return ``(directory, glob_patterns)`` for Windows OpenSSL runtime DLLs, or ``('', ())``."""
+    ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
+    if ssl_bin:
+        return ssl_bin, ("*.dll",)
+
+    machine = platform.machine().lower()
+    if machine in ("arm64", "aarch64"):
+        vcpkg_triplets = ("arm64-windows", "x64-windows", "x86-windows")
+    elif machine in ("x86", "i386", "i686"):
+        vcpkg_triplets = ("x86-windows", "x64-windows", "arm64-windows")
+    else:
+        vcpkg_triplets = ("x64-windows", "arm64-windows", "x86-windows")
+
+    ssl_candidates: list[tuple[Path, tuple[str, ...]]] = []
+    vcpkg_root = os.environ.get("VCPKG_ROOT", "").strip()
+    if vcpkg_root:
+        for triplet in vcpkg_triplets:
+            ssl_candidates.append(
+                (
+                    Path(vcpkg_root) / "installed" / triplet / "bin",
+                    ("libcrypto*.dll", "libssl*.dll"),
+                )
+            )
+    for triplet in vcpkg_triplets:
+        ssl_candidates.append(
+            (
+                Path(f"C:/vcpkg/installed/{triplet}/bin"),
+                ("libcrypto*.dll", "libssl*.dll"),
+            )
+        )
+    for std_ssl in (
+        Path(r"C:\Program Files\OpenSSL\bin"),
+        Path(r"C:\Program Files\OpenSSL-Win64\bin"),
+        Path(r"C:\OpenSSL-Win64\bin"),
+    ):
+        ssl_candidates.append((std_ssl, std_patterns))
+
+    for cand_ssl, pats in ssl_candidates:
+        if cand_ssl.is_dir() and any(
+            any(cand_ssl.glob(p)) for p in ("libcrypto*.dll", "libssl*.dll")
+        ):
+            return str(cand_ssl), pats
+
+    return "", ()

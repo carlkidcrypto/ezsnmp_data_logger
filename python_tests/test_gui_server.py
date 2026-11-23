@@ -301,3 +301,26 @@ def test_server_complete_coverage(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr("webbrowser.open", mock_browser_open_error)
     rc_launch = launch_web_gui(bridge, host="127.0.0.1", port=0, open_browser=True)
     assert rc_launch == 0
+
+
+def test_server_frozen_meipass_static_dir_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify server.py resolves STATIC_DIR via sys._MEIPASS without NameError."""
+    import sys
+
+    from ezsnmp_data_logger.gui import server as server_mod
+
+    fake_meipass = tmp_path / "meipass"
+    expected_static = fake_meipass / "ezsnmp_data_logger" / "gui" / "static"
+    expected_static.mkdir(parents=True, exist_ok=True)
+    (expected_static / "index.html").write_text("<html>ok</html>", encoding="utf-8")
+
+    # Point server.__file__ to a location without a sibling 'static' directory
+    fake_server_file = tmp_path / "frozen_pkg" / "gui" / "server.py"
+    fake_server_file.parent.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(server_mod, "__file__", str(fake_server_file))
+    monkeypatch.setattr(sys, "_MEIPASS", str(fake_meipass), raising=False)
+
+    resolved = server_mod._resolve_static_dir()
+    assert resolved == expected_static

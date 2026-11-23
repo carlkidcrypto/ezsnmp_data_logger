@@ -129,30 +129,36 @@ jobs:
             export PATH="/usr/local/bin:${PATH}"
             export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
+            python -m pip install --pre --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform linux
           macos: |
             export PATH="/usr/local/bin:${PATH}"
             export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$(brew --prefix openssl@3)/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export DYLD_LIBRARY_PATH="/usr/local/lib:${DYLD_LIBRARY_PATH}"
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
+            python -m pip install --pre --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
             python setup.py build_ext --inplace
             python tools/package_desktop_app.py --platform macos
           windows: |
-            python -m pip install --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
+            $ErrorActionPreference = 'Stop'
+            python -m pip install --pre --upgrade pip setuptools wheel pyinstaller "ezsnmp>=2026.11.15b0"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $env:PATH = "C:\ezsnmp-netsnmp-dist\x64\bin\release;" + $env:PATH
             if (Test-Path "C:\ezsnmp-netsnmp-dist\x64\bin\release\netsnmp.dll") {
               Copy-Item "C:\ezsnmp-netsnmp-dist\x64\bin\release\*.dll" ezsnmp_data_logger/ -Force
             }
             if ($env:EZSNMP_OPENSSL_BIN_DIR -and (Test-Path $env:EZSNMP_OPENSSL_BIN_DIR)) {
               Copy-Item "$env:EZSNMP_OPENSSL_BIN_DIR\*.dll" ezsnmp_data_logger/ -Force
+            } elseif (Test-Path "C:\vcpkg\installed\x64-windows\bin\libcrypto*.dll") {
+              Copy-Item "C:\vcpkg\installed\x64-windows\bin\libcrypto*.dll" ezsnmp_data_logger/ -Force
+              Copy-Item "C:\vcpkg\installed\x64-windows\bin\libssl*.dll" ezsnmp_data_logger/ -Force
             } elseif (Test-Path "C:\Program Files\OpenSSL\bin") {
               Copy-Item "C:\Program Files\OpenSSL\bin\*.dll" ezsnmp_data_logger/ -Force
             } elseif (Test-Path "C:\Program Files\OpenSSL-Win64\bin") {
               Copy-Item "C:\Program Files\OpenSSL-Win64\bin\*.dll" ezsnmp_data_logger/ -Force
             }
             python setup.py build_ext --inplace
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             python tools/package_desktop_app.py --platform windows
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -164,7 +170,63 @@ jobs:
           macos: |
             "./dist/EzSnmpDataLogger.app/Contents/MacOS/EzSnmpDataLogger" cli version
           windows: |
-            .\dist\EzSnmpDataLogger.exe cli version
+            $ErrorActionPreference = 'Stop'
+            $exeSrc = (Resolve-Path ".\dist\EzSnmpDataLogger.exe").Path
+            $smokeDir = Join-Path $env:TEMP ("ezsnmp-smoke-" + [System.Guid]::NewGuid().ToString("N"))
+            New-Item -ItemType Directory -Path $smokeDir -Force | Out-Null
+            $origPath = $env:PATH
+            $webProc = $null
+            try {
+              $exe = Join-Path $smokeDir "EzSnmpDataLogger.exe"
+              Copy-Item -Path $exeSrc -Destination $exe -Force
+              Push-Location $smokeDir
+              $env:PATH = "C:\Windows\System32;C:\Windows"
+
+              $verOut = & $exe cli version 2>&1
+              if ($LASTEXITCODE -ne 0) { throw "cli version failed ($LASTEXITCODE): $verOut" }
+              Write-Host "cli version: $verOut"
+              if ("$verOut" -notmatch "ezsnmp=yes") { throw "Expected ezsnmp=yes in version output: $verOut" }
+              if ("$verOut" -notmatch "sqlite3=yes") { throw "Expected sqlite3=yes in version output: $verOut" }
+
+              & $exe cli init-config --template demo -o demo_config.json
+              if ($LASTEXITCODE -ne 0) { throw "cli init-config failed ($LASTEXITCODE)" }
+
+              & $exe cli validate -c demo_config.json --json
+              if ($LASTEXITCODE -ne 0) { throw "cli validate failed ($LASTEXITCODE)" }
+
+              & $exe cli run --once -c demo_config.json --json
+              if ($LASTEXITCODE -ne 0) { throw "cli run --once failed ($LASTEXITCODE)" }
+
+              $webPort = 18765
+              $webProc = Start-Process -FilePath $exe -ArgumentList @("gui", "--frontend", "web", "--no-browser", "--host", "127.0.0.1", "--port", "$webPort", "-c", "demo_config.json") -WorkingDirectory $smokeDir -PassThru -NoNewWindow
+              $ready = $false
+              for ($i = 0; $i -lt 40; $i++) {
+                Start-Sleep -Milliseconds 500
+                if ($webProc.HasExited) {
+                  throw "Web GUI exited prematurely with code $($webProc.ExitCode)"
+                }
+                try {
+                  $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$webPort/api/version" -UseBasicParsing -TimeoutSec 2
+                  if ($resp.StatusCode -eq 200) {
+                    Write-Host "Web GUI /api/version: $($resp.Content)"
+                    $ready = $true
+                    break
+                  }
+                } catch {
+                  # Server still starting up
+                }
+              }
+              if (-not $ready) {
+                throw "Web GUI did not become ready on http://127.0.0.1:$webPort/api/version"
+              }
+            } finally {
+              if ($webProc -and -not $webProc.HasExited) {
+                & C:\Windows\System32\taskkill.exe /T /F /PID $webProc.Id 2>$null | Out-Null
+              }
+              $env:PATH = $origPath
+              Pop-Location -ErrorAction SilentlyContinue
+              Remove-Item -Path $smokeDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
 
       - name: Upload desktop artifacts to workflow run
         uses: actions/upload-artifact@v7

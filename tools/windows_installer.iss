@@ -5,6 +5,10 @@
 #define AppVersion "2026.11.18.1"
 #endif
 
+#ifndef AppArch
+#define AppArch "x64"
+#endif
+
 #ifndef SourceExe
 #define SourceExe "..\dist\EzSnmpDataLogger.exe"
 #endif
@@ -23,7 +27,7 @@ DefaultGroupName=EzSnmp Data Logger
 AllowNoIcons=yes
 LicenseFile=..\LICENSE
 OutputDir=..\dist
-OutputBaseFilename=EzSnmpDataLogger-Windows-x64-Setup
+OutputBaseFilename=EzSnmpDataLogger-Windows-{#AppArch}-Setup
 SetupIconFile=..\ezsnmp_data_logger\gui\static\app_icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -31,6 +35,7 @@ WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+ChangesEnvironment=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -38,6 +43,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "envPath"; Description: "Add application to PATH environment variable (allows running 'ezsnmp-data-logger' or 'EzSnmpDataLogger' from command prompt)"; Flags: unchecked
+
+[Dirs]
+Name: "{userappdata}\EzSnmpDataLogger"
 
 [Files]
 Source: "{#SourceExe}"; DestDir: "{app}"; DestName: "EzSnmpDataLogger.exe"; Flags: ignoreversion
@@ -47,14 +55,14 @@ Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.rst"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\EzSnmp Data Logger"; Filename: "{app}\EzSnmpDataLogger.exe"; IconFilename: "{app}\app_icon.ico"
-Name: "{autodesktop}\EzSnmp Data Logger"; Filename: "{app}\EzSnmpDataLogger.exe"; IconFilename: "{app}\app_icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\EzSnmp Data Logger"; Filename: "{app}\EzSnmpDataLogger.exe"; WorkingDir: "{userappdata}\EzSnmpDataLogger"; IconFilename: "{app}\app_icon.ico"
+Name: "{autodesktop}\EzSnmp Data Logger"; Filename: "{app}\EzSnmpDataLogger.exe"; WorkingDir: "{userappdata}\EzSnmpDataLogger"; IconFilename: "{app}\app_icon.ico"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: envPath; Check: NeedsAddPath(ExpandConstant('{app}'))
 
 [Run]
-Filename: "{app}\EzSnmpDataLogger.exe"; Description: "{cm:LaunchProgram,EzSnmp Data Logger}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\EzSnmpDataLogger.exe"; WorkingDir: "{userappdata}\EzSnmpDataLogger"; Description: "{cm:LaunchProgram,EzSnmp Data Logger}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function NeedsAddPath(Param: string): boolean;

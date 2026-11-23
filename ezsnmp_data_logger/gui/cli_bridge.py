@@ -29,7 +29,13 @@ def _utc_iso_now() -> str:
 def resolve_cli_command(cli_override: str = "") -> list[str]:
     """Locate the ezsnmp-data-logger CLI command across Linux, macOS, and Windows."""
     if cli_override.strip():
-        return shlex.split(cli_override, posix=(os.name != "nt"))
+        tokens = shlex.split(cli_override, posix=(os.name != "nt"))
+        if os.name == "nt":
+            tokens = [
+                tok[1:-1] if len(tok) >= 2 and tok[0] == tok[-1] and tok[0] in ('"', "'") else tok
+                for tok in tokens
+            ]
+        return tokens
 
     if getattr(sys, "frozen", False):
         return [sys.executable, "cli"]
@@ -96,7 +102,7 @@ class CliSubprocessBridge:
 
     def _sync_gui_preferences(self) -> None:
         try:
-            cfg = json.loads(self.config_path.read_text(encoding="utf-8"))
+            cfg = json.loads(self.config_path.read_text(encoding="utf-8-sig"))
             gui = cfg.get("gui", {}) if isinstance(cfg, dict) else {}
             max_lines = int(gui.get("max_log_lines", 500))
             if max_lines >= 50:
@@ -139,13 +145,15 @@ class CliSubprocessBridge:
     def _exec_cli(self, sub_args: list[str], timeout: float = 30.0) -> dict[str, Any]:
         cmd = self.cli_base_command() + sub_args
         t0 = time.perf_counter()
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
+        run_kwargs: dict[str, Any] = {
+            "capture_output": True,
+            "text": True,
+            "timeout": timeout,
+            "check": False,
+        }
+        if os.name == "nt":
+            run_kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        proc = subprocess.run(cmd, **run_kwargs)
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         audit = self._record_audit(cmd, proc.returncode, elapsed_ms)
 
@@ -175,7 +183,7 @@ class CliSubprocessBridge:
     # --- JSON Configuration File Access ---
 
     def load_config_text(self) -> str:
-        return self.config_path.read_text(encoding="utf-8")
+        return self.config_path.read_text(encoding="utf-8-sig")
 
     def load_config_dict(self) -> dict[str, Any]:
         data = json.loads(self.load_config_text())

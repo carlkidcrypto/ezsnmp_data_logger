@@ -26,6 +26,7 @@ if str(ROOT_DIR / "tools") not in sys.path:
 from build_utils import (
     collect_files_with_suffixes,
     compute_object_cache_key,
+    discover_windows_openssl_dlls,
     is_python_independent_source,
     is_up_to_date,
     resolve_build_jobs,
@@ -704,7 +705,7 @@ class SwigBuildExt(build_ext):
                 if os.path.isdir(inplace_pkg_dir) and inplace_pkg_dir not in target_dirs:
                     target_dirs.append(inplace_pkg_dir)
 
-                dll_sources = []
+                dll_sources: list[tuple[str, tuple[str, ...]]] = []
                 win_bin = os.environ.get("EZSNMP_NETSNMP_BIN_DIR", "").strip()
                 if not win_bin:
                     for cand_arch in ("x64", "AMD64", "x86", "ARM64"):
@@ -713,28 +714,20 @@ class SwigBuildExt(build_ext):
                             win_bin = str(cand)
                             break
                 if win_bin and os.path.isdir(win_bin):
-                    dll_sources.append(win_bin)
+                    dll_sources.append((win_bin, ("*.dll",)))
 
-                ssl_bin = os.environ.get("EZSNMP_OPENSSL_BIN_DIR", "").strip()
-                if not ssl_bin:
-                    for cand_ssl in (
-                        Path(r"C:\Program Files\OpenSSL\bin"),
-                        Path(r"C:\Program Files\OpenSSL-Win64\bin"),
-                        Path(r"C:\OpenSSL-Win64\bin"),
-                    ):
-                        if cand_ssl.is_dir():
-                            ssl_bin = str(cand_ssl)
-                            break
+                ssl_bin, ssl_patterns = discover_windows_openssl_dlls()
                 if ssl_bin and os.path.isdir(ssl_bin):
-                    dll_sources.append(ssl_bin)
+                    dll_sources.append((ssl_bin, ssl_patterns))
 
-                for sdir in dll_sources:
-                    for dll_file in Path(sdir).glob("*.dll"):
-                        for tdir in target_dirs:
-                            try:
-                                shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
-                            except (OSError, shutil.SameFileError):
-                                pass
+                for sdir, patterns in dll_sources:
+                    for pat in patterns:
+                        for dll_file in Path(sdir).glob(pat):
+                            for tdir in target_dirs:
+                                try:
+                                    shutil.copy2(dll_file, os.path.join(tdir, dll_file.name))
+                                except (OSError, shutil.SameFileError):
+                                    pass
 
 
 class BuildPy(_build_py):

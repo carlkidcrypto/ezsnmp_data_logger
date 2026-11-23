@@ -167,9 +167,15 @@ class DataLogger::Impl {
          return;
       }
 
-      stop_requested_.store(true);
+      {
+         std::lock_guard<std::mutex> slock(sched_mutex_);
+         stop_requested_.store(true);
+      }
       sched_cv_.notify_all();
-      wait_cv_.notify_all();
+      {
+         std::lock_guard<std::mutex> wlock(wait_mutex_);
+         wait_cv_.notify_all();
+      }
 
       for (auto& wt : workers_) {
          if (wt.joinable()) {
@@ -184,7 +190,10 @@ class DataLogger::Impl {
       }
 
       flush_sinks();
-      running_.store(false);
+      {
+         std::lock_guard<std::mutex> wlock(wait_mutex_);
+         running_.store(false);
+      }
       update_status_file();
       wait_cv_.notify_all();
    }
@@ -434,7 +443,10 @@ class DataLogger::Impl {
                schedule_.push(SchedItem{next_due, dut_idx});
                sched_cv_.notify_one();
             } else if (schedule_.empty() && min_cycles >= max_cycles) {
-               all_cycles_completed_.store(true);
+               {
+                  std::lock_guard<std::mutex> wlock(wait_mutex_);
+                  all_cycles_completed_.store(true);
+               }
                sched_cv_.notify_all();
                wait_cv_.notify_all();
                return;
