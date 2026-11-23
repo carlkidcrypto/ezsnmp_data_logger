@@ -14,7 +14,8 @@ if [[ -z "${OPENSSL_PREFIX:-}" ]]; then
     elif [[ -d "/usr/local/opt/openssl@3" ]]; then
         OPENSSL_PREFIX="/usr/local/opt/openssl@3"
     else
-        OPENSSL_PREFIX="/opt/local"
+        echo "ERROR: OpenSSL 3 not found in /opt/homebrew/opt/openssl@3 or /usr/local/opt/openssl@3; set OPENSSL_PREFIX explicitly." >&2
+        exit 1
     fi
 fi
 
