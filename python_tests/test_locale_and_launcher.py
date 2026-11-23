@@ -205,11 +205,17 @@ def test_is_dir_writable_and_user_config_path_platforms(
     assert gui_mod._is_dir_writable(tmp_path) is False
 
     # 4. _user_config_path on macOS and Linux (with and without XDG_CONFIG_HOME)
+    # Proxy gui_mod.os instead of mutating os.name globally so pathlib.Path still
+    # instantiates the host's native Path class on Windows.
     import os
 
-    real_home = Path.home()
-    monkeypatch.setattr(os, "name", "posix")
-    monkeypatch.setenv("HOME", str(real_home))
+    class _PosixOsProxy:
+        name = "posix"
+
+        def __getattr__(self, item: str):
+            return getattr(os, item)
+
+    monkeypatch.setattr(gui_mod, "os", _PosixOsProxy())
     monkeypatch.setattr(sys, "platform", "darwin")
     assert gui_mod._user_config_path() == (
         Path.home() / "Library" / "Application Support" / "EzSnmpDataLogger" / "config.json"
