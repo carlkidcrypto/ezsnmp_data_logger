@@ -74,7 +74,10 @@ class BoundedQueue {
     * @brief Signal shutdown so blocked pop() calls wake up once remaining items drain.
     */
    void shutdown() {
-      shutdown_.store(true);
+      {
+         std::lock_guard<std::mutex> lk(mutex_);
+         shutdown_.store(true);
+      }
       cv_.notify_all();
    }
 

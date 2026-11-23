@@ -351,6 +351,7 @@ class Parser {
    explicit Parser(std::string const& text) : text_(text) {}
 
    Value parse_document() {
+      skip_utf8_bom();
       skip_ws();
       if (eof()) {
          error("empty JSON document");
@@ -368,6 +369,14 @@ class Parser {
    size_t pos_ = 0;
    size_t line_ = 1;
    size_t col_ = 1;
+
+   void skip_utf8_bom() noexcept {
+      if (pos_ == 0 && text_.size() >= 3 && static_cast<unsigned char>(text_[0]) == 0xEF &&
+          static_cast<unsigned char>(text_[1]) == 0xBB &&
+          static_cast<unsigned char>(text_[2]) == 0xBF) {
+         pos_ = 3;
+      }
+   }
 
    bool eof() const noexcept { return pos_ >= text_.size(); }
    char peek() const noexcept { return eof() ? '\0' : text_[pos_]; }

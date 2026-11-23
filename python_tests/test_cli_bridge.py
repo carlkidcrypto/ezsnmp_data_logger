@@ -68,20 +68,23 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     assert resolve_cli_command() == [sys.executable, "cli"]
     monkeypatch.delattr(sys, "frozen")
 
-    # Local build binary
-    repo_root = Path(__file__).resolve().parent.parent
+    # Local build binary (works in both source checkouts and installed wheels)
+    import ezsnmp_data_logger.gui.cli_bridge as cli_bridge_mod
+
+    fake_pkg_root = tmp_path / "fake_repo"
+    fake_cli_bridge_file = fake_pkg_root / "ezsnmp_data_logger" / "gui" / "cli_bridge.py"
+    fake_cli_bridge_file.parent.mkdir(parents=True, exist_ok=True)
     fake_build_bin = (
-        repo_root
+        fake_pkg_root
         / "build"
         / ("ezsnmp-data-logger.exe" if os.name == "nt" else "ezsnmp-data-logger")
     )
     fake_build_bin.parent.mkdir(parents=True, exist_ok=True)
     fake_build_bin.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     fake_build_bin.chmod(0o755)
-    try:
+    with monkeypatch.context() as mp:
+        mp.setattr(cli_bridge_mod, "__file__", str(fake_cli_bridge_file))
         assert resolve_cli_command() == [str(fake_build_bin)]
-    finally:
-        fake_build_bin.unlink()
 
     # Which CLI found on PATH
     monkeypatch.setattr(
@@ -96,7 +99,8 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
 
     # 2. _ensure_config_exists when CLI init-config fails
     missing_cfg = tmp_path / "sub" / "auto_init.json"
-    bridge_missing = CliSubprocessBridge(missing_cfg, cli_override="false")
+    fail_cmd = f'"{sys.executable}" -c "import sys; sys.exit(1)"'
+    bridge_missing = CliSubprocessBridge(missing_cfg, cli_override=fail_cmd)
     assert missing_cfg.is_file()
     assert bridge_missing.load_config_dict()["logger"]["poll_interval_ms"] == 1000
 
@@ -333,3 +337,54 @@ def test_cli_bridge_complete_coverage(tmp_path: Path, monkeypatch: pytest.Monkey
     mock_none_proc.stderr = None
     bridge_ev._read_run_stdout(mock_none_proc)
     bridge_ev._read_run_stderr(mock_none_proc)
+
+
+def test_windows_cli_override_strips_outer_quotes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify Windows shlex.split(..., posix=False) strips matching outer quotes."""
+    monkeypatch.setattr(os, "name", "nt")
+    cmd = resolve_cli_command(
+        "\"C:\\Program Files\\EzSnmp Data Logger\\EzSnmpDataLogger.exe\" cli --flag 'my value'"
+    )
+    assert cmd == [
+        "C:\\Program Files\\EzSnmp Data Logger\\EzSnmpDataLogger.exe",
+        "cli",
+        "--flag",
+        "my value",
+    ]
+
+
+def test_windows_exec_cli_sets_create_no_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify _exec_cli passes CREATE_NO_WINDOW on Windows to avoid console flashes."""
+    cfg = _create_minimal_config(tmp_path)
+    bridge = CliSubprocessBridge(cfg)
+    bridge.cli_base_command = lambda: ["ezsnmp-data-logger"]  # type: ignore[method-assign]
+
+    captured_kwargs: dict[str, Any] = {}
+
+    def fake_run(*args: Any, **kwargs: Any) -> Any:
+        captured_kwargs.update(kwargs)
+        m = MagicMock()
+        m.returncode = 0
+        m.stdout = '{"ok": true}'
+        m.stderr = ""
+        return m
+
+    monkeypatch.setattr(os, "name", "nt")
+    monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    res = bridge._exec_cli(["version", "--json"])
+    assert res["ok"] is True
+    assert captured_kwargs.get("creationflags") == 0x08000000
+
+
+def test_load_config_dict_handles_utf8_bom(tmp_path: Path) -> None:
+    """Verify CliSubprocessBridge reads UTF-8 BOM JSON configs saved by PowerShell 5.1."""
+    bom_cfg = tmp_path / "bom_config.json"
+    bom_cfg.write_bytes(
+        b'\xef\xbb\xbf{"logger": {"poll_interval_ms": 250}, "duts": [], "sinks": []}'
+    )
+    bridge = CliSubprocessBridge(bom_cfg)
+    assert bridge.load_config_dict()["logger"]["poll_interval_ms"] == 250

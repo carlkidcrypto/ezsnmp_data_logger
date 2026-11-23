@@ -23,6 +23,7 @@ from ezsnmp_data_logger.entry_desktop import CLI_SUBCOMMANDS, main as entry_desk
 from tools.package_desktop_app import (
     build_pyinstaller_cmd,
     package_linux_artifacts,
+    package_windows_artifacts,
     read_version,
     resolve_platform,
 )
@@ -164,7 +165,10 @@ def test_inno_setup_script_structure() -> None:
     content = iss_file.read_text(encoding="utf-8")
     assert "AppId={{E5D4B692-7E5A-483A-9E86-443E838F5C1B}" in content
     assert "AppName=EzSnmp Data Logger" in content
-    assert "OutputBaseFilename=EzSnmpDataLogger-Windows-x64-Setup" in content
+    assert '#define AppArch "x64"' in content
+    assert "OutputBaseFilename=EzSnmpDataLogger-Windows-{#AppArch}-Setup" in content
+    assert "ChangesEnvironment=yes" in content
+    assert 'WorkingDir: "{userappdata}\\EzSnmpDataLogger"' in content
     assert "EzSnmpDataLogger.exe" in content
     assert "ezsnmp-data-logger.exe" in content
     assert "desktopicon" in content
@@ -194,6 +198,108 @@ def test_desktop_distribution_workflow_configuration() -> None:
     assert "dist/*.rpm" in content
     assert "dist/*.tar.gz" in content
     assert "gh release upload" in content
+    assert "$ErrorActionPreference = 'Stop'" in content
+    assert "pip install --pre" in content
+    assert "C:\\Windows\\System32;C:\\Windows" in content
+    assert "cli init-config" in content
+    assert "cli validate" in content
+    assert "cli run --once" in content
+    assert "/api/version" in content
+
+
+def test_windows_pyinstaller_dll_collection_and_deduplication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify Windows DLL collection searches OpenSSL/Net-SNMP dirs and deduplicates netsnmp.dll."""
+    fake_repo = tmp_path / "repo"
+    pkg_dir = fake_repo / "ezsnmp_data_logger"
+    static_dir = pkg_dir / "gui" / "static"
+    static_dir.mkdir(parents=True)
+    (pkg_dir / "entry_desktop.py").write_text("print('ok')\n", encoding="utf-8")
+    (pkg_dir / "netsnmp.dll").write_bytes(b"pkg-netsnmp")
+
+    netsnmp_bin = tmp_path / "netsnmp_bin"
+    netsnmp_bin.mkdir()
+    (netsnmp_bin / "netsnmp.dll").write_bytes(b"ext-netsnmp")
+    (netsnmp_bin / "netsnmphelpers.dll").write_bytes(b"ext-helpers")
+
+    openssl_bin = tmp_path / "openssl_bin"
+    openssl_bin.mkdir()
+    (openssl_bin / "libcrypto-3-x64.dll").write_bytes(b"crypto")
+    (openssl_bin / "libssl-3-x64.dll").write_bytes(b"ssl")
+
+    monkeypatch.setattr("tools.package_desktop_app.REPO_ROOT", fake_repo)
+    monkeypatch.setenv("EZSNMP_NETSNMP_BIN_DIR", str(netsnmp_bin))
+    monkeypatch.setenv("EZSNMP_OPENSSL_BIN_DIR", str(openssl_bin))
+
+    cmd = build_pyinstaller_cmd("windows", "2026.11.18.1", tmp_path / "dist", tmp_path / "build")
+    add_binaries = [cmd[i + 1] for i in range(len(cmd) - 1) if cmd[i] == "--add-binary"]
+    bundled_names = [Path(entry.split(";")[0]).name.lower() for entry in add_binaries]
+
+    assert bundled_names.count("netsnmp.dll") == 1
+    assert "netsnmphelpers.dll" in bundled_names
+    assert "libcrypto-3-x64.dll" in bundled_names
+    assert "libssl-3-x64.dll" in bundled_names
+
+
+def test_package_windows_artifacts_parameterizes_inno_arch(tmp_path: Path) -> None:
+    """Verify package_windows_artifacts passes /DAppArch=<arch> and detects the arch Setup EXE."""
+    exe_src = tmp_path / "EzSnmpDataLogger.exe"
+    exe_src.write_bytes(b"MZfake-exe")
+
+    captured_cmds: list[list[str]] = []
+
+    def fake_run(cmd: list[str], check: bool = False) -> None:
+        captured_cmds.append(cmd)
+        (tmp_path / "EzSnmpDataLogger-Windows-arm64-Setup.exe").write_bytes(b"MZfake-setup")
+
+    with (
+        patch("tools.package_desktop_app.find_iscc_compiler", return_value="C:\\ISCC.exe"),
+        patch("tools.package_desktop_app.subprocess.run", side_effect=fake_run),
+    ):
+        artifacts = package_windows_artifacts(
+            dist_dir=tmp_path,
+            version="2026.11.18.1",
+            arch="arm64",
+            skip_installer=False,
+        )
+
+    assert len(captured_cmds) == 1
+    assert "/DAppArch=arm64" in captured_cmds[0]
+    assert "/DAppVersion=2026.11.18.1" in captured_cmds[0]
+    names = [a.name for a in artifacts]
+    assert "EzSnmpDataLogger-Windows-arm64.exe" in names
+    assert "EzSnmpDataLogger-Windows-arm64-Setup.exe" in names
+
+
+def test_package_linux_artifacts_symlink_oserror_fallback(tmp_path: Path) -> None:
+    """Verify Linux .deb packaging falls back cleanly when os.symlink raises OSError (WinError 1314)."""
+    mock_bin = tmp_path / "EzSnmpDataLogger"
+    mock_bin.write_text("#!/bin/sh\necho 'EzSnmpDataLogger'\n", encoding="utf-8")
+    mock_bin.chmod(0o755)
+
+    with patch("tools.package_desktop_app.os.symlink", side_effect=OSError(1314, "privilege")):
+        artifacts = package_linux_artifacts(
+            dist_dir=tmp_path,
+            version="2026.11.18.1",
+            arch="x64",
+            skip_deb=False,
+            skip_rpm=True,
+        )
+
+    names = [a.name for a in artifacts]
+    assert "EzSnmpDataLogger-Linux-x64.deb" in names
+    assert "ezsnmp-data-logger_2026.11.18.1_amd64.deb" in names
+
+
+def test_setup_py_includes_vcpkg_windows_dll_search() -> None:
+    """Verify setup.py and build_utils search vcpkg bin dirs for OpenSSL runtime DLLs on Windows."""
+    setup_text = (REPO_ROOT / "setup.py").read_text(encoding="utf-8")
+    assert "discover_windows_openssl_dlls" in setup_text
+    build_utils_text = (REPO_ROOT / "tools" / "build_utils.py").read_text(encoding="utf-8")
+    assert "C:/vcpkg/installed/{triplet}/bin" in build_utils_text
+    assert "x64-windows" in build_utils_text
+    assert "arm64-windows" in build_utils_text
 
 
 def test_winget_distribution_workflow_configuration() -> None:

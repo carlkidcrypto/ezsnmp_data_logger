@@ -137,3 +137,100 @@ def test_locale_manager_complete_coverage(tmp_path: Path, monkeypatch: pytest.Mo
     d_es = mgr_test.get_locale_dict("es")
     assert d_es["only_en"] == "Only English"
     assert d_es["flat_str"] == "Plain string for flat"
+
+
+def test_windows_shortcut_when_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _install_windows_shortcut invokes sys.executable directly when frozen."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        sys, "executable", r"C:\Program Files\EzSnmpDataLogger\EzSnmpDataLogger.exe"
+    )
+
+    win_out = tmp_path / "frozen_win"
+    bat_file = install_desktop_launcher(win_out)
+    content = bat_file.read_text(encoding="utf-8")
+    assert r'start "" "C:\Program Files\EzSnmpDataLogger\EzSnmpDataLogger.exe" %*' in content
+    assert "-m ezsnmp_data_logger.gui" not in content
+
+
+def test_resolve_default_config_path_frozen_and_readonly_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify default GUI config path avoids read-only dirs on Windows / frozen builds."""
+    import ezsnmp_data_logger.gui as gui_mod
+
+    fake_appdata = tmp_path / "AppData" / "Roaming"
+    monkeypatch.setenv("APPDATA", str(fake_appdata))
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    # 1. Frozen executable always uses %APPDATA%\EzSnmpDataLogger\config.json
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    assert Path(gui_mod.resolve_default_config_path()) == (
+        fake_appdata / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 2. Non-frozen in non-writable Windows directory (e.g., Program Files) falls back to APPDATA
+    monkeypatch.delattr(sys, "frozen")
+    monkeypatch.setattr(gui_mod, "_is_dir_writable", lambda _p: False)
+    assert Path(gui_mod.resolve_default_config_path()) == (
+        fake_appdata / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 3. Non-frozen in writable dev checkout keeps ./configs/example.json unchanged
+    monkeypatch.setattr(gui_mod, "_is_dir_writable", lambda _p: True)
+    assert gui_mod.resolve_default_config_path() == "./configs/example.json"
+
+
+def test_is_dir_writable_and_user_config_path_platforms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cover _is_dir_writable edge cases, _user_config_path on macOS/Linux, and cwd fallback."""
+    import tempfile
+    import ezsnmp_data_logger.gui as gui_mod
+
+    # 1. _is_dir_writable walks up missing subdirectories and succeeds on writable parent
+    assert gui_mod._is_dir_writable(tmp_path / "does_not_exist" / "nested") is True
+
+    # 2. _is_dir_writable returns False for a regular file
+    reg_file = tmp_path / "file.txt"
+    reg_file.write_text("x", encoding="utf-8")
+    assert gui_mod._is_dir_writable(reg_file) is False
+
+    # 3. _is_dir_writable returns False when TemporaryFile raises OSError
+    def _fail_temp(*_args, **_kwargs):
+        raise OSError("read-only")
+
+    monkeypatch.setattr(tempfile, "TemporaryFile", _fail_temp)
+    assert gui_mod._is_dir_writable(tmp_path) is False
+
+    # 4. _user_config_path on macOS and Linux (with and without XDG_CONFIG_HOME)
+    # Proxy gui_mod.os instead of mutating os.name globally so pathlib.Path still
+    # instantiates the host's native Path class on Windows.
+    import os
+
+    class _PosixOsProxy:
+        name = "posix"
+
+        def __getattr__(self, item: str):
+            return getattr(os, item)
+
+    monkeypatch.setattr(gui_mod, "os", _PosixOsProxy())
+    monkeypatch.setattr(sys, "platform", "darwin")
+    assert gui_mod._user_config_path() == (
+        Path.home() / "Library" / "Application Support" / "EzSnmpDataLogger" / "config.json"
+    )
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    custom_xdg = tmp_path / "xdg_cfg"
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(custom_xdg))
+    assert gui_mod._user_config_path() == custom_xdg / "EzSnmpDataLogger" / "config.json"
+
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    assert gui_mod._user_config_path() == (
+        Path.home() / ".config" / "EzSnmpDataLogger" / "config.json"
+    )
+
+    # 5. resolve_default_config_path in writable non-root cwd without configs/example.json
+    monkeypatch.setattr(Path, "cwd", staticmethod(lambda: tmp_path))
+    assert gui_mod.resolve_default_config_path() == gui_mod.DEFAULT_DEV_CONFIG_PATH
