@@ -509,14 +509,14 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
 }
 
 TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
-   EXPECT_EQ(version(), "2026.11.18.1");
-   EXPECT_EQ(ezsnmp_target_version(), "2026.11.15b0");
+   EXPECT_EQ(version(), "2026.11.22b0");
+   EXPECT_EQ(ezsnmp_target_version(), "2026.11.22b0");
    EXPECT_TRUE(is_valid_calsemver(version()));
    EXPECT_TRUE(is_valid_calsemver(ezsnmp_target_version()));
-   EXPECT_TRUE(is_valid_calsemver("v2026.11.18.1"));
+   EXPECT_TRUE(is_valid_calsemver("v2026.11.22b0"));
    EXPECT_TRUE(is_valid_calsemver("2026.11.1"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.18.1"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.18.1-alpha.0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.22b0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.22-alpha.0"));
    EXPECT_FALSE(is_valid_calsemver("2026.01.05"));
    EXPECT_FALSE(is_valid_calsemver("0.1.0"));
    EXPECT_EQ(supported_swig_languages().size(), 4u);
@@ -528,10 +528,10 @@ TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
 TEST(VersionTest, VersionAndCapabilitiesExhaustive) {
    EXPECT_FALSE(version().empty());
    EXPECT_FALSE(ezsnmp_target_version().empty());
-   EXPECT_TRUE(is_valid_calsemver("2026.11.18.1"));
-   EXPECT_TRUE(is_valid_calsemver("v2026.11.18.1"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.18.1a0"));
-   EXPECT_TRUE(is_valid_calsemver("2026.11.18.1-alpha.1"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.22b0"));
+   EXPECT_TRUE(is_valid_calsemver("v2026.11.22b0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.22a0"));
+   EXPECT_TRUE(is_valid_calsemver("2026.11.22-alpha.1"));
    EXPECT_FALSE(is_valid_calsemver(""));
    EXPECT_FALSE(is_valid_calsemver("invalid"));
    EXPECT_FALSE(is_valid_calsemver("2026.01.01"));

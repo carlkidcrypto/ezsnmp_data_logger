@@ -28,7 +28,7 @@ jobs:
       use-local-wheel-action: true
       python-version: '3.13'
       third-party-repo: 'carlkidcrypto/ezsnmp'
-      third-party-ref: 'v2026.11.15b0'
+      third-party-ref: 'v2026.11.22b0'
       third-party-path: 'third_party/ezsnmp'
       sdist-setup-cmd: >-
         sudo bash ./tools/prepare_linux_netsnmp.sh &&
