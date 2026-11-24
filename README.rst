@@ -65,7 +65,7 @@ Key Highlights
 --------------
 
 1. **Powered by EzSnmp ("net-snmp" Layer — CalSemVer Standardized):**
-   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.11.22b0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
+   Uses ``ezsnmp``'s C++17 ``SessionBase`` and ``Result`` classes (`v2026.11.24b0`) to execute SNMPv1, SNMPv2c, and SNMPv3 (``noAuthNoPriv``, ``authNoPriv``, ``authPriv``) ``get``, ``getnext``, ``walk``, ``bulkget``, ``bulkwalk``, and ``set`` operations against Devices Under Test (DUTs), normalizing returned bindings into typed telemetry records.
 2. **Self-Contained Packages Across All 4 SWIG Target Languages:**
    Statically embeds the public-domain **SQLite3** C amalgamation directly into every binary and bundles/relocates **Net-SNMP 5.10 + OpenSSL** runtime libraries inside **Python** (`cibuildwheel`), **JavaScript / Node.js N-API** (`bindings/javascript/`), **C# / .NET** (`bindings/csharp/`), and **Go** (`bindings/go/`) packages—zero external system libraries required by users!
 3. **Multi-Sink Telemetry Persistence:**
@@ -127,7 +127,7 @@ macOS (Apple Silicon & Intel)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.22b0"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.24b0"
 
    # Install native macOS Application Launcher in ~/Applications with Retina icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -138,7 +138,7 @@ Windows (Windows 10 / 11 / Server)
 .. code-block:: powershell
 
    py -m pip install --upgrade pip
-   py -m pip install --pre "ezsnmp-data-logger>=2026.11.22b0"
+   py -m pip install --pre "ezsnmp-data-logger>=2026.11.24b0"
 
    # Install Windows desktop launcher shortcut with custom icon:
    ezsnmp-data-logger-gui --install-launcher
@@ -149,7 +149,7 @@ Linux (Ubuntu, Debian, Fedora, RHEL, Arch, Alpine)
 .. code-block:: bash
 
    python3 -m pip install --upgrade pip
-   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.22b0"
+   python3 -m pip install --pre "ezsnmp-data-logger>=2026.11.24b0"
 
    # Install desktop launcher (.desktop) in ~/.local/share/applications/:
    ezsnmp-data-logger-gui --install-launcher

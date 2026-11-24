@@ -6,7 +6,7 @@
 
 namespace ezsnmp_data_logger {
 
-std::string version() noexcept { return "2026.11.22b0"; }
+std::string version() noexcept { return "2026.11.24b0"; }
 
 std::string ezsnmp_target_version() noexcept { return "2026.11.22b0"; }
 
