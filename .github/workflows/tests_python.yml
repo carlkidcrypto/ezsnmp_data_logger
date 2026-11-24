@@ -285,7 +285,7 @@ jobs:
 
       - name: Post collapsible pytest coverage comment (PR) - Native
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@b13c6b3a371fec341992ce50ebda4740e3d7ed52 # v5
+        uses: peter-evans/create-or-update-comment@db6c44fe5aad4bd01ab237120b70a9e4cb1e7078 # v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find-native-comment.outputs.comment-id }}
@@ -362,7 +362,7 @@ jobs:
 
       - name: Post collapsible pytest coverage comment (PR) - Homebrew
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@b13c6b3a371fec341992ce50ebda4740e3d7ed52 # v5
+        uses: peter-evans/create-or-update-comment@db6c44fe5aad4bd01ab237120b70a9e4cb1e7078 # v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find-homebrew-comment.outputs.comment-id }}
