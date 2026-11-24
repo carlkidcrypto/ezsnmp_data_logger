@@ -1,6 +1,35 @@
-Last Updated: 2026-11-19 00:03:58 UTC
+Last Updated: 2026-11-23 23:17:58 UTC
 
 # Changelog
+
+<a name="v2026.11.22b0"></a>
+## [v2026.11.22b0](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.18.1...v2026.11.22b0) (2026-11-23)
+
+### Changes
+
+#### Bug Fixes
+- fix(windows): harden standalone DLL bundling, frozen GUI, BOM parsing, and CI ([#92](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/92))
+- fix(gui): avoid read-only '/' config crash in macOS app launcher ([#91](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/91))
+
+#### Documentation Updates
+- docs(srs): update software requirements for DLL bundling, frozen GUI config, MacPorts removal, and PyPI OIDC ([#102](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/102))
+- docs(readme): add TestPyPI version badge ([#101](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/101))
+- docs: add versioned documentation for v2026.11.18.1 ([#77](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/77))
+
+#### Maintenance
+- chore(release): bump version to 2026.11.22b0 ([#98](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/98))
+- chore: remove unused MacPorts /opt/local fallback in prepare_macos_netsnmp.sh ([#99](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/99))
+- chore(ci): bump shared-workflows to 22f04e2 and add caller-side PyPI OIDC publish ([#97](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/97))
+- chore(ci): adopt shared-workflows Tier 2 & 3 DRY actions and gh-aw fragments ([#88](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/88))
+- chore(ci): adopt shared-workflows Tier 1 DRY actions and reusable workflows ([#87](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/87))
+- chore(ci): migrate npm, NuGet, WinGet, and Sphinx workflows to shared-workflows ([#80](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/80))
+- chore(ci): migrate PyPI and TestPyPI workflows to reusable_pypi_publish ([#79](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/79))
+- chore(ci): bump shared-workflows refs and migrate clang-format and codecov ([#78](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/78))
+
+#### Updates & Improvements
+- [changelog] Update CHANGELOG.md ([#76](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/76))
+
+---
 
 <a name="v2026.11.18.1"></a>
 ## [v2026.11.18.1](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.18...v2026.11.18.1) (2026-11-18)
