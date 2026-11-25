@@ -48,7 +48,7 @@ jobs:
         .github/actions/build-wheels/**
         .github/actions/build-distribution/**
       third-party-repo: 'carlkidcrypto/ezsnmp'
-      third-party-ref: 'v2026.11.22b0'
+      third-party-ref: 'v2026.11.24b0'
       third-party-path: 'third_party/ezsnmp'
       sdist-setup-cmd: >-
         sudo bash ./tools/prepare_linux_netsnmp.sh &&

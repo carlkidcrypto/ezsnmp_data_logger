@@ -7,7 +7,7 @@ This guide covers building the self-contained C++17 engine, running GoogleTest a
 CalSemVer Alpha Standardization
 ===============================
 
-``ezsnmp_data_logger`` follows **CalSemVer** (`YYYY.M.DaN`, currently ``2026.11.24b0``) and standardizes on `ezsnmp <https://github.com/carlkidcrypto/ezsnmp>`_'s self-contained CalSemVer release stream (``ezsnmp>=2026.11.22b0``, git tag ``v2026.11.22b0``) until a stable CalSemVer release is published.
+``ezsnmp_data_logger`` follows **CalSemVer** (`YYYY.M.DaN`, currently ``2026.11.24b0``) and standardizes on `ezsnmp <https://github.com/carlkidcrypto/ezsnmp>`_'s self-contained CalSemVer release stream (``ezsnmp>=2026.11.24b0``, git tag ``v2026.11.24b0``) until a stable CalSemVer release is published.
 
 Always pass ``--pre`` when installing ``ezsnmp`` or ``ezsnmp-data-logger`` from PyPI during the alpha testing period:
 

@@ -510,7 +510,7 @@ TEST(ConfigTest, ConfigValidationExhaustive) {
 
 TEST(VersionTest, ExposesCapabilitiesAndSwigLanguages) {
    EXPECT_EQ(version(), "2026.11.24b0");
-   EXPECT_EQ(ezsnmp_target_version(), "2026.11.22b0");
+   EXPECT_EQ(ezsnmp_target_version(), "2026.11.24b0");
    EXPECT_TRUE(is_valid_calsemver(version()));
    EXPECT_TRUE(is_valid_calsemver(ezsnmp_target_version()));
    EXPECT_TRUE(is_valid_calsemver("v2026.11.24b0"));

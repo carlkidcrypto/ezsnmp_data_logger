@@ -15,7 +15,7 @@ Why Self-Contained?
 End users installing any ``ezsnmp_data_logger`` package **never** have to manually install Net-SNMP, OpenSSL, SQLite3, or SWIG:
 
 * **SQLite3** (`3.49.1` public-domain amalgamation) is provisioned via ``tools/prepare_sqlite3_amalgamation.py`` and compiled statically directly into every binary (`EZSNMP_DL_EMBEDDED_SQLITE3=1`).
-* **Net-SNMP 5.10 + OpenSSL + EzSnmp (`v2026.11.22b0`)** are provisioned via ``tools/prepare_ezsnmp_source.py`` and ``tools/prepare_{linux,macos,windows}_netsnmp.*``, then bundled into each language package and dynamic-loader-relocated (`$ORIGIN` on Linux, `@loader_path` on macOS, side-by-side DLLs on Windows) by ``tools/bundle_native_package.py`` (or ``cibuildwheel`` for Python wheels).
+* **Net-SNMP 5.10 + OpenSSL + EzSnmp (`v2026.11.24b0`)** are provisioned via ``tools/prepare_ezsnmp_source.py`` and ``tools/prepare_{linux,macos,windows}_netsnmp.*``, then bundled into each language package and dynamic-loader-relocated (`$ORIGIN` on Linux, `@loader_path` on macOS, side-by-side DLLs on Windows) by ``tools/bundle_native_package.py`` (or ``cibuildwheel`` for Python wheels).
 
 Generating All 4 SWIG Target Wrappers
 =====================================

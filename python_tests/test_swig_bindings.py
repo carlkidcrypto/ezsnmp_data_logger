@@ -93,7 +93,7 @@ def test_windows_dll_directory_registration(
 def test_calsemver_version_and_capabilities() -> None:
     assert edl.__version__ == "2026.11.24b0"
     assert edl.version() == "2026.11.24b0"
-    assert edl.ezsnmp_target_version() == "2026.11.22b0"
+    assert edl.ezsnmp_target_version() == "2026.11.24b0"
     assert edl.is_valid_calsemver(edl.__version__) is True
     assert edl.is_valid_calsemver(edl.ezsnmp_target_version()) is True
     assert edl.is_valid_calsemver("2026.11.1") is True
@@ -111,7 +111,7 @@ def test_calsemver_version_and_capabilities() -> None:
     assert info["version"] == "2026.11.24b0"
     assert info["versioning_scheme"] == "CalSemVer"
     assert info["calsemver_valid"] is True
-    assert info["ezsnmp_target_version"] == "2026.11.22b0"
+    assert info["ezsnmp_target_version"] == "2026.11.24b0"
     assert info["self_contained"] is True
     assert info["capabilities"]["sqlite3_sink"] is True
     assert info["capabilities"]["embedded_sqlite3"] is True

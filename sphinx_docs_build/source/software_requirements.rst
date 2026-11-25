@@ -76,7 +76,7 @@ CalSemVer Versioning Requirements
   [--json]``.
 
 - **[VER-05]** ``ezsnmp_data_logger`` **Shall** standardize on ``ezsnmp``'s
-  CalSemVer release line (``ezsnmp>=2026.11.22b0``, git tag ``v2026.11.22b0``)
+  CalSemVer release line (``ezsnmp>=2026.11.24b0``, git tag ``v2026.11.24b0``)
   until a stable CalSemVer ``ezsnmp`` release is published.
 
 JSON Configuration & Validation Requirements
@@ -208,7 +208,7 @@ Self-Contained Multi-Language Packaging Requirements
   (< 5.10) system installations.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
-  ``[build-system] requires`` and ``ezsnmp>=2026.11.22b0`` in ``dependencies``.
+  ``[build-system] requires`` and ``ezsnmp>=2026.11.24b0`` in ``dependencies``.
 
 - **[PKG-05]** ``cibuildwheel`` **Shall** configure ``auditwheel repair``
   (Linux ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and
