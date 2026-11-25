@@ -325,7 +325,10 @@ def test_netsnmp_5_10_build_requirements() -> None:
 
     # 3. Verify CMakeLists.txt enforces Net-SNMP >= 5.10 and Windows auto-discovery
     cmake_content = (REPO_ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
-    assert "pkg_check_modules(NETSNMP netsnmp>=5.10)" in cmake_content
+    assert (
+        "pkg_check_modules(NETSNMP IMPORTED_TARGET netsnmp>=5.10)" in cmake_content
+        or "pkg_check_modules(NETSNMP netsnmp>=5.10)" in cmake_content
+    )
     assert 'VERSION_LESS "5.10"' in cmake_content
     assert "C:/ezsnmp-netsnmp-dist" in cmake_content
 
