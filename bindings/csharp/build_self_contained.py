@@ -41,7 +41,15 @@ def main() -> int:
 
     build_dir = CSHARP_DIR / "build-native"
     subprocess.run(
-        ["cmake", "-B", str(build_dir), "-S", str(CSHARP_DIR), "-DCMAKE_BUILD_TYPE=Release"],
+        [
+            "cmake",
+            "-B",
+            str(build_dir),
+            "-S",
+            str(CSHARP_DIR),
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_DISABLE_FIND_PACKAGE_PostgreSQL=ON",
+        ],
         check=True,
     )
     jobs = str(os.cpu_count() or 4)
