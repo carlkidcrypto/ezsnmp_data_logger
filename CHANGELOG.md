@@ -1,6 +1,29 @@
-Last Updated: 2026-11-23 23:17:58 UTC
+Last Updated: 2026-11-26 02:12:33 UTC
 
 # Changelog
+
+<a name="v2026.11.24b0"></a>
+## [v2026.11.24b0](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.22b0...v2026.11.24b0) (2026-11-25)
+
+### Changes
+
+#### Bug Fixes
+- fix(ci): run NuGet OIDC publish caller-side and harden C# native runtime linking ([#111](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/111))
+
+#### Build System
+- build(deps): bump peter-evans/create-or-update-comment ([#110](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/110))
+
+#### Documentation Updates
+- docs: add versioned documentation for v2026.11.22b0 ([#106](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/106))
+
+#### Maintenance
+- chore(release): prepare beta release v2026.11.24b0 ([#113](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/113))
+- chore(ci): bump shared-workflows to eeefdd5 ([#112](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/112))
+
+#### Updates & Improvements
+- [changelog] Update CHANGELOG.md ([#105](https://github.com/carlkidcrypto/ezsnmp_data_logger/issues/105))
+
+---
 
 <a name="v2026.11.22b0"></a>
 ## [v2026.11.22b0](https://github.com/carlkidcrypto/ezsnmp_data_logger/compare/v2026.11.18.1...v2026.11.22b0) (2026-11-23)
