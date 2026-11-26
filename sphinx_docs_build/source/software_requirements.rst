@@ -49,11 +49,11 @@ CalSemVer Versioning Requirements
   year, non-zero-padded month ``1-12``, non-zero-padded day ``1-31``, with an
   optional ``.PATCH`` hotfix segment ``YYYY.M.D.P``) for stable releases,
   PEP-440 pre-release suffixes (``aN``, ``bN``, ``rcN``, e.g.,
-  ``2026.11.22b0a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
+  ``2026.11.24b0a0``) for Python, C++17, Meson, and Doxygen artifacts, SemVer-2.0
   pre-release suffixes (``-alpha.N``, ``-beta.N``, ``-rc.N``, e.g.,
-  ``2026.11.22b0-alpha.0``) where target ecosystems (npm ``package.json``, .NET
+  ``2026.11.24b0-alpha.0``) where target ecosystems (npm ``package.json``, .NET
   ``.csproj``) mandate hyphenated pre-releases, and ``v``-prefixed tags (e.g.,
-  ``v2026.11.22b0``) for Git releases, Sphinx documentation
+  ``v2026.11.24b0``) for Git releases, Sphinx documentation
   archives, and Go modules.
 
 - **[VER-02]** ``ezsnmp_data_logger::is_valid_calsemver`` **Shall** validate
@@ -76,7 +76,7 @@ CalSemVer Versioning Requirements
   [--json]``.
 
 - **[VER-05]** ``ezsnmp_data_logger`` **Shall** standardize on ``ezsnmp``'s
-  CalSemVer release line (``ezsnmp>=2026.11.22b0``, git tag ``v2026.11.22b0``)
+  CalSemVer release line (``ezsnmp>=2026.11.24b0``, git tag ``v2026.11.24b0``)
   until a stable CalSemVer ``ezsnmp`` release is published.
 
 JSON Configuration & Validation Requirements
@@ -195,7 +195,7 @@ Self-Contained Multi-Language Packaging Requirements
 - **[PKG-03]** Standalone dependency scripts
   (``tools/prepare_linux_netsnmp.sh``, ``tools/prepare_macos_netsnmp.sh``,
   ``tools/prepare_windows_netsnmp.ps1``, and ``tools/prepare_ezsnmp_source.py``)
-  **Shall** provision ``ezsnmp`` ``v2026.11.22b0`` and build minimal
+  **Shall** provision ``ezsnmp`` ``v2026.11.24b0`` and build minimal
   SHA-256-verified Net-SNMP ``5.10.pre2`` libraries with OpenSSL and
   Blumenthal-AES support. On macOS, ``tools/prepare_macos_netsnmp.sh``
   **Shall** discover OpenSSL 3 exclusively via Homebrew
@@ -208,7 +208,7 @@ Self-Contained Multi-Language Packaging Requirements
   (< 5.10) system installations.
 
 - **[PKG-04]** ``pyproject.toml`` **Shall** declare ``swig>=4.3.0`` in
-  ``[build-system] requires`` and ``ezsnmp>=2026.11.22b0`` in ``dependencies``.
+  ``[build-system] requires`` and ``ezsnmp>=2026.11.24b0`` in ``dependencies``.
 
 - **[PKG-05]** ``cibuildwheel`` **Shall** configure ``auditwheel repair``
   (Linux ``manylinux``/``musllinux``), ``delocate-wheel`` (macOS), and
