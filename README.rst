@@ -6,7 +6,13 @@ EzSnmp Data Logger
 
 |Codecov| |Quality Gate Status| |Security Rating| |Maintainability Rating|
 
-|PyPI Version| |TestPyPI Version| |PyPI Downloads| |npm Version| |npm Downloads| |NuGet Version| |PyPI Distributions| |TestPyPI Distributions|
+|PyPI Version| |PyPI Downloads| |PyPI Distributions| |TestPyPI Version| |TestPyPI Distributions|
+
+|npm Version| |npm Downloads| |npm Distributions|
+
+|NuGet Version| |NuGet Downloads| |NuGet Distributions|
+
+|WinGet Distributions| |Desktop Downloads| |Desktop Distributions|
 
 |Python Versions| |License|
 
@@ -45,10 +51,22 @@ EzSnmp Data Logger
     :target: https://www.npmjs.com/package/ezsnmp-data-logger
 .. |NuGet Version| image:: https://img.shields.io/nuget/v/EzSnmpDataLogger?style=flat-square
     :target: https://www.nuget.org/packages/EzSnmpDataLogger
+.. |NuGet Downloads| image:: https://img.shields.io/nuget/dt/EzSnmpDataLogger?style=flat-square
+    :target: https://www.nuget.org/packages/EzSnmpDataLogger
 .. |PyPI Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_pypi.yml?style=flat-square&label=PyPI+Distributions
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_pypi.yml
 .. |TestPyPI Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_test_pypi.yml?style=flat-square&label=TestPyPI+Distributions
     :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_test_pypi.yml
+.. |npm Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_npm.yml?style=flat-square&label=npm+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_npm.yml
+.. |NuGet Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_nuget.yml?style=flat-square&label=NuGet+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_nuget.yml
+.. |WinGet Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_to_winget.yml?style=flat-square&label=WinGet+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_to_winget.yml
+.. |Desktop Downloads| image:: https://img.shields.io/github/downloads/carlkidcrypto/ezsnmp_data_logger/total?style=flat-square&label=Desktop+Downloads
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/releases
+.. |Desktop Distributions| image:: https://img.shields.io/github/actions/workflow/status/carlkidcrypto/ezsnmp_data_logger/build_and_publish_desktop_apps.yml?style=flat-square&label=Desktop+Distributions
+    :target: https://github.com/carlkidcrypto/ezsnmp_data_logger/actions/workflows/build_and_publish_desktop_apps.yml
 .. |Python Versions| image:: https://img.shields.io/pypi/pyversions/ezsnmp-data-logger?style=flat-square
     :target: https://pypi.org/project/ezsnmp-data-logger/
 .. |License| image:: https://img.shields.io/github/license/carlkidcrypto/ezsnmp_data_logger?style=flat-square
