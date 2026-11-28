@@ -172,6 +172,47 @@ Linux (Ubuntu, Debian, Fedora, RHEL, Arch, Alpine)
    # Install desktop launcher (.desktop) in ~/.local/share/applications/:
    ezsnmp-data-logger-gui --install-launcher
 
+Multi-Language Package Installation (npm, NuGet, Go)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to Python wheels and standalone Desktop apps, ``ezsnmp_data_logger`` ships self-contained SWIG 4.x packages for **JavaScript/Node.js**, **C#/.NET**, and **Go**:
+
+**JavaScript / Node.js (npm)**
+
+.. code-block:: bash
+
+   npm install ezsnmp-data-logger
+
+.. code-block:: javascript
+
+   const edl = require("ezsnmp-data-logger");
+
+   console.log(edl.version(), edl.build_info());
+
+**C# / .NET (NuGet)**
+
+.. code-block:: bash
+
+   dotnet add package EzSnmpDataLogger
+
+.. code-block:: csharp
+
+   using EzSnmpDataLogger;
+
+   Console.WriteLine(ezsnmp_data_logger.version());
+
+**Go (cgo module)**
+
+.. code-block:: bash
+
+   go get github.com/carlkidcrypto/ezsnmp_data_logger/bindings/go
+
+.. code-block:: go
+
+   import edl "github.com/carlkidcrypto/ezsnmp_data_logger/bindings/go"
+
+   fmt.Println(edl.Version())
+
 CLI Usage Reference
 -------------------
 
